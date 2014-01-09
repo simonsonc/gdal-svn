@@ -29,6 +29,7 @@
 
 #include "ogr_geometry.h"
 #include "ogr_p.h"
+#include "ogr_geos.h"
 #include <assert.h>
 
 CPL_CVSID("$Id$");
@@ -1294,6 +1295,43 @@ void OGRLineString::Value( double dfDistance, OGRPoint * poPoint ) const
     
     EndPoint( poPoint );
 }
+
+/************************************************************************/
+/*                              Project()                               */
+/*                                                                      */
+/* Return distance of point projected on line from origin of this line  */
+/************************************************************************/
+
+double OGRLineString::Project(const OGRPoint *poPoint) const
+
+{
+    double dfResult = -1;
+#ifndef HAVE_GEOS
+
+    CPLError(CE_Failure, CPLE_NotSupported,
+        "GEOS support not enabled.");
+    return dfResult;
+
+#else
+    GEOSGeom hThisGeosGeom = NULL;
+    GEOSGeom hPointGeosGeom = NULL;
+
+    GEOSContextHandle_t hGEOSCtxt = createGEOSContext();
+    hThisGeosGeom = exportToGEOS(hGEOSCtxt);
+    hPointGeosGeom = poPoint->exportToGEOS(hGEOSCtxt);
+    if (hThisGeosGeom != NULL && hPointGeosGeom != NULL)
+    {
+        dfResult = GEOSProject_r(hGEOSCtxt, hThisGeosGeom, hPointGeosGeom);
+    }
+    GEOSGeom_destroy_r(hGEOSCtxt, hThisGeosGeom);
+    GEOSGeom_destroy_r(hGEOSCtxt, hPointGeosGeom);
+    freeGEOSContext(hGEOSCtxt);
+
+    return dfResult;
+
+#endif /* HAVE_GEOS */
+}
+
 
 /************************************************************************/
 /*                            getEnvelope()                             */
