@@ -1284,7 +1284,7 @@ void OGRLineString::Value( double dfDistance, OGRPoint * poPoint ) const
 
                 if( getCoordinateDimension() == 3 )
                     poPoint->setZ( padfZ[i] * (1 - dfRatio)
-                                   + padfZ[i] * dfRatio );
+                                   + padfZ[i+1] * dfRatio );
                 
                 return;
             }
@@ -1332,6 +1332,181 @@ double OGRLineString::Project(const OGRPoint *poPoint) const
 #endif /* HAVE_GEOS */
 }
 
+/************************************************************************/
+/*                            getSubLine()                              */
+/*                                                                      */
+/*  Extracts a portion of this OGRLineString into a new OGRLineString   */
+/************************************************************************/
+
+OGRLineString* OGRLineString::getSubLine(double dfDistanceFrom, double dfDistanceTo, int bAsRatio) const
+
+{
+    OGRLineString       *poNewLineString;
+    OGRPoint * poPoint;
+    double      dfLength = 0;
+    int         i;
+
+    poNewLineString = new OGRLineString();
+
+    poNewLineString->assignSpatialReference(getSpatialReference());
+    //poNewLineString->setPoints(nPointCount, paoPoints, padfZ);
+    poNewLineString->setCoordinateDimension(getCoordinateDimension());
+
+    double dfLen = get_Length();
+    if (bAsRatio == TRUE)
+    {
+        //convert to real distance
+        dfDistanceFrom *= dfLen;
+        dfDistanceTo *= dfLen;
+    }
+
+    if (dfDistanceFrom < 0 || dfDistanceFrom > dfDistanceTo || dfDistanceFrom >= dfLen || dfDistanceTo > dfLen)
+    {
+        CPLError(CE_Failure, CPLE_IllegalArg, "Input distances are invalid.");
+
+        return NULL;
+    }
+
+    //get first point
+
+    if (dfDistanceFrom == 0)
+    {
+        if (getCoordinateDimension() == 3)
+            poNewLineString->addPoint(paoPoints[0].x, paoPoints[0].y, padfZ[0]);
+        else
+            poNewLineString->addPoint(paoPoints[0].x, paoPoints[0].y);
+
+        i = 0;
+    }
+    else
+    {
+        for (i = 0; i < nPointCount - 1; i++)
+        {
+            double      dfDeltaX, dfDeltaY, dfSegLength;
+
+            dfDeltaX = paoPoints[i + 1].x - paoPoints[i].x;
+            dfDeltaY = paoPoints[i + 1].y - paoPoints[i].y;
+            dfSegLength = sqrt(dfDeltaX*dfDeltaX + dfDeltaY*dfDeltaY);
+
+            if (dfSegLength > 0)
+            {
+                if ((dfLength <= dfDistanceFrom) && ((dfLength + dfSegLength) >=
+                    dfDistanceFrom))
+                {
+                    double      dfRatio;
+
+                    dfRatio = (dfDistanceFrom - dfLength) / dfSegLength;
+
+                    double dfX = paoPoints[i].x * (1 - dfRatio)
+                        + paoPoints[i + 1].x * dfRatio;
+                    double dfY = paoPoints[i].y * (1 - dfRatio)
+                        + paoPoints[i + 1].y * dfRatio;
+
+                    if (getCoordinateDimension() == 3)
+                    {
+                        poNewLineString->addPoint(dfX, dfY, padfZ[i] * (1 - dfRatio)
+                        + padfZ[i+1] * dfRatio);
+                    }
+                    else
+                    {
+                        poNewLineString->addPoint(dfX, dfY);
+                    }
+                    
+                    //check if dfDistanceTo is in same segment
+                    if ((dfLength <= dfDistanceTo) && ((dfLength + dfSegLength) >=
+                        dfDistanceTo))
+                    {
+                        double      dfRatio;
+
+                        dfRatio = (dfDistanceTo - dfLength) / dfSegLength;
+
+                        double dfX = paoPoints[i].x * (1 - dfRatio)
+                            + paoPoints[i + 1].x * dfRatio;
+                        double dfY = paoPoints[i].y * (1 - dfRatio)
+                            + paoPoints[i + 1].y * dfRatio;
+
+                        if (getCoordinateDimension() == 3)
+                        {
+                            poNewLineString->addPoint(dfX, dfY, padfZ[i] * (1 - dfRatio)
+                                + padfZ[i + 1] * dfRatio);
+                        }
+                        else
+                        {
+                            poNewLineString->addPoint(dfX, dfY);
+                        }
+
+                        if (poNewLineString->getNumPoints() < 2)
+                        {
+                            delete poNewLineString;
+                            poNewLineString = NULL;
+                        }
+
+                        return poNewLineString;
+                    }
+                    i++;
+                    break;
+                }
+
+                dfLength += dfSegLength;
+            }
+        }
+    }
+
+    //add points
+    for (; i < nPointCount - 1; i++)
+    {
+        double      dfDeltaX, dfDeltaY, dfSegLength;
+
+        if (getCoordinateDimension() == 3)
+            poNewLineString->addPoint(paoPoints[i].x, paoPoints[i].y, padfZ[i]);
+        else
+            poNewLineString->addPoint(paoPoints[i].x, paoPoints[i].y);
+
+        dfDeltaX = paoPoints[i + 1].x - paoPoints[i].x;
+        dfDeltaY = paoPoints[i + 1].y - paoPoints[i].y;
+        dfSegLength = sqrt(dfDeltaX*dfDeltaX + dfDeltaY*dfDeltaY);
+
+        if (dfSegLength > 0)
+        {
+            if ((dfLength <= dfDistanceTo) && ((dfLength + dfSegLength) >=
+                dfDistanceTo))
+            {
+                double      dfRatio;
+
+                dfRatio = (dfDistanceTo - dfLength) / dfSegLength;
+
+                double dfX = paoPoints[i].x * (1 - dfRatio)
+                    + paoPoints[i + 1].x * dfRatio;
+                double dfY = paoPoints[i].y * (1 - dfRatio)
+                    + paoPoints[i + 1].y * dfRatio;
+
+                if (getCoordinateDimension() == 3)
+                    poNewLineString->addPoint(dfX, dfY, padfZ[i] * (1 - dfRatio)
+                    + padfZ[i + 1] * dfRatio);
+                else
+                    poNewLineString->addPoint(dfX, dfY);
+
+                return poNewLineString;
+            }
+
+            dfLength += dfSegLength;
+        }
+    }
+
+
+    if (getCoordinateDimension() == 3)
+        poNewLineString->addPoint(paoPoints[nPointCount - 1].x, paoPoints[nPointCount - 1].y, padfZ[nPointCount - 1]);
+    else
+        poNewLineString->addPoint(paoPoints[nPointCount - 1].x, paoPoints[nPointCount - 1].y);
+
+    if (poNewLineString->getNumPoints() < 2)
+    {
+        delete poNewLineString;
+        poNewLineString = NULL;
+    }
+
+    return poNewLineString;
+}
 
 /************************************************************************/
 /*                            getEnvelope()                             */
