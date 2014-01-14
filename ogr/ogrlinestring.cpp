@@ -1360,7 +1360,12 @@ OGRLineString* OGRLineString::getSubLine(double dfDistanceFrom, double dfDistanc
         dfDistanceTo *= dfLen;
     }
 
-    if (dfDistanceFrom < 0 || dfDistanceFrom > dfDistanceTo || dfDistanceFrom >= dfLen || dfDistanceTo > dfLen)
+    if (dfDistanceFrom < 0)
+        dfDistanceFrom = 0;
+    if (dfDistanceTo > dfLen)
+        dfDistanceTo = dfLen;
+
+    if ( dfDistanceFrom > dfDistanceTo || dfDistanceFrom >= dfLen)
     {
         CPLError(CE_Failure, CPLE_IllegalArg, "Input distances are invalid.");
 
@@ -1388,18 +1393,18 @@ OGRLineString* OGRLineString::getSubLine(double dfDistanceFrom, double dfDistanc
             dfDeltaY = paoPoints[i + 1].y - paoPoints[i].y;
             dfSegLength = sqrt(dfDeltaX*dfDeltaX + dfDeltaY*dfDeltaY);
 
+            double dfX, dfY, dfRatio;
+
             if (dfSegLength > 0)
             {
                 if ((dfLength <= dfDistanceFrom) && ((dfLength + dfSegLength) >=
                     dfDistanceFrom))
                 {
-                    double      dfRatio;
-
                     dfRatio = (dfDistanceFrom - dfLength) / dfSegLength;
 
-                    double dfX = paoPoints[i].x * (1 - dfRatio)
+                    dfX = paoPoints[i].x * (1 - dfRatio)
                         + paoPoints[i + 1].x * dfRatio;
-                    double dfY = paoPoints[i].y * (1 - dfRatio)
+                    dfY = paoPoints[i].y * (1 - dfRatio)
                         + paoPoints[i + 1].y * dfRatio;
 
                     if (getCoordinateDimension() == 3)
@@ -1416,13 +1421,11 @@ OGRLineString* OGRLineString::getSubLine(double dfDistanceFrom, double dfDistanc
                     if ((dfLength <= dfDistanceTo) && ((dfLength + dfSegLength) >=
                         dfDistanceTo))
                     {
-                        double      dfRatio;
-
                         dfRatio = (dfDistanceTo - dfLength) / dfSegLength;
 
-                        double dfX = paoPoints[i].x * (1 - dfRatio)
+                        dfX = paoPoints[i].x * (1 - dfRatio)
                             + paoPoints[i + 1].x * dfRatio;
-                        double dfY = paoPoints[i].y * (1 - dfRatio)
+                        dfY = paoPoints[i].y * (1 - dfRatio)
                             + paoPoints[i + 1].y * dfRatio;
 
                         if (getCoordinateDimension() == 3)
@@ -1444,6 +1447,7 @@ OGRLineString* OGRLineString::getSubLine(double dfDistanceFrom, double dfDistanc
                         return poNewLineString;
                     }
                     i++;
+                    dfLength += dfSegLength;
                     break;
                 }
 
@@ -1466,18 +1470,18 @@ OGRLineString* OGRLineString::getSubLine(double dfDistanceFrom, double dfDistanc
         dfDeltaY = paoPoints[i + 1].y - paoPoints[i].y;
         dfSegLength = sqrt(dfDeltaX*dfDeltaX + dfDeltaY*dfDeltaY);
 
+        double dfX, dfY, dfRatio;
+
         if (dfSegLength > 0)
         {
             if ((dfLength <= dfDistanceTo) && ((dfLength + dfSegLength) >=
                 dfDistanceTo))
             {
-                double      dfRatio;
-
                 dfRatio = (dfDistanceTo - dfLength) / dfSegLength;
 
-                double dfX = paoPoints[i].x * (1 - dfRatio)
+                dfX = paoPoints[i].x * (1 - dfRatio)
                     + paoPoints[i + 1].x * dfRatio;
-                double dfY = paoPoints[i].y * (1 - dfRatio)
+                dfY = paoPoints[i].y * (1 - dfRatio)
                     + paoPoints[i + 1].y * dfRatio;
 
                 if (getCoordinateDimension() == 3)
