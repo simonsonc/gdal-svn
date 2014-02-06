@@ -42,6 +42,42 @@
 CPL_CVSID("$Id: ogrsxfdatasource.cpp  $");
 
 static void  *hIOMutex = NULL;
+/*
+static const long aoVCS[] =
+{
+    0,
+    5705,   //1
+    5711,   //2
+    0,      //3
+    5710,   //4
+    5710,   //5
+    0,      //6
+    0,      //7
+    0,      //8
+    0,      //9
+    5716,   //10
+    5733,   //11
+    0,      //12
+    0,      //13
+    0,      //14
+    0,      //15
+    5709,   //16
+    5776,   //17
+    0,      //18
+    0,      //19
+    5717,   //20
+    5613,   //21
+    0,      //22
+    5775,   //23
+    5702,   //24
+    0,      //25
+    0,      //26
+    5714    //27
+};
+
+#define NUMBER_OF_VERTICALCS    (sizeof(aoVCS)/sizeof(aoVCS[0]))
+*/
+
 /************************************************************************/
 /*                         OGRSXFDataSource()                           */
 /************************************************************************/
@@ -517,6 +553,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
     GByte anData[8] = { 0 };
     nObjectsRead = VSIFReadL(&anData, 8, 1, fpSXF);
     long iEllips = anData[0];
+    long iVCS = anData[1];
     long iProjSys = anData[2];
     long iDatum = anData[3];
     double dfProjScale = 1;
@@ -665,6 +702,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
             int nEPSG = 28400 + nZoneEnv;
             passport.stMapDescription.pSpatRef = new OGRSpatialReference();
             OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(nEPSG);
+            //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
             return eErr;
         }
         else
@@ -697,18 +735,24 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
         }
         passport.stMapDescription.pSpatRef = new OGRSpatialReference();
         OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(nEPSG);
+        //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+
         return eErr;
     }
     else if (iEllips == 45 && iProjSys == 35) //Mercator 3395
     {
         passport.stMapDescription.pSpatRef = new OGRSpatialReference();
         OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(3395);
+        //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+
         return eErr;
     }
     else if (iEllips == 9 && iProjSys == 34) //Miller 54003
     {
         passport.stMapDescription.pSpatRef = new OGRSpatialReference();
         OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(54003);
+        //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+
         return eErr;
     }
 
@@ -731,6 +775,8 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
 
     passport.stMapDescription.pSpatRef = new OGRSpatialReference();
     OGRErr eErr = passport.stMapDescription.pSpatRef->importFromPanorama(anData[2], anData[3], anData[0], adfPrjParams);
+    //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+
     return eErr;
 }
 
@@ -1157,11 +1203,11 @@ void OGRSXFDataSource::CreateLayers(VSILFILE* fpRSC)
         else
         {
             if (stRSCFileHeader.nFontEnc == 125)
-                pszRecoded = CPLRecode(LAYER.szName, "KOI8-R", CPL_ENC_UTF8);
+                pszRecoded = CPLRecode(LAYER.szShortName, "KOI8-R", CPL_ENC_UTF8);
             else if (stRSCFileHeader.nFontEnc == 126)
-                pszRecoded = CPLRecode(LAYER.szName, "CP1251", CPL_ENC_UTF8);
+                pszRecoded = CPLRecode(LAYER.szShortName, "CP1251", CPL_ENC_UTF8);
             else
-                pszRecoded = CPLStrdup(LAYER.szName);
+                pszRecoded = CPLStrdup(LAYER.szShortName);
 
             papoLayers[nLayers] = new OGRSXFLayer(fpSXF, &hIOMutex, LAYER.nNo, CPLString(pszRecoded), oSXFPassport.version, oSXFPassport.stMapDescription);
         }
