@@ -42,7 +42,7 @@
 CPL_CVSID("$Id: ogrsxfdatasource.cpp  $");
 
 static void  *hIOMutex = NULL;
-/*
+
 static const long aoVCS[] =
 {
     0,
@@ -76,7 +76,7 @@ static const long aoVCS[] =
 };
 
 #define NUMBER_OF_VERTICALCS    (sizeof(aoVCS)/sizeof(aoVCS[0]))
-*/
+
 
 /************************************************************************/
 /*                         OGRSXFDataSource()                           */
@@ -449,6 +449,43 @@ OGRErr OGRSXFDataSource::ReadSXFInformationFlags(VSILFILE* fpSXF, SXFPassport& p
     return OGRERR_NONE;
 }
 
+void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
+{
+    const long nEPSG = aoVCS[iVCS];
+
+    if (nEPSG == 0)
+    {
+        CPLError( CE_Warning, CPLE_NotSupported,
+                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld) not supported", iVCS) );
+        return;
+    }
+
+    OGRSpatialReference* sr = new OGRSpatialReference();
+    OGRErr eImportFromEPSGErr = sr->importFromEPSG(nEPSG);
+    if (eImportFromEPSGErr != OGRERR_NONE)
+    {
+        CPLError( CE_Warning, CPLE_None,
+                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld, EPSG %d) import from EPSG error", iVCS, nEPSG) );
+        return;
+    }
+
+    if (sr->IsVertical() != 1)
+    {
+        CPLError( CE_Warning, CPLE_None,
+                  CPLString().Printf("SXF. Coordinate system (SXF index %ld, EPSG %d) is not Vertical", iVCS, nEPSG) );
+        return;
+    }
+
+    //passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+    OGRErr eSetVertCSErr = passport.stMapDescription.pSpatRef->SetVertCS(sr->GetAttrValue("VERT_CS"), sr->GetAttrValue("VERT_DATUM"));
+    if (eSetVertCSErr != OGRERR_NONE)
+    {
+        CPLError( CE_Warning, CPLE_None,
+                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld, EPSG %d) set error", iVCS, nEPSG) );
+        return;
+    }
+}
+
 OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& passport)
 {
     int nObjectsRead;
@@ -702,7 +739,8 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
             int nEPSG = 28400 + nZoneEnv;
             passport.stMapDescription.pSpatRef = new OGRSpatialReference();
             OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(nEPSG);
-            //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+            SetVertCS(iVCS, passport);
+
             return eErr;
         }
         else
@@ -735,7 +773,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
         }
         passport.stMapDescription.pSpatRef = new OGRSpatialReference();
         OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(nEPSG);
-        //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+        SetVertCS(iVCS, passport);
 
         return eErr;
     }
@@ -743,7 +781,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
     {
         passport.stMapDescription.pSpatRef = new OGRSpatialReference();
         OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(3395);
-        //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+        SetVertCS(iVCS, passport);
 
         return eErr;
     }
@@ -751,7 +789,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
     {
         passport.stMapDescription.pSpatRef = new OGRSpatialReference();
         OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(54003);
-        //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+        SetVertCS(iVCS, passport);
 
         return eErr;
     }
@@ -775,7 +813,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
 
     passport.stMapDescription.pSpatRef = new OGRSpatialReference();
     OGRErr eErr = passport.stMapDescription.pSpatRef->importFromPanorama(anData[2], anData[3], anData[0], adfPrjParams);
-    //TODO: passport.stMapDescription.pSpatRef->SetVertCS("Baltic", "Baltic Sea");
+    SetVertCS(iVCS, passport);
 
     return eErr;
 }

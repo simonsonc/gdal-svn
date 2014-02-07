@@ -55,6 +55,7 @@ static void Usage(const char* pszErrorMsg = NULL)
         "          CInt16/CInt32/CFloat32/CFloat64}]\n"
         "    [-of format] [-co \"NAME=VALUE\"]\n"
         "    [-zfield field_name]\n"
+        "    [-z_increase increase_value]\n"
         "    [-a_srs srs_def] [-spat xmin ymin xmax ymax]\n"
         "    [-clipsrc <xmin ymin xmax ymax>|WKT|datasource|spat_extent]\n"
         "    [-clipsrcsql sql_statement] [-clipsrclayer layer]\n"
@@ -217,6 +218,7 @@ static void PrintAlgorithmAndOptions( GDALGridAlgorithm eAlgorithm,
 
 static void ProcessGeometry( OGRPoint *poGeom, OGRGeometry *poClipSrc,
                              int iBurnField, double dfBurnValue,
+                             const double dfIncreaseBurnValue,
                              std::vector<double> &adfX,
                              std::vector<double> &adfY,
                              std::vector<double> &adfZ )
@@ -228,9 +230,9 @@ static void ProcessGeometry( OGRPoint *poGeom, OGRGeometry *poClipSrc,
     adfX.push_back( poGeom->getX() );
     adfY.push_back( poGeom->getY() );
     if ( iBurnField < 0 )
-        adfZ.push_back( poGeom->getZ() );
+        adfZ.push_back( poGeom->getZ() + dfIncreaseBurnValue );
     else
-        adfZ.push_back( dfBurnValue );
+        adfZ.push_back( dfBurnValue + dfIncreaseBurnValue );
 }
 
 /************************************************************************/
@@ -241,6 +243,7 @@ static void ProcessGeometry( OGRPoint *poGeom, OGRGeometry *poClipSrc,
 
 static void ProcessCommonGeometry(OGRGeometry* poGeom, OGRGeometry *poClipSrc,
                                 int iBurnField, double dfBurnValue,
+                                const double dfIncreaseBurnValue,
                                 std::vector<double> &adfX,
                                 std::vector<double> &adfY,
                                 std::vector<double> &adfZ)
@@ -253,7 +256,7 @@ static void ProcessCommonGeometry(OGRGeometry* poGeom, OGRGeometry *poClipSrc,
     {
     case wkbPoint:
         return ProcessGeometry((OGRPoint *)poGeom, poClipSrc,
-            iBurnField, dfBurnValue, adfX, adfY, adfZ);
+            iBurnField, dfBurnValue, dfIncreaseBurnValue, adfX, adfY, adfZ);
     case wkbLinearRing:
     case wkbLineString:
         {
@@ -263,7 +266,7 @@ static void ProcessCommonGeometry(OGRGeometry* poGeom, OGRGeometry *poClipSrc,
             {
                 poLS->getPoint(pointIndex, &point);
                 ProcessCommonGeometry((OGRGeometry*)&point, poClipSrc,
-                    iBurnField, dfBurnValue, adfX, adfY, adfZ);
+                    iBurnField, dfBurnValue, dfIncreaseBurnValue, adfX, adfY, adfZ);
             }
         }
         break;
@@ -273,7 +276,7 @@ static void ProcessCommonGeometry(OGRGeometry* poGeom, OGRGeometry *poClipSrc,
             OGRPolygon* poPoly = (OGRPolygon*)poGeom;
             OGRLinearRing* poRing = poPoly->getExteriorRing();
             ProcessCommonGeometry((OGRGeometry*)poRing, poClipSrc,
-                iBurnField, dfBurnValue, adfX, adfY, adfZ);
+                iBurnField, dfBurnValue, dfIncreaseBurnValue, adfX, adfY, adfZ);
 
             nRings = poPoly->getNumInteriorRings();
             if (nRings > 0)
@@ -282,7 +285,7 @@ static void ProcessCommonGeometry(OGRGeometry* poGeom, OGRGeometry *poClipSrc,
                 {
                     OGRLinearRing* poRing = poPoly->getInteriorRing(ir);
                     ProcessCommonGeometry((OGRGeometry*)poRing, poClipSrc,
-                        iBurnField, dfBurnValue, adfX, adfY, adfZ);
+                        iBurnField, dfBurnValue, dfIncreaseBurnValue, adfX, adfY, adfZ);
                 }
             }
         }
@@ -296,7 +299,7 @@ static void ProcessCommonGeometry(OGRGeometry* poGeom, OGRGeometry *poClipSrc,
             for (int i = 0; i < pOGRGeometryCollection->getNumGeometries(); ++i)
             {
                 ProcessCommonGeometry(pOGRGeometryCollection->getGeometryRef(i), poClipSrc,
-                    iBurnField, dfBurnValue, adfX, adfY, adfZ);
+                    iBurnField, dfBurnValue, dfIncreaseBurnValue, adfX, adfY, adfZ);
             }
         }
         break;
@@ -321,6 +324,7 @@ static CPLErr ProcessLayer( OGRLayerH hSrcLayer, GDALDatasetH hDstDS,
                           double& dfXMin, double& dfXMax,
                           double& dfYMin, double& dfYMax,
                           const char *pszBurnAttribute,
+                          const double dfIncreaseBurnValue,
                           GDALDataType eType,
                           GDALGridAlgorithm eAlgorithm, void *pOptions,
                           int bQuiet, GDALProgressFunc pfnProgress )
@@ -362,7 +366,7 @@ static CPLErr ProcessLayer( OGRLayerH hSrcLayer, GDALDatasetH hDstDS,
             dfBurnValue = poFeat->GetFieldAsDouble( iBurnField );
 
         ProcessCommonGeometry(poGeom, poClipSrc, iBurnField, dfBurnValue,
-            adfX, adfY, adfZ);
+            dfIncreaseBurnValue, adfX, adfY, adfZ);
 
         OGRFeature::DestroyFeature( poFeat );
     }
@@ -607,6 +611,7 @@ int main( int argc, char ** argv )
     int             bFormatExplicitelySet = FALSE;
     char            **papszLayers = NULL;
     const char      *pszBurnAttribute = NULL;
+    double          dfIncreaseBurnValue = 0.0;
     const char      *pszWHERE = NULL, *pszSQL = NULL;
     GDALDataType    eOutputType = GDT_Float64;
     char            **papszCreateOptions = NULL;
@@ -720,6 +725,12 @@ int main( int argc, char ** argv )
         {
             CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(1);
             pszBurnAttribute = argv[++i];
+        }
+
+        else if( EQUAL(argv[i],"-z_increase") )
+        {
+            CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(1);
+            dfIncreaseBurnValue = atof(argv[++i]);
         }
 
         else if( EQUAL(argv[i],"-where") )
@@ -1023,7 +1034,7 @@ int main( int argc, char ** argv )
             ProcessLayer( hLayer, hDstDS, poSpatialFilter, nXSize, nYSize, 1,
                           bIsXExtentSet, bIsYExtentSet,
                           dfXMin, dfXMax, dfYMin, dfYMax, pszBurnAttribute,
-                          eOutputType, eAlgorithm, pOptions,
+                          dfIncreaseBurnValue, eOutputType, eAlgorithm, pOptions,
                           bQuiet, pfnProgress );
         }
     }
@@ -1062,7 +1073,7 @@ int main( int argc, char ** argv )
                       i + 1 + nBands - nLayerCount,
                       bIsXExtentSet, bIsYExtentSet,
                       dfXMin, dfXMax, dfYMin, dfYMax, pszBurnAttribute,
-                      eOutputType, eAlgorithm, pOptions,
+                      dfIncreaseBurnValue, eOutputType, eAlgorithm, pOptions,
                       bQuiet, pfnProgress );
     }
 

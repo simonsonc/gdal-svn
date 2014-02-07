@@ -116,6 +116,7 @@ class OGRSXFDataSource : public OGRDataSource
     void CreateLayers(VSILFILE* fpRSC);
     OGRErr ReadSXFInformationFlags(VSILFILE* fpSXF, SXFPassport& passport);
     OGRErr ReadSXFDescription(VSILFILE* fpSXF, SXFPassport& passport);
+    void SetVertCS(const long iVCS, SXFPassport& passport);
     OGRErr ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& passport);
     OGRSXFLayer*       GetLayerById(GByte);
 public:
