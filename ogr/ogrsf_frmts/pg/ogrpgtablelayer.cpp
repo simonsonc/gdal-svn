@@ -1533,15 +1533,17 @@ CPLString OGRPGEscapeString(PGconn *hPGConn,
     /* We need to quote and escape string fields. */
     osCommand += "'";
 
-    int nSrcLen = strlen_utf8_c(pszStrValue); //As UTF-8 character has 2 char size
-    if (nMaxLength > 0 && nSrcLen > nMaxLength)
+    int nSrcLen = strlen(pszStrValue);
+    int nSrcLenUTF = strlen_utf8_c(pszStrValue); //As UTF-8 character has 2 char size
+
+    if (nMaxLength > 0 && nSrcLenUTF > nMaxLength)
     {
         CPLDebug( "PG",
                   "Truncated %s.%s field value '%s' to %d characters.",
                   pszTableName, pszFieldName, pszStrValue, nMaxLength );
-        nSrcLen = nMaxLength;
-        
-        while( nSrcLen > 0 && ((unsigned char *) pszStrValue)[nSrcLen-1] > 127 )
+        nSrcLen = nSrcLen * nMaxLength / nSrcLenUTF;
+
+        while (nSrcLen > 0 && ((unsigned char *)pszStrValue)[nSrcLen - 1] > 127)
         {
             CPLDebug( "PG", "Backup to start of multi-byte character." );
             nSrcLen--;
