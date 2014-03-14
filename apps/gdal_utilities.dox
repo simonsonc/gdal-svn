@@ -1681,6 +1681,7 @@ gdal_grid [-ot {Byte/Int16/UInt16/UInt32/Int32/Float32/Float64/
 	  [-of format] [-co "NAME=VALUE"]
 	  [-zfield field_name]
       [-z_increase increase_value]
+      [-z_multiply multiply_value]
 	  [-a_srs srs_def] [-spat xmin ymin xmax ymax]
           [-clipsrc <xmin ymin xmax ymax>|WKT|datasource|spat_extent]
           [-clipsrcsql sql_statement] [-clipsrclayer layer]
@@ -1731,6 +1732,9 @@ containing Z value).</dd>
 
 <dt> <b>-z_increase </b> <i>increase_value</i>:</dt><dd> For increase final Z 
 value by increase_value, increase_value - number with a floating point</dd>
+
+<dt> <b>-z_multiply </b> <i>multiply_value</i>:</dt><dd> For change final Z 
+value by multiplication by multiply_value, multiply_value - number with a floating point</dd>
 
 <dt> <b>-a</b> <i>[algorithm[:parameter1=value1][:parameter2=value2]...]</i>:
 </dt><dd> Set the interpolation algorithm or data metric name and (optionally)
