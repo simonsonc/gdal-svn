@@ -451,6 +451,9 @@ OGRErr OGRSXFDataSource::ReadSXFInformationFlags(VSILFILE* fpSXF, SXFPassport& p
 
 void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
 {
+    if (!CSLTestBoolean(CPLGetConfigOption("SXF_SET_VERTCS", "NO")))
+        return;
+
     const long nEPSG = aoVCS[iVCS];
 
     if (nEPSG == 0)
@@ -745,7 +748,6 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
         }
         else
         {
-            adfPrjParams[2] = nZoneEnv * 6 * TO_RADIANS;// to radians
             adfPrjParams[7] = nZoneEnv;
 
             if (adfPrjParams[5] == 0)//False Easting
