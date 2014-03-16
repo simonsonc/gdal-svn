@@ -865,9 +865,9 @@ void OGRSXFDataSource::FillLayers()
             return;
         }
 
-        bool bIsSupported = oSXFPassport.version == 3 || !CHECK_BIT(buff[5], 2); 
-        if(bIsSupported)
-        {
+        //bool bIsSupported = oSXFPassport.version == 3 || !CHECK_BIT(buff[5], 2); 
+        //if(bIsSupported)
+        //{
             bool bHasSemantic = CHECK_BIT(buff[5], 9);
             if (bHasSemantic) //check has attributes
             {
@@ -890,7 +890,7 @@ void OGRSXFDataSource::FillLayers()
                     break;
                 }
             }
-        }
+        //}
 
         nOffset += buff[1];
         VSIFSeekL(fpSXF, nOffset, SEEK_SET);
