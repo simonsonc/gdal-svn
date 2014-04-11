@@ -79,6 +79,7 @@ int main( int nArgc, char ** papszArgv )
 /*      Register format(s).                                             */
 /* -------------------------------------------------------------------- */
     OGRRegisterAll();
+
     
 /* -------------------------------------------------------------------- */
 /*      Processing command line arguments.                              */

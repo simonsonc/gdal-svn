@@ -150,6 +150,17 @@ apps_macro("gdal_grid" "${gdal_grid_CSOURCES}" "${gdal_grid_HHEADERS}")
 	)
 	apps_macro("ogr2ogr" "${ogr2ogr_CSOURCES}" "${ogr2ogr_HHEADERS}")    
 
+        
+#ogrlineref    
+	set(ogrlineref_HHEADERS
+	)
+
+	set(ogrlineref_CSOURCES
+		ogrlineref.cpp
+        commonutils.cpp
+	)
+	apps_macro("ogrlineref" "${ogrlineref_CSOURCES}" "${ogrlineref_HHEADERS}")    
+
 endif(GDAL_BUILD_APPS)
 
 option(GDAL_BUILD_TESTAPPS "Set ON to build test apps" OFF)

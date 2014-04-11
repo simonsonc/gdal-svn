@@ -1302,11 +1302,35 @@ void OGRLineString::Value( double dfDistance, OGRPoint * poPoint ) const
 /* Return distance of point projected on line from origin of this line  */
 /************************************************************************/
 
+/**
+* \brief Project point on linestring.
+*
+* The input point projeted on linestring. This is the shortest distance 
+* from point to the linestring. The distance from begin of linestring to
+* the point projection returned.
+*
+* This method is built on the GEOS library (GEOS >= 3.2.0), check it for the 
+* definition of the geometry operation.
+* If OGR is built without the GEOS library, this method will always return -1,
+* issuing a CPLE_NotSupported error.
+*
+* @return a distance from the begin of the linestring to the projected point.
+*
+* @since OGR 1.11.0
+*/
+
+/* GEOS >= 3.2.0 for project capabilty */
+#if defined(HAVE_GEOS)
+#define HAVE_GEOS_PROJECT
+#endif
+
+
 double OGRLineString::Project(const OGRPoint *poPoint) const
 
 {
     double dfResult = -1;
-#ifndef HAVE_GEOS
+#ifndef HAVE_GEOS_PROJECT
+
 
     CPLError(CE_Failure, CPLE_NotSupported,
         "GEOS support not enabled.");
@@ -1337,6 +1361,24 @@ double OGRLineString::Project(const OGRPoint *poPoint) const
 /*                                                                      */
 /*  Extracts a portion of this OGRLineString into a new OGRLineString   */
 /************************************************************************/
+
+
+/**
+* \brief Get the portion of linestring.
+*
+* The portion of the linestring extracted to new one. The input distances 
+* (maybe present as ratio of length of linestring) set begin and end of
+* extracted portion.
+*
+* @param dfDistanceFrom The distance from the origin of linestring, where the subline should begins
+* @param dfDistanceTo The distance from the origin of linestring, where the subline should ends
+* @param bAsRatio The flag indicating that distances are the ratio of the linestring length.
+*
+* @return a newly allocated linestring now owned by the caller, or NULL on failure.
+*
+* @since OGR 1.11.0
+*/
+
 
 OGRLineString* OGRLineString::getSubLine(double dfDistanceFrom, double dfDistanceTo, int bAsRatio) const
 
