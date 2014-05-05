@@ -235,7 +235,6 @@ enum SXFGeometryType
     SXF_GT_TextTemplate = 5, /* Text template */
     SXF_GT_VectorAngle = 21,       /* Rotated symbol */
     SXF_GT_VectorScaled = 22       /* Scaled symbol */
-
 };
 
 enum SXFValueType

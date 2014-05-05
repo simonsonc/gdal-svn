@@ -8,6 +8,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1999, Frank Warmerdam
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,6 +29,7 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "cpl_conv.h"
 #include "cpl_vsi.h"
 
 #include <ctype.h>
@@ -60,7 +62,7 @@ void OGRFormatDouble( char *pszBuffer, int nBufferLen, double dfVal, char chDeci
         return;
     }
 
-    while(TRUE)
+    while(nPrecision > 0)
     {
         i = 0;
         int nCountBeforeDot = 0;
@@ -728,7 +730,7 @@ int OGRGeneralCmdLineProcessor( int nArgc, char ***ppapszArgv, int nOptions )
 /* -------------------------------------------------------------------- */
         else if( EQUAL(papszArgv[iArg],"--locale") && iArg < nArgc-1 )
         {
-            setlocale( LC_ALL, papszArgv[++iArg] );
+            CPLsetlocale( LC_ALL, papszArgv[++iArg] );
         }
 
 /* -------------------------------------------------------------------- */
@@ -1478,7 +1480,7 @@ OGRErr OGRReadWKBGeometryType( unsigned char * pabyData, OGRwkbGeometryType *peG
     /* Nothing left but (hopefully) basic 2D types */
 
     /* What if what we have is still out of range? */
-    if ( iRawType < 1 || iRawType > wkbGeometryCollection )
+    if ( iRawType < 1 || iRawType > (int)wkbGeometryCollection )
     {
         CPLError(CE_Failure, CPLE_NotSupported, "Unsupported WKB type %d", iRawType);            
         return OGRERR_UNSUPPORTED_GEOMETRY_TYPE;

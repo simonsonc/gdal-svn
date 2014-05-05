@@ -6,7 +6,7 @@
  * Author:   Even Rouault, <even dot rouault at mines dash paris dot org>
  *
  ******************************************************************************
- * Copyright (c) 2012, Even Rouault
+ * Copyright (c) 2012-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -679,6 +679,12 @@ int OGROSMDataSource::FlushCurrentSectorCompressedCase()
 
         return TRUE;
     }
+    else
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "Cannot write in temporary node file %s : %s",
+                 osNodesFilename.c_str(), VSIStrerror(errno));
+    }
 
     return FALSE;
 }
@@ -694,6 +700,12 @@ int OGROSMDataSource::FlushCurrentSectorNonCompressedCase()
         memset(pabySector, 0, SECTOR_SIZE);
         nNodesFileSize += SECTOR_SIZE;
         return TRUE;
+    }
+    else
+    {
+        CPLError(CE_Failure, CPLE_AppDefined,
+                 "Cannot write in temporary node file %s : %s",
+                 osNodesFilename.c_str(), VSIStrerror(errno));
     }
 
     return FALSE;
@@ -835,7 +847,9 @@ void OGROSMDataSource::NotifyNodes(unsigned int nNodes, OSMNode* pasNodes)
                 poFeature, pasNodes[i].nID, FALSE, pasNodes[i].nTags, pasTags, &pasNodes[i].sInfo );
 
             int bFilteredOut = FALSE;
-            if( !papoLayers[IDX_LYR_POINTS]->AddFeature(poFeature, FALSE, &bFilteredOut) )
+            if( !papoLayers[IDX_LYR_POINTS]->AddFeature(poFeature, FALSE,
+                                                        &bFilteredOut,
+                                                        !bFeatureAdded) )
             {
                 bStopParsing = TRUE;
                 break;
@@ -1733,7 +1747,8 @@ void OGROSMDataSource::ProcessWaysBatch()
         int bFilteredOut = FALSE;
         if( !papoLayers[IDX_LYR_LINES]->AddFeature(psWayFeaturePairs->poFeature,
                                                    psWayFeaturePairs->bAttrFilterAlreadyEvaluated,
-                                                   &bFilteredOut) )
+                                                   &bFilteredOut,
+                                                   !bFeatureAdded) )
             bStopParsing = TRUE;
         else if (!bFilteredOut)
             bFeatureAdded = TRUE;
@@ -2492,7 +2507,8 @@ void OGROSMDataSource::NotifyRelation (OSMRelation* psRelation)
         int bFilteredOut = FALSE;
         if( !papoLayers[iCurLayer]->AddFeature( poFeature,
                                                 bAttrFilterAlreadyEvaluated,
-                                                &bFilteredOut ) )
+                                                &bFilteredOut,
+                                                !bFeatureAdded ) )
             bStopParsing = TRUE;
         else if (!bFilteredOut)
             bFeatureAdded = TRUE;
@@ -2584,7 +2600,8 @@ void OGROSMDataSource::ProcessPolygonsStandalone()
             int bFilteredOut = FALSE;
             if( !papoLayers[IDX_LYR_MULTIPOLYGONS]->AddFeature( poFeature,
                                                     FALSE,
-                                                    &bFilteredOut ) )
+                                                    &bFilteredOut,
+                                                    !bFeatureAdded ) )
             {
                 bStopParsing = TRUE;
                 break;
@@ -2676,19 +2693,19 @@ int OGROSMDataSource::Open( const char * pszFilename, int bUpdateIn)
     nLayers = 5;
     papoLayers = (OGROSMLayer**) CPLMalloc(nLayers * sizeof(OGROSMLayer*));
 
-    papoLayers[IDX_LYR_POINTS] = new OGROSMLayer(this, "points");
+    papoLayers[IDX_LYR_POINTS] = new OGROSMLayer(this, IDX_LYR_POINTS, "points");
     papoLayers[IDX_LYR_POINTS]->GetLayerDefn()->SetGeomType(wkbPoint);
 
-    papoLayers[IDX_LYR_LINES] = new OGROSMLayer(this, "lines");
+    papoLayers[IDX_LYR_LINES] = new OGROSMLayer(this, IDX_LYR_LINES, "lines");
     papoLayers[IDX_LYR_LINES]->GetLayerDefn()->SetGeomType(wkbLineString);
 
-    papoLayers[IDX_LYR_MULTILINESTRINGS] = new OGROSMLayer(this, "multilinestrings");
+    papoLayers[IDX_LYR_MULTILINESTRINGS] = new OGROSMLayer(this, IDX_LYR_MULTILINESTRINGS, "multilinestrings");
     papoLayers[IDX_LYR_MULTILINESTRINGS]->GetLayerDefn()->SetGeomType(wkbMultiLineString);
 
-    papoLayers[IDX_LYR_MULTIPOLYGONS] = new OGROSMLayer(this, "multipolygons");
+    papoLayers[IDX_LYR_MULTIPOLYGONS] = new OGROSMLayer(this, IDX_LYR_MULTIPOLYGONS, "multipolygons");
     papoLayers[IDX_LYR_MULTIPOLYGONS]->GetLayerDefn()->SetGeomType(wkbMultiPolygon);
 
-    papoLayers[IDX_LYR_OTHER_RELATIONS] = new OGROSMLayer(this, "other_relations");
+    papoLayers[IDX_LYR_OTHER_RELATIONS] = new OGROSMLayer(this, IDX_LYR_OTHER_RELATIONS, "other_relations");
     papoLayers[IDX_LYR_OTHER_RELATIONS]->GetLayerDefn()->SetGeomType(wkbGeometryCollection);
 
     if( !ParseConf() )
@@ -3547,7 +3564,7 @@ int OGROSMDataSource::ResetReading()
 /*                           ParseNextChunk()                           */
 /************************************************************************/
 
-int OGROSMDataSource::ParseNextChunk()
+int OGROSMDataSource::ParseNextChunk(int nIdxLayer)
 {
     if( bStopParsing )
         return FALSE;
@@ -3575,6 +3592,13 @@ int OGROSMDataSource::ParseNextChunk()
 
                 if( !bHasRowInPolygonsStandalone )
                     bStopParsing = TRUE;
+
+                if( !bInterleavedReading && !bFeatureAdded &&
+                    bHasRowInPolygonsStandalone &&
+                    nIdxLayer != IDX_LYR_MULTIPOLYGONS )
+                {
+                    return FALSE;
+                }
 
                 return bFeatureAdded || bHasRowInPolygonsStandalone;
             }

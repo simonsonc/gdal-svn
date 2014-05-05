@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2004, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -703,7 +704,9 @@ OGRFeature * OGRCSVLayer::GetNextUnfilteredFeature()
     
     for( iAttr = 0; !bIsEurostatTSV && iAttr < nAttrCount; iAttr++)
     {
-        if( panGeomFieldIndex[iAttr] >= 0 && papszTokens[iAttr][0] != '\0' )
+        int iGeom = panGeomFieldIndex[iAttr];
+        if( iGeom >= 0 && papszTokens[iAttr][0] != '\0'&&
+            !(poFeatureDefn->GetGeomFieldDefn(iGeom)->IsIgnored()) )
         {
             char *pszWKT = papszTokens[iAttr];
             OGRGeometry *poGeom = NULL;
@@ -711,13 +714,14 @@ OGRFeature * OGRCSVLayer::GetNextUnfilteredFeature()
             if( OGRGeometryFactory::createFromWkt( &pszWKT, NULL, &poGeom )
                 == OGRERR_NONE )
             {
-                int iGeom = panGeomFieldIndex[iAttr];
                 poGeom->assignSpatialReference(
                     poFeatureDefn->GetGeomFieldDefn(iGeom)->GetSpatialRef());
                 poFeature->SetGeomFieldDirectly( iGeom, poGeom );
             }
         }
 
+        if( poFeatureDefn->GetFieldDefn(iAttr)->IsIgnored() )
+            continue;
         OGRFieldType eFieldType = poFeatureDefn->GetFieldDefn(iAttr)->GetType();
         if ( eFieldType == OFTReal || eFieldType == OFTInteger )
         {
@@ -761,7 +765,8 @@ OGRFeature * OGRCSVLayer::GetNextUnfilteredFeature()
             }
             for( int iSubAttr = 0; iSubAttr < nEurostatDims; iSubAttr ++ )
             {
-                poFeature->SetField( iSubAttr, papszDims[iSubAttr] );
+                if( !poFeatureDefn->GetFieldDefn(iSubAttr)->IsIgnored() )
+                    poFeature->SetField( iSubAttr, papszDims[iSubAttr] );
             }
             CSLDestroy(papszDims);
         }
@@ -773,11 +778,13 @@ OGRFeature * OGRCSVLayer::GetNextUnfilteredFeature()
                  ( eType == CPL_VALUE_INTEGER ||
                    eType == CPL_VALUE_REAL ) )
             {
-                poFeature->SetField( nEurostatDims + 2 * (iAttr - 1), papszVals[0] );
+                if( !poFeatureDefn->GetFieldDefn(nEurostatDims + 2 * (iAttr - 1))->IsIgnored() )
+                    poFeature->SetField( nEurostatDims + 2 * (iAttr - 1), papszVals[0] );
             }
             if( CSLCount(papszVals) == 2 )
             {
-                poFeature->SetField( nEurostatDims + 2 * (iAttr - 1) + 1, papszVals[1] );
+                if( !poFeatureDefn->GetFieldDefn(nEurostatDims + 2 * (iAttr - 1) + 1)->IsIgnored() )
+                    poFeature->SetField( nEurostatDims + 2 * (iAttr - 1) + 1, papszVals[1] );
             }
             CSLDestroy(papszVals);
         }
@@ -800,7 +807,8 @@ OGRFeature * OGRCSVLayer::GetNextUnfilteredFeature()
         double dfLat = atof(papszTokens[iNfdcLatitudeS]) / 3600;
         if (strchr(papszTokens[iNfdcLatitudeS], 'S'))
             dfLat *= -1;
-        poFeature->SetGeometryDirectly( new OGRPoint(dfLon, dfLat) );
+        if( !(poFeatureDefn->GetGeomFieldDefn(0)->IsIgnored()) )
+            poFeature->SetGeometryDirectly( new OGRPoint(dfLon, dfLat) );
     }
 
 /* -------------------------------------------------------------------- */
@@ -821,7 +829,8 @@ OGRFeature * OGRCSVLayer::GetNextUnfilteredFeature()
         {
             double dfLon = atof(papszTokens[iLongitudeField]);
             double dfLat = atof(papszTokens[iLatitudeField]);
-            poFeature->SetGeometryDirectly( new OGRPoint(dfLon, dfLat) );
+            if( !(poFeatureDefn->GetGeomFieldDefn(0)->IsIgnored()) )
+                poFeature->SetGeometryDirectly( new OGRPoint(dfLon, dfLat) );
         }
     }
 
@@ -885,6 +894,8 @@ int OGRCSVLayer::TestCapability( const char * pszCap )
         return bNew && !bHasFieldNames;
     else if( EQUAL(pszCap,OLCCreateGeomField) )
         return bNew && !bHasFieldNames && eGeometryFormat == OGR_CSV_GEOM_AS_WKT;
+    else if( EQUAL(pszCap,OLCIgnoreFields) )
+        return TRUE;
     else
         return FALSE;
 }

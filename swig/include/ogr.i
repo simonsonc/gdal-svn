@@ -149,6 +149,7 @@ typedef void OGRGeometryShadow;
 typedef void OSRCoordinateTransformationShadow;
 typedef void OGRFieldDefnShadow;
 #endif
+typedef struct OGRStyleTableHS OGRStyleTableShadow;
 typedef struct OGRGeomFieldDefnHS OGRGeomFieldDefnShadow;
 %}
 
@@ -335,6 +336,62 @@ typedef struct
 #endif
 
 #ifndef GDAL_BINDINGS
+
+/************************************************************************/
+/*                          OGRStyleTable                               */
+/************************************************************************/
+
+%rename (StyleTable) OGRStyleTableShadow;
+class OGRStyleTableShadow {
+public:
+
+%extend {
+
+   OGRStyleTableShadow() {
+        return (OGRStyleTableShadow*) OGR_STBL_Create();
+   }
+
+   ~OGRStyleTableShadow() {
+        OGR_STBL_Destroy( (OGRStyleTableH) self );
+   }
+
+   int AddStyle( const char *pszName, const char *pszStyleString )
+   {
+        return OGR_STBL_AddStyle( (OGRStyleTableH) self, pszName, pszStyleString);
+   }
+
+   int LoadStyleTable( const char *utf8_path )
+   {
+        return OGR_STBL_LoadStyleTable( (OGRStyleTableH) self, utf8_path );
+   }
+
+   int SaveStyleTable( const char *utf8_path )
+   {
+        return OGR_STBL_SaveStyleTable( (OGRStyleTableH) self, utf8_path );
+   }
+
+   const char* Find( const char* pszName )
+   {
+        return OGR_STBL_Find( (OGRStyleTableH) self, pszName );
+   }
+
+   void ResetStyleStringReading()
+   {
+        OGR_STBL_ResetStyleStringReading( (OGRStyleTableH) self );
+   }
+
+   const char *GetNextStyle( )
+   {
+        return OGR_STBL_GetNextStyle( (OGRStyleTableH) self );
+   }
+
+   const char *GetLastStyleName( )
+   {
+        return OGR_STBL_GetLastStyleName( (OGRStyleTableH) self );
+   }
+}
+};
+
 /************************************************************************/
 /*                              OGRDriver                               */
 /************************************************************************/
@@ -541,6 +598,15 @@ public:
     OGR_DS_ReleaseResultSet(self, layer);
   }
 %clear OGRLayerShadow *layer;
+  
+  OGRStyleTableShadow *GetStyleTable() {
+    return (OGRStyleTableShadow*) OGR_DS_GetStyleTable(self);
+  }
+
+  void SetStyleTable(OGRStyleTableShadow* table) {
+    if( table != NULL )
+        OGR_DS_SetStyleTable(self, (OGRStyleTableH) table);
+  }
 
 } /* %extend */
 
@@ -845,6 +911,15 @@ public:
                 GDALProgressFunc callback=NULL,
                 void* callback_data=NULL ) {
     return OGR_L_Erase( self, method_layer, result_layer, options, callback, callback_data );
+  }
+  
+  OGRStyleTableShadow *GetStyleTable() {
+    return (OGRStyleTableShadow*) OGR_L_GetStyleTable(self);
+  }
+
+  void SetStyleTable(OGRStyleTableShadow* table) {
+    if( table != NULL )
+        OGR_L_SetStyleTable(self, (OGRStyleTableH) table);
   }
 
 } /* %extend */
@@ -1256,6 +1331,28 @@ public:
       OGR_F_SetFieldStringList(self, id, pList);
   }
 %clear char**pList;
+
+  void SetFieldBinaryFromHexString(int id, const char* pszValue)
+  {
+     int nBytes;
+     GByte* pabyBuf = CPLHexToBinary(pszValue, &nBytes );
+     OGR_F_SetFieldBinary(self, id, nBytes, pabyBuf);
+     CPLFree(pabyBuf);
+  }
+
+  void SetFieldBinaryFromHexString(const char* name, const char* pszValue)
+  {
+      int i = OGR_F_GetFieldIndex(self, name);
+      if (i == -1)
+        CPLError(CE_Failure, 1, "No such field: '%s'", name);
+      else
+      {
+        int nBytes;
+        GByte* pabyBuf = CPLHexToBinary(pszValue, &nBytes );
+        OGR_F_SetFieldBinary(self, i, nBytes, pabyBuf);
+        CPLFree(pabyBuf);
+      }
+  }
 
   /* ------------------------------------------- */  
   

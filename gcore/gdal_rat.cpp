@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2005, Frank Warmerdam
+ * Copyright (c) 2009, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1772,6 +1773,13 @@ CPLErr GDALDefaultRasterAttributeTable::CreateColumn( const char *pszFieldName,
     aoFields.resize( iNewField+1 );
 
     aoFields[iNewField].sName = pszFieldName;
+
+    // color columns should be int 0..255 
+    if( ( eFieldUsage == GFU_Red ) || ( eFieldUsage == GFU_Green ) || 
+        ( eFieldUsage == GFU_Blue ) || ( eFieldUsage == GFU_Alpha ) )
+    {
+        eFieldType = GFT_Integer;
+    }
     aoFields[iNewField].eType = eFieldType;
     aoFields[iNewField].eUsage = eFieldUsage;
 

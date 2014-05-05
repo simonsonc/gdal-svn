@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1999,  Les Technologies SoftMap Inc.
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1615,7 +1616,7 @@ OGRLayer* OGRDataSource::BuildLayerFromSelectInfo(void* psSelectInfoIn,
                 int iOutField = sFieldList.count++;
                 sFieldList.names[iOutField] = (char *) poFDefn->GetNameRef();
                 if( *sFieldList.names[iOutField] == '\0' )
-                    sFieldList.names[iOutField] = "_ogr_geometry_";
+                    sFieldList.names[iOutField] = (char*) OGR_GEOMETRY_DEFAULT_NON_EMPTY_NAME;
                 sFieldList.types[iOutField] = SWQ_GEOMETRY;
 
                 sFieldList.table_ids[iOutField] = iTable;

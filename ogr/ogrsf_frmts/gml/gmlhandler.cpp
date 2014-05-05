@@ -7,6 +7,7 @@
  *
  **********************************************************************
  * Copyright (c) 2002, Frank Warmerdam
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -248,7 +249,7 @@ char* GMLXercesHandler::GetAttributeValue(void* attr, const char* pszAttributeNa
 char* GMLXercesHandler::GetAttributeByIdx(void* attr, unsigned int idx, char** ppszKey)
 {
     const Attributes* attrs = (const Attributes*) attr;
-    if( idx < 0 || idx >= attrs->getLength() )
+    if( idx >= attrs->getLength() )
     {
         *ppszKey = NULL;
         return NULL;
@@ -826,6 +827,15 @@ void GMLHandler::DealWithAttributes(const char *pszName, int nLenName, void* att
         {
             CPLFree(m_pszKieli);
             m_pszKieli = pszAttrVal;
+            pszAttrVal = NULL;
+        }
+
+        /* Should we report all attributes ? */
+        else if( m_poReader->ReportAllAttributes() && !poClass->IsSchemaLocked() )
+        {
+            m_poReader->SetFeaturePropertyDirectly(
+                CPLSPrintf("%s@%s", pszName, pszAttrKeyNoNS ? pszAttrKeyNoNS : pszAttrKey),
+                pszAttrVal, -1 );
             pszAttrVal = NULL;
         }
 

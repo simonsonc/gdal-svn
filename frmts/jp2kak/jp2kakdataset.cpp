@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2002, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2007-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1562,11 +1563,13 @@ JP2KAKDataset::DirectRasterIO( GDALRWFlag eRWFlag,
                     sample_offsets[i] = i * nBandSpace / 2;
                     sample_gaps[i] = nPixelSpace / 2;
                     row_gaps[i] = nLineSpace / 2;
+                    /* Introduced in r25136 with an unrelated commit message.
+                    Reverted per ticket #5328
                     if( precisions[i] == 12 )
                     {
                       CPLDebug( "JP2KAK", "16bit extend 12 bit data." );
                       precisions[i] = 16;
-                    }
+                    }*/
                 }
                 
             }
@@ -1893,7 +1896,12 @@ JP2KAKCreateCopy_WriteTile( GDALDataset *poSrcDS, kdu_tile &oTile,
 
     try
     {
+        // Does not compile without the change on >= v7_3_2.
+// #if KAKADU_VERSION >= 732
+        // allocator.finalize(oCodeStream);
+// #else
         allocator.finalize();
+// #endif
 
         for (c=0; c < num_components; c++)
             lines[c].create();
@@ -2551,7 +2559,9 @@ JP2KAKCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
             oJP2MD.SetGeoTransform( adfGeoTransform );
         }
 
-        
+        const char* pszAreaOrPoint = poSrcDS->GetMetadataItem(GDALMD_AREA_OR_POINT);
+        oJP2MD.bPixelIsPoint = pszAreaOrPoint != NULL && EQUAL(pszAreaOrPoint, GDALMD_AOP_POINT);
+
         if( CSLFetchBoolean( papszOptions, "GMLJP2", TRUE ) )
             JP2KAKWriteBox( &jp2_out, oJP2MD.CreateGMLJP2(nXSize,nYSize) );
         if( CSLFetchBoolean( papszOptions, "GeoJP2", TRUE ) )

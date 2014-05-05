@@ -7,6 +7,7 @@
  *
  **********************************************************************
  * Copyright (c) 2002, Frank Warmerdam
+ * Copyright (c) 2008-2012, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -99,7 +100,14 @@ retry:
         {
             pabyHeader = (GByte *) CPLCalloc(1025,1);
 
-            fp = VSIFOpen( pszFilename, "rb" );
+            /* No need to try to open /vsi files */
+            if( strncmp( pszFilename, "/vsi", strlen("/vsi") ) == 0 )
+            {
+                errno = ENOENT;
+                fp = NULL;
+            }
+            else
+                fp = VSIFOpen( pszFilename, "rb" );
 
             if( fp != NULL )
             {

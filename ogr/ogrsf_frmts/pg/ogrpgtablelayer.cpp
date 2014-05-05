@@ -1,5 +1,6 @@
 /******************************************************************************
  * $Id$
+
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  Implements OGRPGTableLayer class, access to an existing table.
@@ -7,6 +8,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2000, Frank Warmerdam
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,21 +39,12 @@
 
 CPL_CVSID("$Id$");
 
+
 #define USE_COPY_UNSET  -10
 static CPLString OGRPGEscapeStringList(PGconn *hPGConn,
                                        char** papszItems, int bForInsertOrUpdate);
 
 #define UNSUPPORTED_OP_READ_ONLY "%s : unsupported operation on a read-only datasource."
-
-int strlen_utf8_c(const char *s) {
-    int i = 0, j = 0;
-    while (s[i]) {
-        if ((s[i] & 0xc0) != 0x80) j++;
-        i++;
-    }
-    return j;
-}
-
 
 /************************************************************************/
 /*                        OGRPGTableFeatureDefn                         */
@@ -621,7 +614,7 @@ int OGRPGTableLayer::ReadTableDefinition()
         {
             const char* pszType = PQgetvalue(hResult,0,0);
 
-            int nCoordDimension = MAX(2,MIN(3,atoi(PQgetvalue(hResult,0,1))));
+            int nCoordDimension = atoi(PQgetvalue(hResult,0,1));
 
             int nSRSId = atoi(PQgetvalue(hResult,0,2));
 
@@ -1533,8 +1526,9 @@ CPLString OGRPGEscapeString(PGconn *hPGConn,
     /* We need to quote and escape string fields. */
     osCommand += "'";
 
+
     int nSrcLen = strlen(pszStrValue);
-    int nSrcLenUTF = strlen_utf8_c(pszStrValue); //As UTF-8 character has 2 char size
+    int nSrcLenUTF = CPLStrlenUTF8(pszStrValue);
 
     if (nMaxLength > 0 && nSrcLenUTF > nMaxLength)
     {
@@ -1543,7 +1537,8 @@ CPLString OGRPGEscapeString(PGconn *hPGConn,
                   pszTableName, pszFieldName, pszStrValue, nMaxLength );
         nSrcLen = nSrcLen * nMaxLength / nSrcLenUTF;
 
-        while (nSrcLen > 0 && ((unsigned char *)pszStrValue)[nSrcLen - 1] > 127)
+        
+        while( nSrcLen > 0 && ((unsigned char *) pszStrValue)[nSrcLen-1] > 127 )
         {
             CPLDebug( "PG", "Backup to start of multi-byte character." );
             nSrcLen--;
@@ -2062,7 +2057,7 @@ OGRErr OGRPGTableLayer::CreateFeatureViaCopy( OGRFeature *poFeature )
             {
 
                 if( poFeatureDefn->GetFieldDefn(i)->GetWidth() > 0
-                    && iUTFChar == poFeatureDefn->GetFieldDefn(i)->GetWidth())
+                    && iUTFChar == poFeatureDefn->GetFieldDefn(i)->GetWidth() )
                 {
                     CPLDebug( "PG",
                               "Truncated %s.%s field value '%s' to %d characters.",
@@ -2073,7 +2068,7 @@ OGRErr OGRPGTableLayer::CreateFeatureViaCopy( OGRFeature *poFeature )
                     break;
                 }
 
-                //count utf chars
+                //count of utf chars
                 if ((pszStrValue[iChar] & 0xc0) != 0x80) 
                     iUTFChar++;
 
@@ -3114,4 +3109,60 @@ void OGRPGTableLayer::SetOverrideColumnTypes( const char* pszOverrideColumnTypes
     }
     if( osCur.size() )
         papszOverrideColumnTypes = CSLAddString(papszOverrideColumnTypes, osCur);
+}
+
+/************************************************************************/
+/*                             GetExtent()                              */
+/*                                                                      */
+/*      For PostGIS use internal ST_EstimatedExtent(geometry) function  */
+/*      if bForce == 0                                                  */
+/************************************************************************/
+
+OGRErr OGRPGTableLayer::GetExtent( int iGeomField, OGREnvelope *psExtent, int bForce )
+{
+    CPLString   osCommand;
+
+    if( iGeomField < 0 || iGeomField >= GetLayerDefn()->GetGeomFieldCount() ||
+        GetLayerDefn()->GetGeomFieldDefn(iGeomField)->GetType() == wkbNone )
+    {
+        if( iGeomField != 0 )
+        {
+            CPLError(CE_Failure, CPLE_AppDefined,
+                     "Invalid geometry field index : %d", iGeomField);
+        }
+        return OGRERR_FAILURE;
+    }
+
+    OGRPGGeomFieldDefn* poGeomFieldDefn =
+        poFeatureDefn->myGetGeomFieldDefn(iGeomField);
+
+    const char* pszExtentFct;
+    // if bForce is 0 and ePostgisType is not GEOM_TYPE_GEOGRAPHY we can use 
+    // the ST_EstimatedExtent function which is quicker
+    // ST_EstimatedExtent was called ST_Estimated_Extent up to PostGIS 2.0.x
+    // ST_EstimatedExtent returns NULL in absence of statistics (an exception before 
+    //   PostGIS 1.5.4)
+    if ( bForce == 0 && TestCapability(OLCFastGetExtent) )
+    {
+        PGconn              *hPGConn = poDS->GetPGConn();
+
+        if ( poDS->sPostGISVersion.nMajor > 2 ||
+             ( poDS->sPostGISVersion.nMajor == 2 && poDS->sPostGISVersion.nMinor >= 1 ) )
+            pszExtentFct = "ST_EstimatedExtent";
+        else
+            pszExtentFct = "ST_Estimated_Extent";
+
+        osCommand.Printf( "SELECT %s(%s, %s, %s)",
+                        pszExtentFct,
+                        OGRPGEscapeString(hPGConn, pszSchemaName).c_str(),
+                        OGRPGEscapeString(hPGConn, pszTableName).c_str(),
+                        OGRPGEscapeString(hPGConn, poGeomFieldDefn->GetNameRef()).c_str() );
+
+        if( RunGetExtentRequest(psExtent, bForce, osCommand) == OGRERR_NONE )
+            return OGRERR_NONE;
+
+        CPLDebug("PG","Unable to get extimated extent by PostGIS. Trying real extent.");
+    }
+
+    return OGRPGLayer::GetExtent( iGeomField, psExtent, bForce );
 }

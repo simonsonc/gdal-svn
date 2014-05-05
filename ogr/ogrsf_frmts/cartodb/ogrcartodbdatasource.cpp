@@ -6,7 +6,7 @@
  * Author:   Even Rouault, even dot rouault at mines dash paris dot org
  *
  ******************************************************************************
- * Copyright (c) 2013, Even Rouault <even dot rouault at mines dash paris dot org>
+ * Copyright (c) 2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -504,7 +504,7 @@ json_object* OGRCARTODBDataSource::RunSQL(const char* pszUnescapedSQL)
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                     "JSON parsing error: %s (at offset %d)",
-                    json_tokener_errors[jstok->err], jstok->char_offset);
+                    json_tokener_error_desc(jstok->err), jstok->char_offset);
         json_tokener_free(jstok);
         CPLHTTPDestroyResult(psResult);
         return NULL;

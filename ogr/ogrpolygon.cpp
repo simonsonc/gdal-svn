@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1999, Frank Warmerdam
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -183,6 +184,28 @@ const OGRLinearRing *OGRPolygon::getExteriorRing() const
 }
 
 /************************************************************************/
+/*                          stealExteriorRing()                         */
+/************************************************************************/
+
+/**
+ * \brief "Steal" reference to external polygon ring.
+ *
+ * After the call to that function, only call to stealInteriorRing() or
+ * destruction of the OGRPolygon is valid. Other operations may crash.
+ *
+ * @return pointer to external ring.  May be NULL if the OGRPolygon is empty.
+ */
+
+OGRLinearRing *OGRPolygon::stealExteriorRing()
+{
+    if( nRingCount == 0 )
+        return NULL;
+    OGRLinearRing *poRet = papoRings[0];
+    papoRings[0] = NULL;
+    return poRet;
+}
+
+/************************************************************************/
 /*                        getNumInteriorRings()                         */
 /************************************************************************/
 
@@ -221,7 +244,7 @@ int OGRPolygon::getNumInteriorRings() const
  *
  * @param iRing internal ring index from 0 to getNumInternalRings() - 1.
  *
- * @return pointer to external ring.  May be NULL if the OGRPolygon is empty.
+ * @return pointer to interior ring.  May be NULL.
  */
 
 OGRLinearRing *OGRPolygon::getInteriorRing( int iRing )
@@ -240,6 +263,29 @@ const OGRLinearRing *OGRPolygon::getInteriorRing( int iRing ) const
         return NULL;
     else
         return papoRings[iRing+1];
+}
+
+/************************************************************************/
+/*                          stealInteriorRing()                         */
+/************************************************************************/
+
+/**
+ * \brief "Steal" reference to indicated interior ring.
+ *
+ * After the call to that function, only call to stealInteriorRing() or
+ * destruction of the OGRPolygon is valid. Other operations may crash.
+ *
+ * @param iRing internal ring index from 0 to getNumInternalRings() - 1.
+ * @return pointer to interior ring.  May be NULL.
+ */
+
+OGRLinearRing *OGRPolygon::stealInteriorRing(int iRing)
+{
+    if( iRing < 0 || iRing >= nRingCount-1 )
+        return NULL;
+    OGRLinearRing *poRet = papoRings[iRing+1];
+    papoRings[iRing+1] = NULL;
+    return poRet;
 }
 
 /************************************************************************/

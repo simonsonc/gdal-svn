@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1999, Frank Warmerdam
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -41,7 +42,7 @@
 CPL_CVSID("$Id$");
 
 static int bSkipFailures = FALSE;
-static int nGroupTransactions = 200;
+static int nGroupTransactions = 20000;
 static int bPreserveFID = FALSE;
 static int nFIDToFetch = OGRNullFID;
 
@@ -2370,7 +2371,7 @@ static void Usage(const char* pszAdditionalMsg, int bShort)
             " -sql statement: Execute given SQL statement and save result.\n"
             " -dialect value: select a dialect, usually OGRSQL to avoid native sql.\n"
             " -skipfailures: skip features or layers that fail to convert\n"
-            " -gt n: group n features per transaction (default 200)\n"
+            " -gt n: group n features per transaction (default 20000)\n"
             " -spat xmin ymin xmax ymax: spatial query extents\n"
             " -simplify tolerance: distance tolerance for simplification.\n"
             " -segmentize max_dist: maximum distance between 2 nodes.\n"

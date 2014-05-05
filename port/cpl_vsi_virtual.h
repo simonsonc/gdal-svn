@@ -10,6 +10,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2005, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2010-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -61,6 +62,7 @@ class CPL_DLL VSIVirtualHandle {
     virtual int       Flush() {return 0;}
     virtual int       Close() = 0;
     virtual int       Truncate( vsi_l_offset nNewSize ) { return -1; }
+    virtual void     *GetNativeFileDescriptor() { return NULL; }
     virtual           ~VSIVirtualHandle() { }
 };
 

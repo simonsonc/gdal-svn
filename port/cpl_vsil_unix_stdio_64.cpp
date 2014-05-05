@@ -8,6 +8,7 @@
  *
  **********************************************************************
  * Copyright (c) 2001, Frank Warmerdam
+ * Copyright (c) 2010-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -160,6 +161,7 @@ class VSIUnixStdioHandle : public VSIVirtualHandle
     virtual int       Flush();
     virtual int       Close();
     virtual int       Truncate( vsi_l_offset nNewSize );
+    virtual void     *GetNativeFileDescriptor() { return (void*) (size_t) fileno(fp); }
 };
 
 

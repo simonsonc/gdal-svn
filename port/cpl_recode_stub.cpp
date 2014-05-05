@@ -15,6 +15,7 @@
  **********************************************************************
  * Copyright (c) 2008, Frank Warmerdam
  * Copyright 2006 by Bill Spitzak and others.
+ * Copyright (c) 2009-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -169,6 +170,8 @@ char *CPLRecodeStub( const char *pszSource,
         if( nCode > 0 ) {
            return CPLWin32Recode( pszSource, nCode, CP_UTF8 );
         }
+        else if( EQUAL(pszSrcEncoding, "CP_OEMCP") )
+            return CPLWin32Recode( pszSource, CP_OEMCP, CP_UTF8 );
     }
 
 /* ---------------------------------------------------------------------*/

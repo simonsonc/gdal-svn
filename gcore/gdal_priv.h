@@ -8,6 +8,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1998, Frank Warmerdam
+ * Copyright (c) 2007-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -617,6 +618,11 @@ class CPL_DLL GDALRasterBand : public GDALMajorObject
     virtual GDALRasterBand *GetMaskBand();
     virtual int             GetMaskFlags();
     virtual CPLErr          CreateMaskBand( int nFlags );
+
+    virtual CPLVirtualMem  *GetVirtualMemAuto( GDALRWFlag eRWFlag,
+                                               int *pnPixelSpace,
+                                               GIntBig *pnLineSpace,
+                                               char **papszOptions );
 
     void ReportError(CPLErr eErrClass, int err_no, const char *fmt, ...)  CPL_PRINT_FUNC_FORMAT (4, 5);
 };

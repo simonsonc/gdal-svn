@@ -9,6 +9,7 @@
 ******************************************************************************
 * Copyright (c) 2010, Ragi Yaser Burhum
 * Copyright (c) 2011, Paul Ramsey <pramsey at cleverelephant.ca>
+ * Copyright (c) 2011-2014, Even Rouault <even dot rouault at mines-paris dot org>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
 * copy of this software and associated documentation files (the "Software"),
@@ -135,6 +136,7 @@ FGdbLayer::FGdbLayer():
     m_bLayerJustCreated = false;
 #endif
     m_papszOptions = NULL;
+    m_bCreateMultipatch = FALSE;
 }
 
 /************************************************************************/
@@ -163,6 +165,9 @@ FGdbLayer::~FGdbLayer()
         OGRGeometryFactory::destroyGeometry(m_pOGRFilterGeometry);
         m_pOGRFilterGeometry = NULL;
     }
+    
+    for(size_t i = 0; i < m_apoByteArrays.size(); i++ )
+        delete m_apoByteArrays[i];
 
     CSLDestroy(m_papszOptions);
 }
@@ -425,6 +430,7 @@ OGRErr FGdbLayer::PopulateRowWithFeature( Row& fgdb_row, OGRFeature *poFeature )
     int nFieldCount = poFeatureDefn->GetFieldCount();
 
     /* Copy the OGR visible fields (everything except geometry and FID) */
+    int nCountBinaryField = 0;
     for( int i = 0; i < nFieldCount; i++ )
     {
         std::string field_name = poFeatureDefn->GetFieldDefn(i)->GetNameRef();
@@ -527,20 +533,23 @@ OGRErr FGdbLayer::PopulateRowWithFeature( Row& fgdb_row, OGRFeature *poFeature )
         else if ( nOGRFieldType == OFTBinary )
         {
             /* Binary data */
-            ByteArray fgdb_bytearray;
             int bytesize;
             GByte *bytes = poFeature->GetFieldAsBinary(i, &bytesize);
             if ( bytesize )
             {
-                fgdb_bytearray.Allocate(bytesize);
-                memcpy(fgdb_bytearray.byteArray, bytes, bytesize);
-                fgdb_bytearray.inUseLength = bytesize;
-                hr = fgdb_row.SetBinary(wfield_name, fgdb_bytearray);
+                /* This is annoying but SetBinary() doesn't keep the binary */
+                /* content. The ByteArray object must still be alive at */
+                /* the time Insert() is called */
+                m_apoByteArrays[nCountBinaryField]->Allocate(bytesize);
+                memcpy(m_apoByteArrays[nCountBinaryField]->byteArray, bytes, bytesize);
+                m_apoByteArrays[nCountBinaryField]->inUseLength = bytesize;
+                hr = fgdb_row.SetBinary(wfield_name, *(m_apoByteArrays[nCountBinaryField]));
             }
             else
             {
                 hr = fgdb_row.SetNull(wfield_name);
             }
+            nCountBinaryField ++;
         }
         else
         {
@@ -577,7 +586,16 @@ OGRErr FGdbLayer::PopulateRowWithFeature( Row& fgdb_row, OGRFeature *poFeature )
             /* Write geometry to a buffer */
             GByte *pabyShape = NULL;
             int nShapeSize = 0;
-            OGRErr err = OGRWriteToShapeBin( poGeom, &pabyShape, &nShapeSize );
+            OGRErr err;
+
+            if( m_bCreateMultipatch && wkbFlatten(poGeom->getGeometryType()) == wkbMultiPolygon )
+            {
+                err = OGRWriteMultiPatchToShapeBin( poGeom, &pabyShape, &nShapeSize );
+            }
+            else
+            {
+                err = OGRWriteToShapeBin( poGeom, &pabyShape, &nShapeSize );
+            }
             if ( err != OGRERR_NONE )
                 return err;
 
@@ -884,6 +902,9 @@ OGRErr FGdbLayer::CreateField(OGRFieldDefn* poField, int bApproxOK)
 
     m_vOGRFieldToESRIField.push_back(StringToWString(fieldname_clean));
     m_vOGRFieldToESRIFieldType.push_back( gdbFieldType );
+    
+    if( oField.GetType() == OFTBinary )
+        m_apoByteArrays.push_back(new ByteArray());
 
     /* All done and happy */
     return OGRERR_NONE;
@@ -1407,6 +1428,13 @@ bool FGdbLayer::Create(FGdbDataSource* pParentDataSource,
         }
         if ( ! OGRGeometryToGDB(eType, &esri_type, &has_z) )
             return GDBErr(-1, "Unable to map OGR type to ESRI type");
+
+        if( wkbFlatten(eType) == wkbMultiPolygon &&
+            CSLTestBoolean(CSLFetchNameValueDef(papszOptions, "CREATE_MULTIPATCH", "NO")) )
+        {
+            esri_type = "esriGeometryMultiPatch";
+            has_z = true;
+        }
     }
 
     m_bLaunderReservedKeywords = CSLFetchBoolean( papszOptions, "LAUNDER_RESERVED_KEYWORDS", TRUE) == TRUE;
@@ -1569,6 +1597,7 @@ bool FGdbLayer::Create(FGdbDataSource* pParentDataSource,
     }
 
     m_papszOptions = CSLDuplicate(papszOptions);
+    m_bCreateMultipatch = CSLTestBoolean(CSLFetchNameValueDef(m_papszOptions, "CREATE_MULTIPATCH", "NO"));
 
     /* Store the new FGDB Table pointer and set up the OGRFeatureDefn */
     return FGdbLayer::Initialize(pParentDataSource, table, wtable_path, L"Table");
@@ -1942,6 +1971,8 @@ bool FGdbLayer::GDBToOGRFields(CPLXMLNode* psRoot)
 
             m_vOGRFieldToESRIField.push_back(StringToWString(fieldName));
             m_vOGRFieldToESRIFieldType.push_back( fieldType );
+            if( ogrType == OFTBinary )
+                m_apoByteArrays.push_back(new ByteArray());
 
         }
     }
@@ -2259,22 +2290,20 @@ bool FGdbBaseLayer::OGRFeatureFromGdbRow(Row* pRow, OGRFeature** ppFeature)
             }
             break;
 
-            /* TODO: Need to get test dataset to implement these leave it as NULL for now
             case OFTBinary:
             {
                 ByteArray binaryBuf;
 
                 if (FAILED(hr = pRow->GetBinary(wstrFieldName, binaryBuf)))
-                {
-                GDBErr(hr, "Failed to determine binary value for column " + WStringToString(wstrFieldName));
-                foundBadColumn = true;
-                continue;
+                    {
+                    GDBErr(hr, "Failed to determine binary value for column " + WStringToString(wstrFieldName));
+                    foundBadColumn = true;
+                    continue;
                 }
 
                 pOutFeature->SetField(i, (int)binaryBuf.inUseLength, (GByte*)binaryBuf.byteArray);
             }
             break;
-            */
 
             case OFTDateTime:
             {

@@ -10,6 +10,7 @@
  ******************************************************************************
  * Copyright (c) 2011, Ben Ahmed Daho Ali
  * Copyright (c) 2013, NextGIS
+ * Copyright (c) 2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -40,8 +41,6 @@
 #include <string>
 
 CPL_CVSID("$Id: ogrsxfdatasource.cpp  $");
-
-static void  *hIOMutex = NULL;
 
 static const long aoVCS[] =
 {
@@ -77,7 +76,6 @@ static const long aoVCS[] =
 
 #define NUMBER_OF_VERTICALCS    (sizeof(aoVCS)/sizeof(aoVCS[0]))
 
-
 /************************************************************************/
 /*                         OGRSXFDataSource()                           */
 /************************************************************************/
@@ -89,6 +87,7 @@ OGRSXFDataSource::OGRSXFDataSource()
     nLayers = 0;
 
     fpSXF = NULL;
+    hIOMutex = NULL;
 
     oSXFPassport.stMapDescription.pSpatRef = NULL;
 }
@@ -488,7 +487,6 @@ void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
         return;
     }
 }
-
 OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& passport)
 {
     int nObjectsRead;
@@ -743,7 +741,6 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
             passport.stMapDescription.pSpatRef = new OGRSpatialReference();
             OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(nEPSG);
             SetVertCS(iVCS, passport);
-
             return eErr;
         }
         else
@@ -776,15 +773,13 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
         passport.stMapDescription.pSpatRef = new OGRSpatialReference();
         OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(nEPSG);
         SetVertCS(iVCS, passport);
-
         return eErr;
     }
-    else if (iEllips == 45 && iProjSys == 35) //Mercator 3395 on sphere wgs84
+   else if (iEllips == 45 && iProjSys == 35) //Mercator 3395 on sphere wgs84
     {
         passport.stMapDescription.pSpatRef = new OGRSpatialReference("PROJCS[\"WGS_1984_Web_Mercator\",GEOGCS[\"GCS_WGS_1984_Major_Auxiliary_Sphere\",DATUM[\"WGS_1984_Major_Auxiliary_Sphere\",SPHEROID[\"WGS_1984_Major_Auxiliary_Sphere\",6378137.0,0.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Mercator_1SP\"],PARAMETER[\"False_Easting\",0.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",0.0],PARAMETER[\"latitude_of_origin\",0.0],UNIT[\"Meter\",1.0]]");
         OGRErr eErr = OGRERR_NONE; //passport.stMapDescription.pSpatRef->importFromEPSG(3395);
         SetVertCS(iVCS, passport);
-
         return eErr;
     }
     else if (iEllips == 9 && iProjSys == 34) //Miller 54003
@@ -792,7 +787,6 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
         passport.stMapDescription.pSpatRef = new OGRSpatialReference();
         OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(54003);
         SetVertCS(iVCS, passport);
-
         return eErr;
     }
 
@@ -816,7 +810,6 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
     passport.stMapDescription.pSpatRef = new OGRSpatialReference();
     OGRErr eErr = passport.stMapDescription.pSpatRef->importFromPanorama(anData[2], anData[3], anData[0], adfPrjParams);
     SetVertCS(iVCS, passport);
-
     return eErr;
 }
 
@@ -865,33 +858,28 @@ void OGRSXFDataSource::FillLayers()
             return;
         }
 
-        //bool bIsSupported = oSXFPassport.version == 3 || !CHECK_BIT(buff[5], 2); 
-        //if(bIsSupported)
-        //{
-            bool bHasSemantic = CHECK_BIT(buff[5], 9);
-            if (bHasSemantic) //check has attributes
-            {
-                //we have already 24 byte readed
-                nOffsetSemantic = 8 + buff[2];
-                VSIFSeekL(fpSXF, nOffsetSemantic, SEEK_CUR);
-            }
+        bool bHasSemantic = CHECK_BIT(buff[5], 9);
+        if (bHasSemantic) //check has attributes
+        {
+            //we have already 24 byte readed
+            nOffsetSemantic = 8 + buff[2];
+            VSIFSeekL(fpSXF, nOffsetSemantic, SEEK_CUR);
+        }
 
-            int nSemanticSize = buff[1] - 32 - buff[2];
-            if( nSemanticSize < 0 )
+        int nSemanticSize = buff[1] - 32 - buff[2];
+        if( nSemanticSize < 0 )
+        {
+            CPLError(CE_Failure, CPLE_AppDefined, "Invalid value");
+            break;
+        }
+        for (i = 0; i < nLayers; i++)
+        {
+            OGRSXFLayer* pOGRSXFLayer = (OGRSXFLayer*)papoLayers[i];
+            if (pOGRSXFLayer && pOGRSXFLayer->AddRecord(nFID, buff[3], nOffset, bHasSemantic, nSemanticSize) == TRUE)
             {
-                CPLError(CE_Failure, CPLE_AppDefined, "Invalid value");
                 break;
             }
-            for (i = 0; i < nLayers; i++)
-            {
-                OGRSXFLayer* pOGRSXFLayer = (OGRSXFLayer*)papoLayers[i];
-                if (pOGRSXFLayer && pOGRSXFLayer->AddRecord(nFID, buff[3], nOffset, bHasSemantic, nSemanticSize) == TRUE)
-                {
-                    break;
-                }
-            }
-        //}
-
+        }
         nOffset += buff[1];
         VSIFSeekL(fpSXF, nOffset, SEEK_SET);
     }
@@ -1294,7 +1282,7 @@ void OGRSXFDataSource::CreateLayers(VSILFILE* fpRSC)
             else if (stRSCFileHeader.nFontEnc == 126)
                 pszRecoded = CPLRecode(OBJECT.szName, "CP1251", CPL_ENC_UTF8);
             else
-                pszRecoded = CPLStrdup(OBJECT.szName);//already in  CPL_ENC_UTF8
+                pszRecoded = CPLStrdup(OBJECT.szName); //already in  CPL_ENC_UTF8
             pLayer->AddClassifyCode(OBJECT.nClassifyCode, pszRecoded);
             //printf("%d;%s\n", OBJECT.nClassifyCode, OBJECT.szName);
             CPLFree(pszRecoded);

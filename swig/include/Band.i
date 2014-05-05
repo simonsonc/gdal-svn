@@ -195,6 +195,12 @@ public:
   GDALDataType DataType;
 %mutable;
 
+  /* Interface method added for GDAL 1.12.0 */
+  GDALDatasetShadow* GetDataset()
+  {
+    return (GDALDatasetShadow*) GDALGetBandDataset(self);
+  }
+
   /* Interface method added for GDAL 1.7.0 */
   int GetBand()
   {
@@ -542,6 +548,107 @@ CPLErr SetDefaultHistogram( double min, double max,
     return GDALSetRasterCategoryNames( self, papszCategoryNames );
   }
 %clear char **papszMetadata;
+
+#if defined(SWIGPYTHON)
+%feature( "kwargs" ) GetVirtualMem;
+%newobject GetVirtualMem;
+  CPLVirtualMemShadow* GetVirtualMem( GDALRWFlag eRWFlag,
+                                      int nXOff, int nYOff,
+                                      int nXSize, int nYSize,
+                                      int nBufXSize, int nBufYSize,
+                                      GDALDataType eBufType,
+                                      size_t nCacheSize,
+                                      size_t nPageSizeHint,
+                                      char **options = NULL )
+    {
+        CPLVirtualMem* vmem = GDALRasterBandGetVirtualMem( self,
+                                         eRWFlag,
+                                         nXOff, nYOff,
+                                         nXSize, nYSize,
+                                         nBufXSize, nBufYSize,
+                                         eBufType,
+                                         0,
+                                         0,
+                                         nCacheSize,
+                                         nPageSizeHint,
+                                         FALSE,
+                                         options );
+        if( vmem == NULL )
+            return NULL;
+        CPLVirtualMemShadow* vmemshadow = (CPLVirtualMemShadow*)calloc(1, sizeof(CPLVirtualMemShadow));
+        vmemshadow->vmem = vmem;
+        vmemshadow->eBufType = eBufType;
+        vmemshadow->bIsBandSequential = TRUE;
+        vmemshadow->bReadOnly = (eRWFlag == GF_Read);
+        vmemshadow->nBufXSize = nBufXSize;
+        vmemshadow->nBufYSize = nBufYSize;
+        vmemshadow->nBandCount = 1;
+        return vmemshadow;
+    }
+
+%feature( "kwargs" ) GetVirtualMemAuto;
+%newobject GetVirtualMemAuto;
+  CPLVirtualMemShadow* GetVirtualMemAuto( GDALRWFlag eRWFlag,
+                                          char **options = NULL )
+    {
+        int            nPixelSpace;
+        GIntBig        nLineSpace;
+        CPLVirtualMem* vmem = GDALGetVirtualMemAuto( self,
+                                         eRWFlag,
+                                         &nPixelSpace,
+                                         &nLineSpace,
+                                         options );
+        if( vmem == NULL )
+            return NULL;
+        CPLVirtualMemShadow* vmemshadow = (CPLVirtualMemShadow*)calloc(1, sizeof(CPLVirtualMemShadow));
+        vmemshadow->vmem = vmem;
+        vmemshadow->eBufType = GDALGetRasterDataType( self );
+        vmemshadow->bAuto = TRUE;
+        vmemshadow->bReadOnly = (eRWFlag == GF_Read);
+        vmemshadow->nBandCount = 1;
+        vmemshadow->nPixelSpace = nPixelSpace;
+        vmemshadow->nLineSpace = nLineSpace;
+        vmemshadow->nBufXSize = GDALGetRasterBandXSize(self);
+        vmemshadow->nBufYSize = GDALGetRasterBandYSize(self);
+        return vmemshadow;
+    }
+
+%feature( "kwargs" ) GetTiledVirtualMem;
+%newobject GetTiledVirtualMem;
+  CPLVirtualMemShadow* GetTiledVirtualMem( GDALRWFlag eRWFlag,
+                                      int nXOff, int nYOff,
+                                      int nXSize, int nYSize,
+                                      int nTileXSize, int nTileYSize,
+                                      GDALDataType eBufType,
+                                      size_t nCacheSize,
+                                      char **options = NULL )
+    {
+        CPLVirtualMem* vmem = GDALRasterBandGetTiledVirtualMem( self,
+                                         eRWFlag,
+                                         nXOff, nYOff,
+                                         nXSize, nYSize,
+                                         nTileXSize, nTileYSize,
+                                         eBufType,
+                                         nCacheSize,
+                                         FALSE,
+                                         options );
+        if( vmem == NULL )
+            return NULL;
+        CPLVirtualMemShadow* vmemshadow = (CPLVirtualMemShadow*)calloc(1, sizeof(CPLVirtualMemShadow));
+        vmemshadow->vmem = vmem;
+        vmemshadow->eBufType = eBufType;
+        vmemshadow->bIsBandSequential = -1;
+        vmemshadow->bReadOnly = (eRWFlag == GF_Read);
+        vmemshadow->nBufXSize = nXSize;
+        vmemshadow->nBufYSize = nYSize;
+        vmemshadow->eTileOrganization = GTO_BSQ;
+        vmemshadow->nTileXSize = nTileXSize;
+        vmemshadow->nTileYSize = nTileYSize;
+        vmemshadow->nBandCount = 1;
+        return vmemshadow;
+    }
+
+#endif /* #if defined(SWIGPYTHON) */
 
 } /* %extend */
 

@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1999, Frank Warmerdam
+ * Copyright (c) 2009-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -230,6 +231,9 @@ int OGRS57Layer::TestCapability( const char * pszCap )
 OGRErr OGRS57Layer::GetExtent( OGREnvelope *psExtent, int bForce )
 
 {
+    if( GetGeomType() == wkbNone )
+        return OGRERR_FAILURE;
+
     return poDS->GetDSExtent( psExtent, bForce );
 }
 

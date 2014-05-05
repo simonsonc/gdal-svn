@@ -8,6 +8,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2007, Adam Nowacki
+ * Copyright (c) 2008-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -379,7 +380,7 @@ CPLErr GDALWMSDataset::Initialize(CPLXMLNode *config) {
     
     if (ret == CE_None) {
         const char *pszHttpZeroBlockCodes = CPLGetXMLValue(config, "ZeroBlockHttpCodes", "");
-        if(pszHttpZeroBlockCodes == '\0') {
+        if(pszHttpZeroBlockCodes[0] == '\0') {
             m_http_zeroblock_codes.push_back(204);
         } else {
             char **kv = CSLTokenizeString2(pszHttpZeroBlockCodes,",",CSLT_HONOURSTRINGS);

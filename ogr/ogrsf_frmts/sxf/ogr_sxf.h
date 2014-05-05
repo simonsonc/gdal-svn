@@ -62,7 +62,6 @@ protected:
     CPLString sFIDColumn_;
     void            **m_hIOMutex;
     double              m_dfCoeff;
-
     virtual OGRFeature *       GetNextRawFeature(long nFID);
 
     GUInt32 TranslateXYH(const SXFRecordDescription& certifInfo,
@@ -112,7 +111,7 @@ class OGRSXFDataSource : public OGRDataSource
     size_t              nLayers;
 
     VSILFILE* fpSXF;    
-
+    void  *hIOMutex;
     void FillLayers(void);
     void CreateLayers();
     void CreateLayers(VSILFILE* fpRSC);

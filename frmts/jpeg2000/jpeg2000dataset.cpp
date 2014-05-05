@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2002, Andrey Kiselev <dron@ak4719.spb.edu>
+ * Copyright (c) 2007-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1069,6 +1070,9 @@ JPEG2000CreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
                 oJP2Geo.SetProjection( poSrcDS->GetProjectionRef() );
                 oJP2Geo.SetGeoTransform( adfGeoTransform );
             }
+
+            const char* pszAreaOrPoint = poSrcDS->GetMetadataItem(GDALMD_AREA_OR_POINT);
+            oJP2Geo.bPixelIsPoint = pszAreaOrPoint != NULL && EQUAL(pszAreaOrPoint, GDALMD_AOP_POINT);
 
             GDALJP2Box *poBox = oJP2Geo.CreateJP2GeoTIFF();
             jp2_box_t  *box = jp2_box_create( JP2_BOX_UUID );

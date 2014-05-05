@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2002, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2009-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -125,8 +126,14 @@ void OGRGMLLayer::ResetReading()
     iNextGMLId = 0;
     poDS->GetReader()->ResetReading();
     CPLDebug("GML", "ResetReading()");
-    if (poDS->GetLayerCount() > 1 && poDS->GetReadMode() == STANDARD)
-        poDS->GetReader()->SetFilteredClassName(poFClass->GetName());
+    if ( poDS->GetLayerCount() > 1 && poDS->GetReadMode() == STANDARD )
+    {
+        const char* pszElementName = poFClass->GetElementName();
+        const char* pszLastPipe = strrchr( pszElementName, '|' );
+        if ( pszLastPipe != NULL )
+            pszElementName = pszLastPipe + 1;
+        poDS->GetReader()->SetFilteredClassName(pszElementName);
+    }
 }
 
 /************************************************************************/

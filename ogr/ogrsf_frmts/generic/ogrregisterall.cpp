@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1999,  Les Technologies SoftMap Inc.
+ * Copyright (c) 2007-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -101,6 +102,7 @@ void OGRRegisterAll()
     RegisterOGRGMT();
 #endif
 #ifdef SQLITE_ENABLED
+    RegisterOGRGeoPackage();
     RegisterOGRSQLite();
 #endif
 #ifdef DODS_ENABLED
@@ -108,6 +110,9 @@ void OGRRegisterAll()
 #endif
 #ifdef ODBC_ENABLED
     RegisterOGRODBC();
+#endif
+#ifdef WASP_ENABLED
+    RegisterOGRWAsP();
 #endif
 
 /* Register before PGeo and Geomedia drivers */
@@ -142,6 +147,10 @@ void OGRRegisterAll()
 #endif
 #ifdef SDE_ENABLED
     RegisterOGRSDE();
+#endif
+/* Register OpenFileGDB before FGDB as it is more capable for read-only */
+#ifdef OPENFILEGDB_ENABLED
+    RegisterOGROpenFileGDB();
 #endif
 #ifdef FGDB_ENABLED
     RegisterOGRFileGDB();

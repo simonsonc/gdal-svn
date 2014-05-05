@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2009-2010, 2012-2013, Martin Landa <landa.martin gmail.com>
+ * Copyright (c) 2012, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -244,7 +245,7 @@ bool VFKFeature::SetProperties(const char *pszLine)
     for (poChar = pszLine; *poChar != '\0' && *poChar != ';'; poChar++)
         /* skip data block name */
         ;
-    if (poChar == '\0')
+    if (*poChar == '\0')
         return FALSE; /* nothing to read */
 
     poChar++; /* skip ';' after data block name*/

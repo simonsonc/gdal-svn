@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2002, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2010-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -253,7 +254,7 @@ OGRFeature *OGRNASLayer::GetNextFeature()
             int iId = poNASFeature->GetClass()->GetPropertyIndex( "gml_id" );
             const GMLProperty *poIdProp = poNASFeature->GetProperty(iId);
             CPLError( CE_Warning, CPLE_AppDefined, "NAS: could not set geometry (gml_id:%s)",
-		      poIdProp && poIdProp->nSubProperties>0 && poIdProp->papszSubProperties[0] ? poIdProp->papszSubProperties[0] : "(null)" );
+                      poIdProp && poIdProp->nSubProperties>0 && poIdProp->papszSubProperties[0] ? poIdProp->papszSubProperties[0] : "(null)" );
         }
 
         delete poNASFeature;
@@ -289,7 +290,7 @@ OGRErr OGRNASLayer::GetExtent(OGREnvelope *psExtent, int bForce )
 {
     double dfXMin, dfXMax, dfYMin, dfYMax;
 
-    if( poFClass != NULL && 
+    if( poFClass != NULL &&
         poFClass->GetExtents( &dfXMin, &dfXMax, &dfYMin, &dfYMax ) )
     {
         psExtent->MinX = dfXMin;
@@ -299,7 +300,7 @@ OGRErr OGRNASLayer::GetExtent(OGREnvelope *psExtent, int bForce )
 
         return OGRERR_NONE;
     }
-    else 
+    else
         return OGRLayer::GetExtent( psExtent, bForce );
 }
 
@@ -322,8 +323,8 @@ int OGRNASLayer::TestCapability( const char * pszCap )
 
     else if( EQUAL(pszCap,OLCFastFeatureCount) )
     {
-        if( poFClass == NULL 
-            || m_poFilterGeom != NULL 
+        if( poFClass == NULL
+            || m_poFilterGeom != NULL
             || m_poAttrQuery != NULL )
             return FALSE;
 
@@ -333,6 +334,6 @@ int OGRNASLayer::TestCapability( const char * pszCap )
     else if( EQUAL(pszCap,OLCStringsAsUTF8) )
         return TRUE;
 
-    else 
+    else
         return FALSE;
 }

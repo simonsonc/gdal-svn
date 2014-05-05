@@ -10,6 +10,7 @@
  * 
  ******************************************************************************
  * Copyright (c) 2004, VIZRT Inc.
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -249,7 +250,7 @@ v2_Lg3 = {2.857142874366239149e-01, 2.857142874366239149e-01},
 v2_Lg4 = {2.222219843214978396e-01, 2.222219843214978396e-01},
 v2_Lg5 = {1.818357216161805012e-01, 1.818357216161805012e-01},
 v2_Lg6 = {1.531383769920937332e-01, 1.531383769920937332e-01},
-v2_Lg7 = {1.479819860511658591e-01, 1.479819860511658591e-01},
+/*v2_Lg7 = {1.479819860511658591e-01, 1.479819860511658591e-01}, */
 v2_one = { 1.0, 1.0 },
 v2_const1023_mul_2pow20 = { 1023.0 * 1048576, 1023.0 * 1048576};
 

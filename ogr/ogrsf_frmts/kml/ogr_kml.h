@@ -10,6 +10,7 @@
  ******************************************************************************
  * Copyright (c) 2006, Christopher Condit
  *               2007, Jens Oberender
+ * Copyright (c) 2007-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -73,9 +74,11 @@ public:
 
     void SetClosedForWriting() { bClosedForWriting = TRUE; }
     
-    void WriteSchema();
+    CPLString WriteSchema();
 
 private:
+    friend class OGRKMLDataSource;
+
     OGRKMLDataSource* poDS_;
     OGRSpatialReference* poSRS_;
 	OGRCoordinateTransformation *poCT_;
@@ -87,6 +90,7 @@ private:
     int bWriter_;
     int nLayerNumber_;
     int nWroteFeatureCount_;
+    int bSchemaWritten_;
     int bClosedForWriting;
     char* pszName_;
 

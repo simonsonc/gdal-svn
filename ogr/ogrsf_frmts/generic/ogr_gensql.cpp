@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2002, Frank Warmerdam
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -410,7 +411,7 @@ OGRGenSQLResultsLayer::OGRGenSQLResultsLayer( OGRDataSource *poSrcDS,
         if( *pszName != '\0' )
             col_def->field_name = CPLStrdup( pszName );
         else
-            col_def->field_name = CPLStrdup( "_ogr_geometry_" );
+            col_def->field_name = CPLStrdup( OGR_GEOMETRY_DEFAULT_NON_EMPTY_NAME );
         col_def->field_alias = NULL;
         col_def->table_index = 0;
         col_def->field_index = GEOM_FIELD_INDEX_TO_ALL_FIELD_INDEX(poSrcDefn, 0);

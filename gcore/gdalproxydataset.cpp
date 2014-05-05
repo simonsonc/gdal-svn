@@ -7,7 +7,7 @@
  * Author:   Even Rouault <even dot rouault at mines dash paris dot org>
  *
  ******************************************************************************
- * Copyright (c) 2008, Even Rouault
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -289,6 +289,10 @@ RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, SetDefaultRAT,
 RB_PROXY_METHOD_WITH_RET(GDALRasterBand*, NULL, GetMaskBand, (), ())
 RB_PROXY_METHOD_WITH_RET(int, 0, GetMaskFlags, (), ())
 RB_PROXY_METHOD_WITH_RET(CPLErr, CE_Failure, CreateMaskBand, ( int nFlags ), (nFlags))
+
+RB_PROXY_METHOD_WITH_RET(CPLVirtualMem*, NULL, GetVirtualMemAuto,
+                         ( GDALRWFlag eRWFlag, int *pnPixelSpace, GIntBig *pnLineSpace, char **papszOptions ),
+                         (eRWFlag, pnPixelSpace, pnLineSpace, papszOptions) )
 
 /************************************************************************/
 /*                 UnrefUnderlyingRasterBand()                        */

@@ -6,7 +6,7 @@
  * Author:   Even Rouault, <even dot rouault at mines dash paris dot org>
  *
  ******************************************************************************
- * Copyright (c) 2012, Even Rouault
+ * Copyright (c) 2012-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -45,9 +45,10 @@ CPL_CVSID("$Id$");
 /************************************************************************/
 
 
-OGROSMLayer::OGROSMLayer(OGROSMDataSource* poDS, const char* pszName )
+OGROSMLayer::OGROSMLayer(OGROSMDataSource* poDS, int nIdxLayer, const char* pszName )
 {
     this->poDS = poDS;
+    this->nIdxLayer = nIdxLayer;
 
     poFeatureDefn = new OGRFeatureDefn( pszName );
     poFeatureDefn->Reference();
@@ -235,7 +236,7 @@ OGRFeature *OGROSMLayer::GetNextFeature()
             }
 
             /* Read some more data and accumulate features */
-            poDS->ParseNextChunk();
+            poDS->ParseNextChunk(nIdxLayer);
 
             if ( nFeatureArraySize == 0 )
             {
@@ -265,7 +266,7 @@ OGRFeature *OGROSMLayer::GetNextFeature()
         {
             while(TRUE)
             {
-                int bRet = poDS->ParseNextChunk();
+                int bRet = poDS->ParseNextChunk(nIdxLayer);
                 if (nFeatureArraySize != 0)
                     break;
                 if (bRet == FALSE)
@@ -305,9 +306,9 @@ int OGROSMLayer::TestCapability( const char * pszCap )
 /*                             AddToArray()                             */
 /************************************************************************/
 
-int  OGROSMLayer::AddToArray(OGRFeature* poFeature)
+int  OGROSMLayer::AddToArray(OGRFeature* poFeature, int bCheckFeatureThreshold)
 {
-    if( nFeatureArraySize > MAX_THRESHOLD)
+    if( bCheckFeatureThreshold && nFeatureArraySize > MAX_THRESHOLD)
     {
         if( !bHasWarnedTooManyFeatures )
         {
@@ -328,6 +329,9 @@ int  OGROSMLayer::AddToArray(OGRFeature* poFeature)
                                 nFeatureArrayMaxSize * sizeof(OGRFeature*));
         if (papoNewFeatures == NULL)
         {
+            CPLError(CE_Failure, CPLE_AppDefined,
+                     "For layer %s, cannot resize feature array to %d features",
+                     GetName(), nFeatureArrayMaxSize);
             return FALSE;
         }
         papoFeatures = papoNewFeatures;
@@ -353,7 +357,8 @@ int OGROSMLayer::EvaluateAttributeFilter(OGRFeature* poFeature)
 
 int  OGROSMLayer::AddFeature(OGRFeature* poFeature,
                              int bAttrFilterAlreadyEvaluated,
-                             int* pbFilteredOut)
+                             int* pbFilteredOut,
+                             int bCheckFeatureThreshold)
 {
     if( !bUserInterested )
     {
@@ -372,7 +377,7 @@ int  OGROSMLayer::AddFeature(OGRFeature* poFeature,
         && (m_poAttrQuery == NULL || bAttrFilterAlreadyEvaluated
             || m_poAttrQuery->Evaluate( poFeature )) )
     {
-        if (!AddToArray(poFeature))
+        if (!AddToArray(poFeature, bCheckFeatureThreshold))
         {
             delete poFeature;
             return FALSE;

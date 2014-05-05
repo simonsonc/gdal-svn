@@ -4,13 +4,14 @@
 
 include ../GDALmake.opt
 
-CPPFLAGS	:=	$(GDAL_INCLUDE) -I$(GDAL_ROOT)/frmts $(CPPFLAGS)
-LNK_FLAGS   :=  $(LDFLAGS)
-DEP_LIBS	=	$(EXE_DEP_LIBS) $(XTRAOBJ)
-BIN_LIST	=	gdalinfo$(EXE) gdalserver$(EXE) gdal_translate$(EXE) gdaladdo$(EXE) \
-			gdalwarp$(EXE) nearblack$(EXE) gdalmanage$(EXE) \
-			gdalenhance$(EXE) gdaltransform$(EXE) gdaldem$(EXE) \
-			gdallocationinfo$(EXE) gdalsrsinfo$(EXE) 
+CPPFLAGS :=	$(GDAL_INCLUDE) -I$(GDAL_ROOT)/frmts $(CPPFLAGS)
+LNK_FLAGS :=	$(LDFLAGS)
+DEP_LIBS =	$(EXE_DEP_LIBS) $(XTRAOBJ)
+
+BIN_LIST =	gdalinfo$(EXE) gdalserver$(EXE) gdal_translate$(EXE) \
+		gdaladdo$(EXE) gdalwarp$(EXE) nearblack$(EXE) gdalmanage$(EXE) \
+		gdalenhance$(EXE) gdaltransform$(EXE) gdaldem$(EXE) \
+		gdallocationinfo$(EXE) gdalsrsinfo$(EXE) 
 
 ifeq ($(OGR_ENABLED),yes)
 BIN_LIST += 	gdal_contour$(EXE) \
@@ -20,14 +21,19 @@ BIN_LIST += 	gdal_contour$(EXE) \
 		ogrinfo$(EXE) \
 		ogr2ogr$(EXE) \
 		ogrtindex$(EXE) \
+		ogrlineref$(EXE) \
 		testepsg$(EXE) \
 		gdalbuildvrt$(EXE)
 endif
 
-NON_DEFAULT_LIST = 	multireadtest$(EXE) \
-			dumpoverviews$(EXE) gdalwarpsimple$(EXE) gdalflattenmask$(EXE) \
-			gdaltorture$(EXE) gdal2ogr$(EXE) test_ogrsf$(EXE) \
-			gdalasyncread$(EXE) testreprojmulti$(EXE)
+ifeq ($(HAVE_GEOS),yes)
+CPPFLAGS 	:=	$(CPPFLAGS) -DHAVE_GEOS=1 $(GEOS_CFLAGS)
+endif
+
+NON_DEFAULT_LIST = 	multireadtest$(EXE) dumpoverviews$(EXE) \
+	gdalwarpsimple$(EXE) gdalflattenmask$(EXE) \
+	gdaltorture$(EXE) gdal2ogr$(EXE) test_ogrsf$(EXE) \
+	gdalasyncread$(EXE) testreprojmulti$(EXE)
 
 default:	gdal-config-inst gdal-config $(BIN_LIST)
 
@@ -107,6 +113,9 @@ gdal2ogr$(EXE):	gdal2ogr.$(OBJ_EXT) $(DEP_LIBS)
 	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
 
 ogrinfo$(EXE):	ogrinfo.$(OBJ_EXT) commonutils.$(OBJ_EXT)  $(DEP_LIBS)
+	$(LD) $(LNK_FLAGS) $< commonutils.$(OBJ_EXT)  $(XTRAOBJ) $(CONFIG_LIBS) -o $@
+
+ogrlineref$(EXE):	ogrlineref.$(OBJ_EXT) commonutils.$(OBJ_EXT)  $(DEP_LIBS)
 	$(LD) $(LNK_FLAGS) $< commonutils.$(OBJ_EXT)  $(XTRAOBJ) $(CONFIG_LIBS) -o $@
 
 ogr2ogr$(EXE):	ogr2ogr.$(OBJ_EXT) commonutils.$(OBJ_EXT)  $(DEP_LIBS)

@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1999, Frank Warmerdam
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,8 +30,8 @@
 
 #include "ogr_geometry.h"
 #include "ogr_p.h"
-#include "ogr_geos.h"
 #include <assert.h>
+#include "ogr_geos.h"
 
 CPL_CVSID("$Id$");
 
@@ -775,7 +776,7 @@ void OGRLineString::addSubLineString( const OGRLineString *poOtherLine,
     int nOldPoints = nPointCount;
     int nPointsToAdd = ABS(nEndVertex-nStartVertex) + 1;
 
-    setNumPoints( nPointsToAdd + nOldPoints );
+    setNumPoints( nPointsToAdd + nOldPoints, FALSE );
     if (nPointCount < nPointsToAdd + nOldPoints)
         return;
 
@@ -883,7 +884,7 @@ OGRErr OGRLineString::importFromWkb( unsigned char * pabyData,
         return OGRERR_NOT_ENOUGH_DATA;
     }
 
-    setNumPoints( nNewNumPoints );
+    setNumPoints( nNewNumPoints, FALSE );
     if (nPointCount < nNewNumPoints)
         return OGRERR_FAILURE;
     
@@ -1284,7 +1285,7 @@ void OGRLineString::Value( double dfDistance, OGRPoint * poPoint ) const
 
                 if( getCoordinateDimension() == 3 )
                     poPoint->setZ( padfZ[i] * (1 - dfRatio)
-                                   + padfZ[i+1] * dfRatio );
+                                   + padfZ[i] * dfRatio );
                 
                 return;
             }
@@ -1321,7 +1322,9 @@ void OGRLineString::Value( double dfDistance, OGRPoint * poPoint ) const
 
 /* GEOS >= 3.2.0 for project capabilty */
 #if defined(HAVE_GEOS)
+#if GEOS_VERSION_MAJOR > 3 || (GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 2)
 #define HAVE_GEOS_PROJECT
+#endif
 #endif
 
 
@@ -1384,7 +1387,6 @@ OGRLineString* OGRLineString::getSubLine(double dfDistanceFrom, double dfDistanc
 
 {
     OGRLineString       *poNewLineString;
-    OGRPoint * poPoint;
     double      dfLength = 0;
     int         i;
 

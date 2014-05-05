@@ -9,6 +9,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2003, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2008-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -4998,6 +4999,10 @@ static void GWKAverageOrModeThread( void* pData)
     int *panVals = NULL;
     int nBins = 0, nBinsOffset = 0;
 
+    // only used with nAlgo = 2
+    float*   pafVals = NULL;
+    int*     panSums = NULL;
+
     if ( poWK->eResample == GRA_Average ) 
     {
         nAlgo = 1;
@@ -5028,11 +5033,25 @@ static void GWKAverageOrModeThread( void* pData)
             {
                 nBins = 65536;
             }
-            panVals = (int*) CPLMalloc(nBins * sizeof(int));            
+            panVals = (int*) VSIMalloc(nBins * sizeof(int));
+            if( panVals == NULL )
+                return;
         }
         else
         {
             nAlgo = 2;
+
+            if ( nSrcXSize > 0 && nSrcYSize > 0 )
+            {
+                pafVals = (float*) VSIMalloc3(nSrcXSize, nSrcYSize, sizeof(float));
+                panSums = (int*) VSIMalloc3(nSrcXSize, nSrcYSize, sizeof(int));
+                if( pafVals == NULL || panSums == NULL )
+                {
+                    VSIFree(pafVals);
+                    VSIFree(panSums);
+                    return;
+                }
+            }
         }
     }
     else
@@ -5123,11 +5142,32 @@ static void GWKAverageOrModeThread( void* pData)
                 int iSrcXMin, iSrcXMax,iSrcYMin,iSrcYMax;
 
                 // compute corners in source crs
-                iSrcXMin = MAX( ((int) floor(padfX[iDstX])) - poWK->nSrcXOff, 0 );
-                iSrcXMax = MIN( ((int) ceil(padfX2[iDstX])) - poWK->nSrcXOff, nSrcXSize );
-                iSrcYMin = MAX( ((int) floor(padfY[iDstX])) - poWK->nSrcYOff, 0 );
-                iSrcYMax = MIN( ((int) ceil(padfY2[iDstX])) - poWK->nSrcYOff, nSrcYSize );
+                iSrcXMin = MAX( ((int) floor((padfX[iDstX] + 1e-10))) - poWK->nSrcXOff, 0 ); 
+                iSrcXMax = MIN( ((int) ceil((padfX2[iDstX] - 1e-10))) - poWK->nSrcXOff, nSrcXSize ); 
+                iSrcYMin = MAX( ((int) floor((padfY[iDstX] + 1e-10))) - poWK->nSrcYOff, 0 ); 
+                iSrcYMax = MIN( ((int) ceil((padfY2[iDstX] - 1e-10))) - poWK->nSrcYOff, nSrcYSize );
                 
+                // The transformation might not have preserved ordering of coordinates
+                // so do the necessary swapping (#5433)
+                // NOTE: this is really an approximative fix. To do something more precise
+                // we would for example need to compute the transformation of coordinates
+                // in the [iDstX,iDstY]x[iDstX+1,iDstY+1] square back to source coordinates,
+                // and take the bounding box of the got source coordinates.
+                if( iSrcXMax < iSrcXMin )
+                {
+                    iSrcXMin = MAX( ((int) floor((padfX2[iDstX] + 1e-10))) - poWK->nSrcXOff, 0 ); 
+                    iSrcXMax = MIN( ((int) ceil((padfX[iDstX] - 1e-10))) - poWK->nSrcXOff, nSrcXSize ); 
+                }
+                if( iSrcYMax < iSrcYMin )
+                {
+                    iSrcYMin = MAX( ((int) floor((padfY2[iDstX] + 1e-10))) - poWK->nSrcYOff, 0 ); 
+                    iSrcYMax = MIN( ((int) ceil((padfY[iDstX] - 1e-10))) - poWK->nSrcYOff, nSrcYSize );
+                }
+                if( iSrcXMin == iSrcXMax && iSrcXMax < nSrcXSize )
+                    iSrcXMax ++;
+                if( iSrcYMin == iSrcYMax && iSrcYMax < nSrcYSize )
+                    iSrcYMax ++;
+
                 // loop over source lines and pixels - 3 possible algorithms
                 
                 if ( nAlgo == 1 ) // poWK->eResample == GRA_Average
@@ -5176,16 +5216,7 @@ static void GWKAverageOrModeThread( void* pData)
                            of compatability. It won't look right on RGB images by the
                            nature of the filter. */
                         int     iMaxInd = 0, iMaxVal = -1, i = 0;
-                        int     nNumPx = nSrcXSize * nSrcYSize;
 
-                        if ( nNumPx == 0 )
-                            continue;
-
-                        /* putting alloc outside of loop (and CPLRealloc here) saves time 
-                           but takes much more memory (why?), so just doing malloc here */
-                        float*   pafVals = (float*) CPLMalloc(nNumPx * sizeof(float));
-                        int*     panSums = (int*) CPLMalloc(nNumPx * sizeof(int));
-                        
                         for( iSrcY = iSrcYMin; iSrcY < iSrcYMax; iSrcY++ )
                         {
                             for( iSrcX = iSrcXMin; iSrcX < iSrcXMax; iSrcX++ )
@@ -5235,9 +5266,6 @@ static void GWKAverageOrModeThread( void* pData)
                             dfBandDensity = 1;                
                             bHasFoundDensity = TRUE;
                         }
-
-                        CPLFree( pafVals );
-                        CPLFree( panSums );
                     }
                     
                     else // byte or int16
@@ -5336,6 +5364,8 @@ static void GWKAverageOrModeThread( void* pData)
     CPLFree( padfZ2 );
     CPLFree( pabSuccess );
     CPLFree( pabSuccess2 );
-    if ( panVals ) CPLFree( panVals );
+    VSIFree( panVals );
+    VSIFree(pafVals);
+    VSIFree(panSums);
 }
 

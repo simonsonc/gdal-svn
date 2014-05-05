@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2000, Frank Warmerdam
+ * Copyright (c) 2008-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -317,6 +318,9 @@ public:
 
     virtual int         TestCapability( const char * );
 
+    virtual OGRErr      GetExtent( OGREnvelope *psExtent, int bForce ) { return GetExtent(0, psExtent, bForce); }
+    virtual OGRErr      GetExtent( int iGeomField, OGREnvelope *psExtent, int bForce );
+
     const char*         GetTableName() { return pszTableName; }
     const char*         GetSchemaName() { return pszSchemaName; }
 
@@ -429,6 +433,13 @@ class OGRPGDataSource : public OGRDataSource
     CPLString           GetCurrentSchema();
 
     int                 nUndefinedSRID;
+    
+    char               *pszForcedTables;
+    char              **papszSchemaList;
+    int                 bHasLoadTables;
+    CPLString           osActiveSchema;
+    int                 bListAllTables;
+    void                LoadTables();
 
   public:
     PGver               sPostgreSQLVersion;
@@ -458,7 +469,7 @@ class OGRPGDataSource : public OGRDataSource
                                    int bUpdate, int bTestOpen );
 
     const char          *GetName() { return pszName; }
-    int                 GetLayerCount() { return nLayers; }
+    int                 GetLayerCount();
     OGRLayer            *GetLayer( int );
     OGRLayer            *GetLayerByName(const char * pszName);
 

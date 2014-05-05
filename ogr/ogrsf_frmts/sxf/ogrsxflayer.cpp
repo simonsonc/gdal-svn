@@ -10,6 +10,7 @@
  ******************************************************************************
  * Copyright (c) 2011, Ben Ahmed Daho Ali
  * Copyright (c) 2013, NextGIS
+ * Copyright (c) 2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -55,7 +56,6 @@ OGRSXFLayer::OGRSXFLayer(VSILFILE* fp, void** hIOMutex, GByte nID, const char* p
     oNextIt = mnRecordDesc.begin();
     m_hIOMutex = hIOMutex;
     m_dfCoeff = stSXFMapDescription.dfScale / stSXFMapDescription.nResolution;
-
     poFeatureDefn = new OGRFeatureDefn(pszLayerName);
     poFeatureDefn->Reference();
     
@@ -438,29 +438,28 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
         if( nBufLen < 4 )
             return 0;
         GInt16 x, y;
-        memcpy(&x, psBuff, 2);
-        CPL_LSBINT16PTR(&x);
-        memcpy(&y, psBuff + 2, 2);
+        memcpy(&y, psBuff, 2);
         CPL_LSBINT16PTR(&y);
-
+        memcpy(&x, psBuff + 2, 2);
+        CPL_LSBINT16PTR(&x);
 
         if (stSXFMapDescription.bIsRealCoordinates)
         {
-            *dfX = (double)y;
-            *dfY = (double)x;
+            *dfX = (double)x;
+            *dfY = (double)y;
         }
         else
         {
             if (m_nSXFFormatVer == 3)
             {
-                *dfX = stSXFMapDescription.dfXOr + (double)y * m_dfCoeff;
-                *dfY = stSXFMapDescription.dfYOr + (double)x * m_dfCoeff;
+                *dfX = stSXFMapDescription.dfXOr + (double)x * m_dfCoeff;
+                *dfY = stSXFMapDescription.dfYOr + (double)y * m_dfCoeff;
             }
             else if (m_nSXFFormatVer == 4)
             {
                 //TODO: check on real data
-                *dfX = stSXFMapDescription.dfXOr + (double)y * m_dfCoeff;
-                *dfY = stSXFMapDescription.dfYOr + (double)x * m_dfCoeff;
+                *dfX = stSXFMapDescription.dfXOr + (double)x * m_dfCoeff;
+                *dfY = stSXFMapDescription.dfYOr + (double)y * m_dfCoeff;
             }
         }
 
@@ -481,9 +480,9 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
         break;
     case SXF_VT_FLOAT:
     {
-        float x, y;
         if( nBufLen < 8 )
             return 0;
+        float x, y;
         memcpy(&y, psBuff, 4);
         CPL_LSBPTR32(&y);
         memcpy(&x, psBuff + 4, 4);
@@ -491,8 +490,8 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
 
         if (stSXFMapDescription.bIsRealCoordinates)
         {
-            *dfX = (double)y;
-            *dfY = (double)x;
+            *dfX = (double)x;
+            *dfY = (double)y;
         }
         else
         {
@@ -527,24 +526,23 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
 
         if (stSXFMapDescription.bIsRealCoordinates)
         {
-            *dfX = (double)y;
-            *dfY = (double)x;
+            *dfX = (double)x;
+            *dfY = (double)y;
         }
         else
         {
             //TODO: check on real data
             if (m_nSXFFormatVer == 3)
             {
-                *dfX = stSXFMapDescription.dfXOr + (double)y * m_dfCoeff;
-                *dfY = stSXFMapDescription.dfYOr + (double)x * m_dfCoeff;
+                *dfX = stSXFMapDescription.dfXOr + (double)x * m_dfCoeff;
+                *dfY = stSXFMapDescription.dfYOr + (double)y * m_dfCoeff;
             }
             else if (m_nSXFFormatVer == 4)
             {
-                *dfX = stSXFMapDescription.dfXOr + (double)y * m_dfCoeff;
-                *dfY = stSXFMapDescription.dfYOr + (double)x * m_dfCoeff;
+                *dfX = stSXFMapDescription.dfXOr + (double)x * m_dfCoeff;
+                *dfY = stSXFMapDescription.dfYOr + (double)y * m_dfCoeff;
             }
         }
-
         offset += 8;
 
         if (dfH != NULL)
@@ -572,8 +570,8 @@ GUInt32 OGRSXFLayer::TranslateXYH(const SXFRecordDescription& certifInfo,
 
         if (stSXFMapDescription.bIsRealCoordinates)
         {
-            *dfY = y;
             *dfX = x;
+            *dfY = y;
         }
         else
         {
@@ -631,7 +629,7 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
             }
             else
             {
-                code = 0x21;  
+                code = 0x21; 
                 stRecordHeader.nSubObjectCount = 0;
             }
         }
@@ -693,7 +691,6 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
         eGeomType = SXF_GT_VectorAngle;
     else if (code == 0x22) 
         eGeomType = SXF_GT_VectorScaled;
-
     bool bHasAttributes = CHECK_BIT(stRecordHeader.nRef[1], 1);
     bool bHasRefVector = CHECK_BIT(stRecordHeader.nRef[1], 3);
     if (bHasRefVector == true)
@@ -888,7 +885,9 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
                     char * value = (char*)CPLMalloc(nLen);
                     memcpy(value, psSemanticsdBuf + offset, nLen);
                     value[nLen-1] = 0;
-                    poFeature->SetField(oFieldName, CPLRecode(value, "CP866", CPL_ENC_UTF8));
+                    char* pszRecoded = CPLRecode(value, "CP866", CPL_ENC_UTF8);
+                    poFeature->SetField(oFieldName, pszRecoded);
+                    CPLFree(pszRecoded);
                     CPLFree(value);
 
                     offset += stAttInfo.nScale + 1;

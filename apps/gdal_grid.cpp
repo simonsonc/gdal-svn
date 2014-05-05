@@ -54,9 +54,7 @@ static void Usage(const char* pszErrorMsg = NULL)
         "    [-ot {Byte/Int16/UInt16/UInt32/Int32/Float32/Float64/\n"
         "          CInt16/CInt32/CFloat32/CFloat64}]\n"
         "    [-of format] [-co \"NAME=VALUE\"]\n"
-        "    [-zfield field_name]\n"
-        "    [-z_increase increase_value]\n"
-        "    [-z_multiply multiply_value]\n"
+        "    [-zfield field_name] [-z_increase increase_value] [-z_multiply multiply_value]\n"
         "    [-a_srs srs_def] [-spat xmin ymin xmax ymax]\n"
         "    [-clipsrc <xmin ymin xmax ymax>|WKT|datasource|spat_extent]\n"
         "    [-clipsrcsql sql_statement] [-clipsrclayer layer]\n"
@@ -232,7 +230,7 @@ static void ProcessGeometry( OGRPoint *poGeom, OGRGeometry *poClipSrc,
     adfX.push_back( poGeom->getX() );
     adfY.push_back( poGeom->getY() );
     if ( iBurnField < 0 )
-        adfZ.push_back( (poGeom->getZ() + dfIncreaseBurnValue) * dfMultiplyBurnValue );
+        adfZ.push_back(  (poGeom->getZ() + dfIncreaseBurnValue) * dfMultiplyBurnValue  );
     else
         adfZ.push_back( (dfBurnValue + dfIncreaseBurnValue) * dfMultiplyBurnValue );
 }
@@ -265,7 +263,7 @@ static void ProcessCommonGeometry(OGRGeometry* poGeom, OGRGeometry *poClipSrc,
         {
             OGRLineString *poLS = (OGRLineString*)poGeom;
             OGRPoint point;
-            for (size_t pointIndex = 0; pointIndex < poLS->getNumPoints(); pointIndex++)
+            for (int pointIndex = 0; pointIndex < poLS->getNumPoints(); pointIndex++)
             {
                 poLS->getPoint(pointIndex, &point);
                 ProcessCommonGeometry((OGRGeometry*)&point, poClipSrc,
