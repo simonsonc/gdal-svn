@@ -50,15 +50,38 @@ mark_as_advanced(LIBKML_INCLUDE_DIR_T)
 
 get_filename_component(LIBKML_INCLUDE_DIR ${LIBKML_INCLUDE_DIR_T} PATH)
 
-FIND_LIBRARY(LIBKML_LIBRARY NAMES kml libkml PATHS
-  "$ENV{LIB_DIR}/lib"
-  /usr/lib
-  /usr/local/lib
-  #mingw
-  c:/msys/local/lib
-  NO_DEFAULT_PATH
-  )
-FIND_LIBRARY(LIBKML_LIBRARY NAMES libkml)
+    find_library(LIBKML_RELEASE
+        NAMES
+          kml.lib      
+          libkml.lib          
+        PATHS 
+          "$ENV{LIB_DIR}/lib"
+          /usr/lib
+          /usr/local/lib
+          #mingw
+          c:/msys/local/lib
+          NO_DEFAULT_PATH
+    )	
+    find_library(LIBKML_DEBUG
+        NAMES
+          kmld.lib   
+          libkmld.lib   
+        PATHS
+          "$ENV{LIB_DIR}/lib"
+          /usr/lib
+          /usr/local/lib
+          #mingw
+          c:/msys/local/lib
+          NO_DEFAULT_PATH
+    )  
+    
+    if(NOT LIBKML_RELEASE AND LIBKML_DEBUG)
+        set(LIBKML_RELEASE ${LIBKML_DEBUG})
+    endif(NOT LIBKML_RELEASE AND LIBKML_DEBUG)
+	
+    LIST(APPEND LIBKML_LIBRARY
+        debug ${LIBKML_DEBUG} optimized ${LIBKML_RELEASE}
+    )
 
 IF (LIBKML_INCLUDE_DIR AND LIBKML_LIBRARY)
    SET(LIBKML_FOUND TRUE)

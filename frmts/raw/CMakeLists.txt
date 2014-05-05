@@ -59,6 +59,7 @@ set(LIB_CSOURCES
 	gtxdataset.cpp
 	hkvdataset.cpp
 	idadataset.cpp
+    krodataset.cpp
 	landataset.cpp
 	lcpdataset.cpp
 	loslasdataset.cpp

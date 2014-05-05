@@ -37,7 +37,7 @@ project ("lib${LIB_NAME}")
 include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/ogrsf_frmts)  
-
+include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/ogrsf_frmts/mem)  
 
 find_package(GEOS)
 if(GEOS_FOUND)
@@ -83,6 +83,7 @@ set(LIB_INST_HEADERS
 	ogr_p.h
 	ogr_spatialref.h
 	ogr_srs_api.h
+    ogr_geocoding.h
 )
 
 set(LIB_HHEADERS ${LIB_INST_HEADERS}
@@ -95,6 +96,8 @@ set(LIB_HHEADERS ${LIB_INST_HEADERS}
     swq.h
     osr_cs_wkt.h
     osr_cs_wkt_parser.h
+    ogr_expat.h
+    ogrsf_frmts/mem/ogr_mem.h
 )
 
 set(LIB_CSOURCES
@@ -147,6 +150,7 @@ set(LIB_CSOURCES
     ogrgeomediageometry.cpp 
 	ogrpgeogeometry.cpp 
     ogrfeaturequery.cpp 
+    ogr_geocoding.cpp 
 )
 
 # needed packages

@@ -52,6 +52,9 @@ set(LIB_HHEADERS
     gdal_proxy.h
     gdal_rat.h
 	gdalexif.h
+    gdalgeorefpamdataset.h
+    gdaljp2abstractdataset.h
+    gdaljp2metadata.h
 )
 
 set(LIB_CSOURCES
@@ -82,8 +85,14 @@ set(LIB_CSOURCES
 	gdaljp2box.cpp
 	gdaljp2metadata.cpp
     gdalclientserver.cpp
+    gdalpamdataset.cpp
+    gdalpamrasterband.cpp
+    gdalpamproxydb.cpp
+    gdalgeorefpamdataset.cpp  
+    gdaljp2abstractdataset.cpp
+    gdalvirtualmem.cpp    
 )
-
+        
 if(GDAL_PAM_ENABLED)
 	set(LIB_HHEADERS ${LIB_HHEADERS}
 		gdal_pam.h

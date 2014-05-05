@@ -247,51 +247,53 @@ set(LIB_HHEADERS
     gdal_csv.h
     cpl_spawn.h
     cpl_progress.h
+    cpl_virtualmem.h
+    cpl_vsil_curl_priv.h
 )
 
 set(LIB_CSOURCES
-    cplgetsymbol.cpp
-    cplkeywordparser.cpp
+    cpl_conv.cpp
+    cpl_error.cpp 
+    cpl_string.cpp      
     cplstring.cpp
     cplstringlist.cpp
-    cpl_atomic_ops.cpp
-    cpl_base64.cpp
-    cpl_conv.cpp 
+    cpl_strtod.cpp  
+    cpl_vsisimple.cpp 
+    cplgetsymbol.cpp
+    cpl_path.cpp 
     cpl_csv.cpp 
-    cpl_error.cpp 
     cpl_findfile.cpp
-    cpl_getexecpath.cpp 
-    cpl_hash_set.cpp 
-    cpl_http.cpp 
-    cpl_list.cpp 
     cpl_minixml.cpp 
     cpl_multiproc.cpp
-    cpl_path.cpp 
-    cpl_quad_tree.cpp 
+    cpl_list.cpp 
+    cpl_getexecpath.cpp
+    cpl_vsil.cpp
+    cpl_vsi_mem.cpp 
+    cpl_http.cpp 
+    cpl_hash_set.cpp 
+    cplkeywordparser.cpp
     cpl_recode.cpp 
     cpl_recode_iconv.cpp 
     cpl_recode_stub.cpp 
-    cpl_string.cpp 
-    cpl_strtod.cpp 
-    cpl_time.cpp 
-    cpl_vsil.cpp 
+    cpl_quad_tree.cpp 
+    cpl_vsil_subfile.cpp     
+    cpl_atomic_ops.cpp
+    cpl_time.cpp
+    cpl_vsil_stdout.cpp
+    cpl_vsil_sparsefile.cpp 
     cpl_vsil_abstract_archive.cpp
+    cpl_vsil_tar.cpp
+    cpl_vsil_curl.cpp 
+    cpl_vsil_curl_streaming.cpp 
+    cpl_vsil_stdin.cpp 
     cpl_vsil_buffered_reader.cpp 
     cpl_vsil_cache.cpp 
-    cpl_vsil_curl.cpp 
-    #cpl_vsil_simple.cpp 
-    cpl_vsil_sparsefile.cpp 
-    cpl_vsil_stdin.cpp 
-    cpl_vsil_stdout.cpp 
-    cpl_vsil_subfile.cpp 
-    cpl_vsil_tar.cpp     
-    cpl_vsisimple.cpp 
-    cpl_vsi_mem.cpp 
-    #cpl_win32ce_api.cpp 
+    cpl_base64.cpp
 	cpl_xml_validate.cpp
     cpl_spawn.cpp
     cpl_google_oauth2.cpp
     cpl_progress.cpp
+    cpl_virtualmem.cpp
 )
 
 if(WIN32)
