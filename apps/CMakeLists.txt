@@ -151,7 +151,16 @@ apps_macro("gdal_grid" "${gdal_grid_CSOURCES}" "${gdal_grid_HHEADERS}")
 	apps_macro("ogr2ogr" "${ogr2ogr_CSOURCES}" "${ogr2ogr_HHEADERS}")    
 
         
-#ogrlineref    
+#ogrlineref   
+    find_package(GEOS)
+    if(GEOS_FOUND)
+    	get_filename_component(GEOS_ROOT ${GEOS_INCLUDE_DIR} PATH)
+        include_directories(${GEOS_INCLUDE_DIR})
+        include_directories(${GEOS_ROOT}/capi)	
+        add_definitions(-DHAVE_GEOS=1)
+    	set(GDAL_HAVE_GEOS ON PARENT_SCOPE)
+    endif(GEOS_FOUND)
+ 
 	set(ogrlineref_HHEADERS
 	)
 
