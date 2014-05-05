@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2002, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2007-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -251,7 +252,7 @@ int OGRGMLDataSource::Open( const char * pszNameIn )
 
 {
     VSILFILE   *fp;
-    char        szHeader[2048];
+    char        szHeader[4096];
     int         nNumberOfFeatures = 0;
     CPLString   osWithVsiGzip;
     const char *pszSchemaLocation = NULL;
@@ -757,17 +758,30 @@ int OGRGMLDataSource::Open( const char * pszNameIn )
                     {
                         if( oNamespace.bUseGlobalSRSName )
                             bUseGlobalSRSName = TRUE;
-
+                        
                         for( size_t iTypename = 0;
                                     iTypename < oNamespace.aoFeatureTypes.size();
                                     iTypename ++ )
                         {
+                            const char* pszElementToFind = NULL;
+                            
                             GMLRegistryFeatureType& oFeatureType =
                                         oNamespace.aoFeatureTypes[iTypename];
-                            const char* pszElementToFind =
-                                CPLSPrintf("%s:%s", oNamespace.osPrefix.c_str(),
-                                           oFeatureType.osElementName.c_str());
-                            if( osHeader.ifind(pszElementToFind) != std::string::npos )
+                            
+                            if ( oFeatureType.osElementValue.size() ) 
+                                pszElementToFind = CPLSPrintf("%s:%s>%s",
+                                                              oNamespace.osPrefix.c_str(),
+                                                              oFeatureType.osElementName.c_str(),
+                                                              oFeatureType.osElementValue.c_str());
+                            else
+                                pszElementToFind = CPLSPrintf("%s:%s",
+                                                              oNamespace.osPrefix.c_str(),
+                                                              oFeatureType.osElementName.c_str());
+
+                            /* Case sensitive test since in a CadastralParcel feature */
+                            /* there is a property basicPropertyUnit xlink, not to be */
+                            /* confused with a top-level BasicPropertyUnit feature... */
+                            if( osHeader.find(pszElementToFind) != std::string::npos )
                             {
                                 if( oFeatureType.osSchemaLocation.size() )
                                 {
@@ -1176,7 +1190,7 @@ OGRGMLLayer *OGRGMLDataSource::TranslateGMLSchema( GMLFeatureClass *poClass )
     for( iField = 0; iField < poClass->GetGeometryPropertyCount(); iField++ )
     {
         GMLGeometryPropertyDefn *poProperty = poClass->GetGeometryProperty( iField );
-        OGRGeomFieldDefn oField( poProperty->GetSrcElement(), (OGRwkbGeometryType)poProperty->GetType() );
+        OGRGeomFieldDefn oField( poProperty->GetName(), (OGRwkbGeometryType)poProperty->GetType() );
         if( poClass->GetGeometryPropertyCount() == 1 && poClass->GetFeatureCount() == 0 )
         {
             oField.SetType(wkbUnknown);

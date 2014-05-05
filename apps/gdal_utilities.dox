@@ -33,6 +33,7 @@ The following utility programs are distributed with GDAL.
 <li> \ref gdalsrsinfo - Report a given SRS in different formats.  (GDAL >= 1.9.0)
 <li> \ref gdalmove - Transform the coordinate system of a file (GDAL >= 1.10)
 <li> \ref gdal_edit - Edit in place various information of an existing GDAL dataset (projection, geotransform, nodata, metadata)
+<li> \ref gdal_calc - Command line raster calculator with numpy syntax
 <li> \ref gdal-config - Get options required to build software using GDAL.
 <li> \ref gdalmanage - Identify, copy, rename and delete raster.
 <li> \ref gdalcompare - Compare two images and report on differences.
@@ -209,11 +210,11 @@ useful for datasets with huge amount of GCPs, such as L1B AVHRR or HDF4 MODIS
 which contain thousands of them.</dd>
 <dt> <b>-nomd</b></dt><dd> Suppress metadata printing. Some datasets may contain a lot
 of metadata strings.</dd>
-<dt> <b>-nrat</b></dt><dd> Suppress printing of raster attribute table.</dd>
+<dt> <b>-norat</b></dt><dd> Suppress printing of raster attribute table.</dd>
 <dt> <b>-noct</b></dt><dd> Suppress printing of color table.</dd>
 <dt> <b>-checksum</b></dt><dd> Force computation of the checksum for each band in the dataset.</dd>
-<dt> <b>-listmdd</b></dt><dd> (GDAL >= 2.0) List all metadata domains available for the dataset.</dd>
-<dt> <b>-mdd domain</b></dt><dd> Report metadata for the specified domain. Starting with GDAL 2.0,
+<dt> <b>-listmdd</b></dt><dd> (GDAL >= 1.11) List all metadata domains available for the dataset.</dd>
+<dt> <b>-mdd domain</b></dt><dd> Report metadata for the specified domain. Starting with GDAL 1.11,
 "all" can be used to report metadata in all domains</dd>
 <dt> <b>-nofl</b></dt><dd> (GDAL >= 1.9.0) Only display the first file of the
 file list.</dd>
@@ -303,7 +304,7 @@ gdal_translate [--help-general]
        [-a_srs srs_def] [-a_ullr ulx uly lrx lry] [-a_nodata value]
        [-gcp pixel line easting northing [elevation]]*
        [-mo "META-TAG=VALUE"]* [-q] [-sds]
-       [-co "NAME=VALUE"]* [-stats]
+       [-co "NAME=VALUE"]* [-stats] [-norat]
        src_dataset dst_dataset
 \endverbatim
 
@@ -346,15 +347,15 @@ input pixels values from the range <i>src_min</i> to <i>src_max</i> to
 the range <i>dst_min</i> to <i>dst_max</i>.  If omitted the output range is
 0 to 255.  If omitted the input range is automatically computed from the
 source data.
-Before GDAL 2.0, it can be specified only once, and in that case, it applies to
+Before GDAL 1.11, it can be specified only once, and in that case, it applies to
 all bands of the output dataset.
-Starting with GDAL 2.0, -scale can be repeated several times (if specified only once,
+Starting with GDAL 1.11, -scale can be repeated several times (if specified only once,
 it also applies to all bands of the output dataset), so as to specify per band parameters.
 It is also possible to use the "-scale_bn" syntax where bn is a band number
 (e.g. "-scale_2" for the 2nd band of the output dataset) to specify the parameters of
 one or several specific bands.
 </dd>
-<dt> <b>-exponent</b> <i> exp_val</i>:</dt><dd> (From GDAL 2.0) To apply non-linear scaling
+<dt> <b>-exponent</b> <i> exp_val</i>:</dt><dd> (From GDAL 1.11) To apply non-linear scaling
 with a power function. exp_val is the exponent of the power function (must be postive). This option
 must be used with the -scale option.
 If specified only once, -exponent applies to all bands of the output image.
@@ -404,6 +405,7 @@ output.</dd>
 output files.  Use with formats like HDF or OGDI that have subdatasets.
 The output file naming scheme has changed in GDAL 1.11 (e.g. ofile_1.tif, ofile_2.tif).</dd>
 <dt> <b>-stats</b>:</dt><dd> (GDAL >= 1.8.0) Force (re)computation of statistics.</dd>
+<dt> <b>-norat</b></dt><dd> (GDAL >= 1.11) Do not copy source RAT into destination dataset.</dd>
 <dt> <i>src_dataset</i>:</dt><dd>The source dataset name. It can be either
 file name, URL of data source or subdataset name for multi-dataset files.</dd>
 <dt> <i>dst_dataset</i>:</dt><dd> The destination file name.</dd>
@@ -594,7 +596,7 @@ raster.  This output is suitable for use with <a href="http://mapserver.org/">Ma
 tileindex. 
 
 <dl>
-<dt><b>-f</b> format:</dt><dd> (GDAL >= 2.0)
+<dt><b>-f</b> format:</dt><dd> (GDAL >= 1.11)
 <p>The OGR format of the output tile index file. Default is Esri Shapefile.</p>
 </dd>
 <dt><b>-tileindex</b> field_name:</dt>
@@ -609,10 +611,10 @@ tileindex.
 <dt><b>-t_srs</b> target_srs:</dt>
 <dd><p>Geometries of input files will be transformed to the desired target coordinate reference system. Using this option generates files that are not compatible with MapServer &lt; 6.4. Default creates simple rectangular polygons in the same coordinate reference system as the input rasters.</p>
 </dd>
-<dt><b>-src_srs_name</b> field_name:</dt><dd> (GDAL >= 2.0) 
+<dt><b>-src_srs_name</b> field_name:</dt><dd> (GDAL >= 1.11) 
 <p>The name of the field to store the SRS of each tile. This field name can be used as the value of the TILESRS keyword in MapServer &gt;= 6.4.</p>
 </dd>
-<dt><b>-src_srs_format</b> type:</dt><dd> (GDAL >= 2.0) 
+<dt><b>-src_srs_format</b> type:</dt><dd> (GDAL >= 1.11) 
 <p>The format in which the SRS of each tile must be written. Types can be AUTO, WKT, EPSG, PROJ.</p>
 </dd>
 <dt><b>-lyr_name</b> name:</dt>
@@ -1679,7 +1681,7 @@ creates regular grid from the scattered data
 gdal_grid [-ot {Byte/Int16/UInt16/UInt32/Int32/Float32/Float64/
           CInt16/CInt32/CFloat32/CFloat64}]
 	  [-of format] [-co "NAME=VALUE"]
-	  [-zfield field_name]
+	  [-zfield field_name] [-z_increase increase_value] [-z_multiply multiply_value]
 	  [-a_srs srs_def] [-spat xmin ymin xmax ymax]
           [-clipsrc <xmin ymin xmax ymax>|WKT|datasource|spat_extent]
           [-clipsrcsql sql_statement] [-clipsrclayer layer]
@@ -1727,6 +1729,15 @@ on the features to be used to get a Z value from. This value overrides Z value
 read from feature geometry record (naturally, if you have a Z value in
 geometry, otherwise you have no choice and should specify a field name
 containing Z value).</dd>
+
+<dt> <b>-z_increase</b> <i>increase_value</i>:</dt><dd> Addition to the attribute field
+on the features to be used to get a Z value from. The addition should be the same
+unit as Z value. The result value will be Z value + Z increase value. The default value is 0.</dd>
+
+<dt> <b>-z_multiply</b> <i>multiply_value</i>:</dt><dd> This is multiplication 
+ratio for Z field. This can be used for shift from e.g. foot to meters or from 
+elevation to deep. The result value will be (Z value + Z increase value) * Z multiply value. 
+The default value is 1.</dd>
 
 <dt> <b>-a</b> <i>[algorithm[:parameter1=value1][:parameter2=value2]...]</i>:
 </dt><dd> Set the interpolation algorithm or data metric name and (optionally)
@@ -2037,8 +2048,14 @@ Usage:
                 [-compute_edges] [-b Band (default=1)] [-of format] [-q]
 
 Notes :
-  Scale is the ratio of vertical units to horizontal
-   for Feet:Latlong use scale=370400, for Meters:LatLong use scale=111120)
+  gdaldem generally assumes that x, y and z units are identical.  If x (east-west)
+  and y (north-south) units are identical, but z (elevation) units are different, the
+  scale (-s) option can be used to set the ratio of vertical units to horizontal.  For 
+  LatLong projections near the equator, where units of latitude and units of 
+  longitude are similar, elevation (z) units can be converted to be compatible
+  by using scale=370400 (if elevation is in feet) or scale=111120 (if elevation is in 
+  meters).  For locations not near the equator, it would be best to reproject your
+  grid using gdalwarp before using gdaldem.
 
 \endverbatim
 \if man

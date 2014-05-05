@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2010, Thomas Hirsch
+ * Copyright (c) 2010-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -296,6 +297,8 @@ void OGRSOSILayer::ResetReading() {
 int OGRSOSILayer::TestCapability( const char * pszCap ) {
 
     if( EQUAL(pszCap,OLCStringsAsUTF8) )
+        return TRUE;
+    if( EQUAL(pszCap,OLCCreateField) )
         return TRUE;
     else
         return FALSE;

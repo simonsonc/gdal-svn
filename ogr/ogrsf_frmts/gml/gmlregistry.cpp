@@ -6,7 +6,7 @@
  * Author:   Even Rouault, <even dot rouault at mines dash paris dot org>
  *
  ******************************************************************************
- * Copyright (c) 2013, Even Rouault
+ * Copyright (c) 2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -110,6 +110,7 @@ int GMLRegistryNamespace::Parse(const char* pszRegistryFilename, CPLXMLNode* psN
 int GMLRegistryFeatureType::Parse(const char* pszRegistryFilename, CPLXMLNode* psNode)
 {
     const char* pszElementName = CPLGetXMLValue(psNode, "elementName", NULL);
+    const char* pszElementValue = CPLGetXMLValue(psNode, "elementValue", NULL);
     const char* pszSchemaLocation = CPLGetXMLValue(psNode, "schemaLocation", NULL);
     const char* pszGFSSchemaLocation = CPLGetXMLValue(psNode, "gfsSchemaLocation", NULL);
     if( pszElementName == NULL || (pszSchemaLocation == NULL && pszGFSSchemaLocation == NULL) )
@@ -137,6 +138,11 @@ int GMLRegistryFeatureType::Parse(const char* pszRegistryFilename, CPLXMLNode* p
                 CPLGetPath(pszRegistryFilename), pszGFSSchemaLocation, NULL );
         }
         osGFSSchemaLocation = pszGFSSchemaLocation;
+    }
+
+    if ( pszElementValue != NULL )
+    {
+        osElementValue = pszElementValue; 
     }
 
     return TRUE;

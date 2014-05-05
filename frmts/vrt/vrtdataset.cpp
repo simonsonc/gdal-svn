@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2001, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2007-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -58,7 +59,7 @@ VRTDataset::VRTDataset( int nXSize, int nYSize )
 
     nGCPCount = 0;
     pasGCPList = NULL;
-    pszGCPProjection = CPLStrdup("");
+    pszGCPProjection = NULL;
 
     pszVRTPath = NULL;
 
@@ -458,7 +459,10 @@ int VRTDataset::GetGCPCount()
 const char *VRTDataset::GetGCPProjection()
 
 {
-    return pszGCPProjection;
+    if( pszGCPProjection == NULL )
+        return "";
+    else
+        return pszGCPProjection;
 }
 
 /************************************************************************/

@@ -6,7 +6,7 @@
  * Author:   Even Rouault, even.rouault at mines-paris.org
  *
  ******************************************************************************
- * Copyright (c) 2010, Even Rouault
+ * Copyright (c) 2010-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -464,7 +464,7 @@ int VSIArchiveFilesystemHandler::Stat( const char *pszFilename, VSIStatBufL *pSt
         if (FindFileInArchive(archiveFilename, osFileInArchive, &archiveEntry))
         {
             /* Patching st_size with uncompressed file size */
-            pStatBuf->st_size = (long)archiveEntry->uncompressed_size;
+            pStatBuf->st_size = archiveEntry->uncompressed_size;
             pStatBuf->st_mtime = (time_t)archiveEntry->nModifiedTime;
             if (archiveEntry->bIsDir)
                 pStatBuf->st_mode = S_IFDIR;
@@ -502,7 +502,7 @@ int VSIArchiveFilesystemHandler::Stat( const char *pszFilename, VSIStatBufL *pSt
             else
             {
                 /* Patching st_size with uncompressed file size */
-                pStatBuf->st_size = (long)poReader->GetFileSize();
+                pStatBuf->st_size = poReader->GetFileSize();
                 pStatBuf->st_mtime = (time_t)poReader->GetModifiedTime();
                 pStatBuf->st_mode = S_IFREG;
             }

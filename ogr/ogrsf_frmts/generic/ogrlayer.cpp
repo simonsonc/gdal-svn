@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1999,  Les Technologies SoftMap Inc.
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -869,7 +870,7 @@ OGRFeatureDefnH OGR_L_GetLayerDefn( OGRLayerH hLayer )
 int OGR_L_FindFieldIndex( OGRLayerH hLayer, const char *pszFieldName, int bExactMatch )
 
 {
-    VALIDATE_POINTER1( hLayer, "OGR_L_FindFieldIndex", NULL );
+    VALIDATE_POINTER1( hLayer, "OGR_L_FindFieldIndex", -1 );
 
     return ((OGRLayer *)hLayer)->FindFieldIndex( pszFieldName, bExactMatch );
 }

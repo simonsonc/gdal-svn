@@ -6,7 +6,7 @@
  * Author:   Even Rouault, even dot rouault at mines dash paris dot org
  *
  ******************************************************************************
- * Copyright (c) 2012, Even Rouault <even dot rouault at mines dash paris dot org>
+ * Copyright (c) 2012-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -40,6 +40,7 @@ class OGRWarpedLayer : public OGRLayerDecorator
 {
   protected:
       OGRFeatureDefn              *m_poFeatureDefn;
+      int                          m_iGeomField;
 
       OGRCoordinateTransformation *m_poCT;
       OGRCoordinateTransformation *m_poReversedCT; /* may be NULL */
@@ -56,6 +57,7 @@ class OGRWarpedLayer : public OGRLayerDecorator
   public:
 
                        OGRWarpedLayer(OGRLayer* poDecoratedLayer,
+                                      int iGeomField,
                                       int bTakeOwnership,
                                       OGRCoordinateTransformation* poCT,  /* must NOT be NULL, ownership acquired by OGRWarpedLayer */
                                       OGRCoordinateTransformation* poReversedCT /* may be NULL, ownership acquired by OGRWarpedLayer */);

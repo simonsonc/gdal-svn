@@ -7,6 +7,7 @@
  *
  **********************************************************************
  * Copyright (c) 2002, Frank Warmerdam
+ * Copyright (c) 2010-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -218,7 +219,7 @@ void GMLFeature::SetGeometryDirectly( int nIdx, CPLXMLNode* psGeom )
         SetGeometryDirectly( psGeom );
         return;
     }
-    else if( m_nGeometryCount == 1 && nIdx > 0 )
+    else if( nIdx > 0 && m_nGeometryCount <= 1 )
     {
         m_papsGeometry = (CPLXMLNode **) CPLMalloc(2 * sizeof(CPLXMLNode *));
         m_papsGeometry[0] = m_apsGeometry[0];

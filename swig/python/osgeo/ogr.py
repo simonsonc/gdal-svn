@@ -141,6 +141,51 @@ def DontUseExceptions(*args):
   """DontUseExceptions()"""
   return _ogr.DontUseExceptions(*args)
 import osr
+class StyleTable(_object):
+    """Proxy of C++ OGRStyleTableShadow class"""
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, StyleTable, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, StyleTable, name)
+    __repr__ = _swig_repr
+    def __init__(self, *args): 
+        """__init__(self) -> StyleTable"""
+        this = _ogr.new_StyleTable(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _ogr.delete_StyleTable
+    __del__ = lambda self : None;
+    def AddStyle(self, *args):
+        """AddStyle(self, char pszName, char pszStyleString) -> int"""
+        return _ogr.StyleTable_AddStyle(self, *args)
+
+    def LoadStyleTable(self, *args):
+        """LoadStyleTable(self, char utf8_path) -> int"""
+        return _ogr.StyleTable_LoadStyleTable(self, *args)
+
+    def SaveStyleTable(self, *args):
+        """SaveStyleTable(self, char utf8_path) -> int"""
+        return _ogr.StyleTable_SaveStyleTable(self, *args)
+
+    def Find(self, *args):
+        """Find(self, char pszName) -> char"""
+        return _ogr.StyleTable_Find(self, *args)
+
+    def ResetStyleStringReading(self, *args):
+        """ResetStyleStringReading(self)"""
+        return _ogr.StyleTable_ResetStyleStringReading(self, *args)
+
+    def GetNextStyle(self, *args):
+        """GetNextStyle(self) -> char"""
+        return _ogr.StyleTable_GetNextStyle(self, *args)
+
+    def GetLastStyleName(self, *args):
+        """GetLastStyleName(self) -> char"""
+        return _ogr.StyleTable_GetLastStyleName(self, *args)
+
+StyleTable_swigregister = _ogr.StyleTable_swigregister
+StyleTable_swigregister(StyleTable)
+
 class Driver(_object):
     """Proxy of C++ OGRDriverShadow class"""
     __swig_setmethods__ = {}
@@ -726,6 +771,25 @@ class DataSource(_object):
 
         """
         return _ogr.DataSource_ReleaseResultSet(self, *args)
+
+    def GetStyleTable(self, *args):
+        """
+        GetStyleTable(self) -> StyleTable
+
+        OGRStyleTableH
+        OGR_DS_GetStyleTable(OGRDataSourceH hDS) 
+        """
+        return _ogr.DataSource_GetStyleTable(self, *args)
+
+    def SetStyleTable(self, *args):
+        """
+        SetStyleTable(self, StyleTable table)
+
+        void
+        OGR_DS_SetStyleTable(OGRDataSourceH hDS, OGRStyleTableH hStyleTable)
+
+        """
+        return _ogr.DataSource_SetStyleTable(self, *args)
 
     def Destroy(self):
       "Once called, self has effectively been destroyed.  Do not access. For backwards compatiblity only"
@@ -1931,6 +1995,24 @@ class Layer(_object):
         """
         return _ogr.Layer_Erase(self, *args, **kwargs)
 
+    def GetStyleTable(self, *args):
+        """
+        GetStyleTable(self) -> StyleTable
+
+        OGRStyleTableH
+        OGR_L_GetStyleTable(OGRLayerH hLayer) 
+        """
+        return _ogr.Layer_GetStyleTable(self, *args)
+
+    def SetStyleTable(self, *args):
+        """
+        SetStyleTable(self, StyleTable table)
+
+        void
+        OGR_L_SetStyleTable(OGRLayerH hLayer, OGRStyleTableH hStyleTable) 
+        """
+        return _ogr.Layer_SetStyleTable(self, *args)
+
     def Reference(self):
       "For backwards compatibility only."
       pass
@@ -2703,6 +2785,13 @@ class Feature(_object):
         papszValues:  the values to assign. 
         """
         return _ogr.Feature_SetFieldStringList(self, *args)
+
+    def SetFieldBinaryFromHexString(self, *args):
+        """
+        SetFieldBinaryFromHexString(self, int id, char pszValue)
+        SetFieldBinaryFromHexString(self, char name, char pszValue)
+        """
+        return _ogr.Feature_SetFieldBinaryFromHexString(self, *args)
 
     def SetFrom(self, *args, **kwargs):
         """

@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 1999, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2007-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1869,6 +1870,9 @@ GDALDataset *EHdrDataset::CreateCopy( const char * pszFilename,
                                            papszAdjustedOptions, 
                                            pfnProgress, pProgressData );
     CSLDestroy( papszAdjustedOptions );
+    
+    if( poOutDS != NULL )
+        poOutDS->FlushCache();
 
     return poOutDS;
 }

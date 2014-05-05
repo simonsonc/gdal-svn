@@ -6,7 +6,7 @@
  * Author:   Even Rouault, even.rouault at mines-paris.org
  *
  ******************************************************************************
- * Copyright (c) 2007, Even Rouault
+ * Copyright (c) 2007-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -822,7 +822,7 @@ GDALDataset* RPFTOCSubDataset::CreateDataSetFromTocEntry(const char* openInforma
                             if( bHasNoDataValue && iC == (int)noDataValue )
                                 continue;
 
-                            const GDALColorEntry* entry = poCT->GetColorEntry(i);
+                            const GDALColorEntry* entry = poCT->GetColorEntry(iC);
                             if( entry->c1 != 0 || entry->c2 != 0 || entry->c3 != 0)
                             {
                                 bAllBlack = FALSE;

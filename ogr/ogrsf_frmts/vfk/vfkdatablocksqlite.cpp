@@ -6,7 +6,8 @@
  * Author:   Martin Landa, landa.martin gmail.com
  *
  ******************************************************************************
- * Copyright (c) 2012-2013, Martin Landa <landa.martin gmail.com>
+ * Copyright (c) 2012-2014, Martin Landa <landa.martin gmail.com>
+ * Copyright (c) 2012-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -92,7 +93,7 @@ int VFKDataBlockSQLite::LoadGeometryPoint()
 	    nGeometries++;
     }
     
-    /* update number of geometries in 'vfk_blocks' table */
+    /* update number of geometries in VFK_DB_TABLE table */
     UpdateVfkBlocks(nGeometries);
 
     if (poReader->IsSpatial())
@@ -256,7 +257,7 @@ int VFKDataBlockSQLite::LoadGeometryLineStringSBP()
 	    poReader->ExecuteSQL("COMMIT");
     }
 
-    /* update number of geometries in 'vfk_blocks' table */
+    /* update number of geometries in VFK_DB_TABLE table */
     UpdateVfkBlocks(nGeometries);
     
     return nInvalid;
@@ -344,7 +345,7 @@ int VFKDataBlockSQLite::LoadGeometryLineStringHP()
 	    nGeometries++;
     }
     
-    /* update number of geometries in 'vfk_blocks' table */
+    /* update number of geometries in VFK_DB_TABLE table */
     UpdateVfkBlocks(nGeometries);
     
     if (poReader->IsSpatial())
@@ -600,7 +601,7 @@ int VFKDataBlockSQLite::LoadGeometryPolygon()
     CPLDebug("OGR-VFK", "%s: nolines = %d norings = %d",
              m_pszName, nInvalidNoLines, nInvalidNoRings);
     
-    /* update number of geometries in 'vfk_blocks' table */
+    /* update number of geometries in VFK_DB_TABLE table */
     UpdateVfkBlocks(nGeometries);
 
     if (poReader->IsSpatial())
@@ -856,8 +857,8 @@ bool VFKDataBlockSQLite::LoadGeometryFromDB()
     if (!poReader->IsSpatial())   /* check if DB is spatial */
 	return FALSE;
 
-    osSQL.Printf("SELECT num_geometries FROM 'vfk_blocks' WHERE table_name = '%s'",
-		 m_pszName);
+    osSQL.Printf("SELECT num_geometries FROM %s WHERE table_name = '%s'",
+		 VFK_DB_TABLE, m_pszName);
     hStmt = poReader->PrepareStatement(osSQL.c_str());
     if (poReader->ExecuteSQL(hStmt) != OGRERR_NONE)
         return FALSE;
@@ -929,7 +930,7 @@ bool VFKDataBlockSQLite::LoadGeometryFromDB()
 }
 
 /*!
-  \brief Update vfk_blocks table
+  \brief Update VFK_DB_TABLE table
 
   \param nGeometries number of geometries to update
 */
@@ -945,9 +946,9 @@ void VFKDataBlockSQLite::UpdateVfkBlocks(int nGeometries) {
                  "VFKDataBlockSQLite::UpdateVfkBlocks(): name=%s -> "
                  "%d geometries saved to internal DB", m_pszName, nGeometries);
         
-	/* update number of geometries in 'vfk_blocks' table */
-	osSQL.Printf("UPDATE vfk_blocks SET num_geometries = %d WHERE table_name = '%s'",
-		     nGeometries, m_pszName);
+	/* update number of geometries in VFK_DB_TABLE table */
+	osSQL.Printf("UPDATE %s SET num_geometries = %d WHERE table_name = '%s'",
+		     VFK_DB_TABLE, nGeometries, m_pszName);
 	poReader->ExecuteSQL(osSQL.c_str());
     }
 }
@@ -965,7 +966,7 @@ void VFKDataBlockSQLite::UpdateFID(long int iFID, std::vector<int> rowId)
     
     poReader = (VFKReaderSQLite*) m_poReader;
     
-    /* update number of geometries in 'vfk_blocks' table */
+    /* update number of geometries in VFK_DB_TABLE table */
     osSQL.Printf("UPDATE %s SET %s = %ld WHERE rowid IN (",
                  m_pszName, FID_COLUMN, iFID);
     for (size_t i = 0; i < rowId.size(); i++) {

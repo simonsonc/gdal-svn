@@ -7,8 +7,9 @@
  * Author:   Even Rouault, even dot rouault at mines dash paris dot org
  *
  ******************************************************************************
- * Copyright (c) 2010, Even Rouault
+ * Copyright (c) 2010-2013, Even Rouault <even dot rouault at mines-paris dot org>
  * Copyright (c) 2007, Mateusz Loskot
+ * Copyright (c) 2013, Kyle Shannon <kyle at pobox dot com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -77,7 +78,7 @@ OGRErr OGRESRIJSONReader::Parse( const char* pszText )
         {
             CPLError( CE_Failure, CPLE_AppDefined,
                       "ESRIJSON parsing error: %s (at offset %d)",
-            	      json_tokener_errors[jstok->err], jstok->char_offset);
+            	      json_tokener_error_desc(jstok->err), jstok->char_offset);
             
             json_tokener_free(jstok);
             return OGRERR_CORRUPT_DATA;

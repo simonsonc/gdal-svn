@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2002, Frank Warmerdam
+ * Copyright (c) 2008-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -189,12 +190,17 @@ double CPL_DLL OGR_G_GetY( OGRGeometryH, int );
 double CPL_DLL OGR_G_GetZ( OGRGeometryH, int );
 void   CPL_DLL OGR_G_GetPoint( OGRGeometryH, int iPoint, 
                                double *, double *, double * );
+void   CPL_DLL OGR_G_SetPointCount( OGRGeometryH hGeom, int nNewPointCount );
 void   CPL_DLL OGR_G_SetPoint( OGRGeometryH, int iPoint, 
                                double, double, double );
 void   CPL_DLL OGR_G_SetPoint_2D( OGRGeometryH, int iPoint, 
                                   double, double );
 void   CPL_DLL OGR_G_AddPoint( OGRGeometryH, double, double, double );
 void   CPL_DLL OGR_G_AddPoint_2D( OGRGeometryH, double, double );
+void   CPL_DLL OGR_G_SetPoints( OGRGeometryH hGeom, int nPointsIn,
+                                void* pabyX, int nXStride,
+                                void* pabyY, int nYStride,
+                                void* pabyZ, int nZStride );
 
 /* Methods for getting/setting rings and members collections */
 
@@ -559,6 +565,9 @@ int CPL_DLL OGR_ST_GetRGBFromString(OGRStyleToolH hST, const char *pszColor,
 
 OGRStyleTableH  CPL_DLL OGR_STBL_Create( void ) CPL_WARN_UNUSED_RESULT;
 void    CPL_DLL OGR_STBL_Destroy( OGRStyleTableH hSTBL ); 
+int     CPL_DLL OGR_STBL_AddStyle( OGRStyleTableH hStyleTable,
+                                   const char *pszName,
+                                   const char *pszStyleString);
 int     CPL_DLL OGR_STBL_SaveStyleTable( OGRStyleTableH hStyleTable,
                                          const char *pszFilename );
 int     CPL_DLL OGR_STBL_LoadStyleTable( OGRStyleTableH hStyleTable,

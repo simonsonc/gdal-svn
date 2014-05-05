@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2002, Frank Warmerdam
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -180,6 +181,10 @@ GMLReader::GMLReader(int bUseExpatParserPreferably,
     m_bFaceHoleNegative = CSLTestBoolean(CPLGetConfigOption("GML_FACE_HOLE_NEGATIVE", "NO"));
 
     m_bSetWidthFlag = TRUE;
+
+    m_bReportAllAttributes = CSLTestBoolean(
+                    CPLGetConfigOption("GML_ATTRIBUTES_TO_OGR_FIELDS", "NO"));
+
 }
 
 /************************************************************************/
@@ -775,7 +780,22 @@ int GMLReader::GetFeatureElementIndex( const char *pszElement, int nElementLengt
             /* GML answer of MapServer WMS GetFeatureInfo request */
         }
         else
+        {
+            if( m_bClassListLocked )
+            {
+                for( int i = 0; i < m_nClassCount; i++ )
+                {
+                    if( m_poState->osPath.size() + 1 + nElementLength == m_papoClass[i]->GetElementNameLen() &&
+                        m_papoClass[i]->GetElementName()[m_poState->osPath.size()] == '|' &&
+                        memcmp(m_poState->osPath.c_str(), m_papoClass[i]->GetElementName(), m_poState->osPath.size()) == 0 &&
+                        memcmp(pszElement,m_papoClass[i]->GetElementName() + 1 + m_poState->osPath.size(), nElementLength) == 0 )
+                    {
+                        return i;
+                    }
+                }
+            }
             return -1;
+        }
     }
 
     // If the class list isn't locked, any element that is a featureMember
@@ -1064,6 +1084,10 @@ void GMLReader::SetFeaturePropertyDirectly( const char *pszElement,
                     osFieldName = pszElement;
             }
 
+            size_t nPos = osFieldName.find("@");
+            if( nPos != std::string::npos )
+                osFieldName[nPos] = '_';
+
             // Does this conflict with an existing property name?
             while( poClass->GetProperty(osFieldName) != NULL )
             {
@@ -1327,7 +1351,7 @@ int GMLReader::PrescanForSchema( int bGetExtents, int bAnalyzeSRSPerFeature )
         if( papsGeometry != NULL && papsGeometry[0] != NULL )
         {
             if( poClass->GetGeometryPropertyCount() == 0 )
-                poClass->AddGeometryProperty( new GMLGeometryPropertyDefn( "", wkbUnknown ) );
+                poClass->AddGeometryProperty( new GMLGeometryPropertyDefn( "", "", wkbUnknown ) );
         }
 
 #ifdef SUPPORT_GEOMETRY

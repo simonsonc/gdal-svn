@@ -7,6 +7,7 @@
 *
 ******************************************************************************
 * Copyright (c) 2009, Ragi Yaser Burhum
+ * Copyright (c) 2011-2014, Even Rouault <even dot rouault at mines-paris dot org>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
 * copy of this software and associated documentation files (the "Software"),
@@ -112,10 +113,13 @@ class FGdbLayer : public FGdbBaseLayer
   bool                UpdateRowWithGeometry(Row& row, OGRGeometry* poGeom);
 #endif
 
+  std::vector<ByteArray*> m_apoByteArrays;
   OGRErr              PopulateRowWithFeature( Row& row, OGRFeature *poFeature );
   OGRErr              GetRow( EnumRows& enumRows, Row& row, long nFID );
 
   char              **m_papszOptions;
+  
+  int                 m_bCreateMultipatch;
 
   char*               CreateFieldDefn(OGRFieldDefn& oField,
                                       int bApproxOK,

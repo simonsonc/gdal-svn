@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2001, 2004, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2008-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -91,7 +92,7 @@ public:
                         GDALDataType eType, 
                         const char *pszWKT, double *padfGeoTransform,
                         int nGCPCount, const GDAL_GCP *pasGCPList,
-                        int bIsJPEG2000 );
+                        int bIsJPEG2000, int bPixelIsPoint );
     CPLErr  CloseDown();
 
     CPLErr  PrepareCoverageBox( const char *pszWKT, double *padfGeoTransform );
@@ -514,7 +515,7 @@ CPLErr GDALECWCompressor::Initialize(
     GDALDataType eType, 
     const char *pszWKT, double *padfGeoTransform,
     int nGCPCount, const GDAL_GCP *pasGCPList,
-    int bIsJPEG2000 )
+    int bIsJPEG2000, int bPixelIsPoint )
 
 {
      const char *pszOption;
@@ -927,6 +928,8 @@ CPLErr GDALECWCompressor::Initialize(
         oJP2MD.SetProjection( pszWKT );
         oJP2MD.SetGeoTransform( padfGeoTransform );
         oJP2MD.SetGCPs( nGCPCount, pasGCPList );
+        oJP2MD.bPixelIsPoint = bPixelIsPoint;
+
         if (bIsJPEG2000) {
 
             if( CSLFetchBoolean( papszOptions, "GMLJP2", TRUE ) )
@@ -1197,12 +1200,16 @@ ECWCreateCopy( const char * pszFilename, GDALDataset *poSrcDS,
         /* by CPLSPrintf(), which has just a few rotating entries. */
         papszBandDescriptions[i] = CPLStrdup(ECWGetColorInterpretationName(poSrcDS->GetRasterBand(i+1)->GetColorInterpretation(), i));
     }
+
+    const char* pszAreaOrPoint = poSrcDS->GetMetadataItem(GDALMD_AREA_OR_POINT);
+    int bPixelIsPoint = pszAreaOrPoint != NULL && EQUAL(pszAreaOrPoint, GDALMD_AOP_POINT);
+
     if( oCompressor.Initialize( pszFilename, papszOptions, 
                                 nXSize, nYSize, nBands, papszBandDescriptions, bRGBColorSpace,
                                 eType, pszWKT, adfGeoTransform, 
                                 poSrcDS->GetGCPCount(), 
                                 poSrcDS->GetGCPs(),
-                                bIsJPEG2000 )
+                                bIsJPEG2000, bPixelIsPoint )
         != CE_None )
     {
         for (i=0;i<nBands;i++)
@@ -1736,7 +1743,7 @@ CPLErr ECWWriteDataset::Crystalize()
                                    eDataType, 
                                    pszProjection, adfGeoTransform, 
                                    0, NULL,
-                                   bIsJPEG2000 );
+                                   bIsJPEG2000, FALSE );
 
     if( eErr == CE_None )
         bCrystalized = TRUE;

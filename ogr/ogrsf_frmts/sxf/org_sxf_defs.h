@@ -232,7 +232,9 @@ enum SXFGeometryType
     SXF_GT_Point = 2,       /* MultiPoint geometric object                       */
     SXF_GT_Text = 3,        /* LineString geometric object with associated label */
     SXF_GT_Vector = 4,      /* Vector geometric object with associated label */
-    SXF_GT_TextTemplate = 5 /* Text template */
+    SXF_GT_TextTemplate = 5, /* Text template */
+    SXF_GT_VectorAngle = 21,       /* Rotated symbol */
+    SXF_GT_VectorScaled = 22       /* Scaled symbol */
 };
 
 enum SXFValueType
@@ -363,7 +365,7 @@ typedef struct{
     GByte nFlagKeysAsCodes;
     GByte nFlagPalleteMods;
     GByte Reserved[30];
-    GByte szFontEnc[4];
+    GUInt32 nFontEnc;
     GUInt32 nColorsInPalette;
 } RSCHeader;
 

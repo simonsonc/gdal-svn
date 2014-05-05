@@ -61,7 +61,7 @@ protected:
     int m_nSXFFormatVer;
     CPLString sFIDColumn_;
     void            **m_hIOMutex;
-
+    double              m_dfCoeff;
     virtual OGRFeature *       GetNextRawFeature(long nFID);
 
     GUInt32 TranslateXYH(const SXFRecordDescription& certifInfo,
@@ -73,6 +73,7 @@ protected:
     OGRFeature *TranslateText(const SXFRecordDescription& certifInfo, const char * psBuff, GUInt32 nBufLen);
     OGRFeature *TranslatePolygon(const SXFRecordDescription& certifInfo, const char * psBuff, GUInt32 nBufLen);
     OGRFeature *TranslateLine(const SXFRecordDescription& certifInfo, const char * psBuff, GUInt32 nBufLen);
+    OGRFeature *TranslateVetorAngle(const SXFRecordDescription& certifInfo, const char * psBuff, GUInt32 nBufLen);
 public:
     OGRSXFLayer(VSILFILE* fp, void** hIOMutex, GByte nID, const char* pszLayerName, int nVer, const SXFMapDescription&  sxfMapDesc);
     ~OGRSXFLayer();
@@ -110,12 +111,13 @@ class OGRSXFDataSource : public OGRDataSource
     size_t              nLayers;
 
     VSILFILE* fpSXF;    
-
+    void  *hIOMutex;
     void FillLayers(void);
     void CreateLayers();
     void CreateLayers(VSILFILE* fpRSC);
     OGRErr ReadSXFInformationFlags(VSILFILE* fpSXF, SXFPassport& passport);
     OGRErr ReadSXFDescription(VSILFILE* fpSXF, SXFPassport& passport);
+    void SetVertCS(const long iVCS, SXFPassport& passport);
     OGRErr ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& passport);
     OGRSXFLayer*       GetLayerById(GByte);
 public:

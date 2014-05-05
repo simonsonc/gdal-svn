@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2002, Frank Warmerdam <warmerdam@pobox.com>
+ * Copyright (c) 2010-2013, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -268,7 +269,7 @@ OGRNASLayer *OGRNASDataSource::TranslateNASSchema( GMLFeatureClass *poClass )
 {
     OGRNASLayer *poLayer;
     OGRwkbGeometryType eGType = wkbNone;
-    
+
     if( poClass->GetGeometryPropertyCount() != 0 )
     {
         eGType = (OGRwkbGeometryType) poClass->GetGeometryProperty(0)->GetType();

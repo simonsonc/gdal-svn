@@ -6,7 +6,7 @@
  * Author:   Even Rouault, even dot rouault at mines dash paris dot org
  *
  ******************************************************************************
- * Copyright (c) 2007, Even Rouault
+ * Copyright (c) 2007-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1803,7 +1803,8 @@ int OGRGPXLayer::TestCapability( const char * pszCap )
 {
     if( EQUAL(pszCap,OLCSequentialWrite) )
         return bWriteMode;
-
+    else if( EQUAL(pszCap,OLCCreateField) )
+        return bWriteMode;
     else if( EQUAL(pszCap,OLCStringsAsUTF8) )
         return TRUE;
 

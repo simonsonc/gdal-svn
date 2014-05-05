@@ -7,6 +7,7 @@
  *
  ******************************************************************************
  * Copyright (c) 2007, Mateusz Loskot
+ * Copyright (c) 2008-2014, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -33,6 +34,7 @@
 #include <json_object_private.h>
 #include <printbuf.h>
 #include <ogr_api.h>
+#include <ogr_p.h>
 
 /************************************************************************/
 /*                           OGRGeoJSONWriteFeature                     */
@@ -313,6 +315,11 @@ json_object* OGRGeoJSONWritePolygon( OGRPolygon* poPolygon, int nCoordPrecision 
     
     json_object* poObjRing = NULL;
     poObjRing = OGRGeoJSONWriteLineCoords( poRing, nCoordPrecision );
+    if( poObjRing == NULL )
+    {
+        json_object_put(poObj);
+        return NULL;
+    }
     json_object_array_add( poObj, poObjRing );
 
     /* Interior rings. */
@@ -324,6 +331,11 @@ json_object* OGRGeoJSONWritePolygon( OGRPolygon* poPolygon, int nCoordPrecision 
             continue;
 
         poObjRing = OGRGeoJSONWriteLineCoords( poRing, nCoordPrecision );
+        if( poObjRing == NULL )
+        {
+            json_object_put(poObj);
+            return NULL;
+        }
 
         json_object_array_add( poObj, poObjRing );
     }
@@ -351,6 +363,11 @@ json_object* OGRGeoJSONWriteMultiPoint( OGRMultiPoint* poGeometry, int nCoordPre
 
         json_object* poObjPoint = NULL;
         poObjPoint = OGRGeoJSONWritePoint( poPoint, nCoordPrecision );
+        if( poObjPoint == NULL )
+        {
+            json_object_put(poObj);
+            return NULL;
+        }
 
         json_object_array_add( poObj, poObjPoint );
     }
@@ -378,6 +395,11 @@ json_object* OGRGeoJSONWriteMultiLineString( OGRMultiLineString* poGeometry, int
 
         json_object* poObjLine = NULL;
         poObjLine = OGRGeoJSONWriteLineString( poLine, nCoordPrecision );
+        if( poObjLine == NULL )
+        {
+            json_object_put(poObj);
+            return NULL;
+        }
         
         json_object_array_add( poObj, poObjLine );
     }
@@ -405,6 +427,11 @@ json_object* OGRGeoJSONWriteMultiPolygon( OGRMultiPolygon* poGeometry, int nCoor
 
         json_object* poObjPoly = NULL;
         poObjPoly = OGRGeoJSONWritePolygon( poPoly, nCoordPrecision );
+        if( poObjPoly == NULL )
+        {
+            json_object_put(poObj);
+            return NULL;
+        }
         
         json_object_array_add( poObj, poObjPoly );
     }
@@ -431,6 +458,11 @@ json_object* OGRGeoJSONWriteGeometryCollection( OGRGeometryCollection* poGeometr
         
         json_object* poObjGeom = NULL;
         poObjGeom = OGRGeoJSONWriteGeometry( poGeom, nCoordPrecision );
+        if( poGeom == NULL )
+        {
+            json_object_put(poObj);
+            return NULL;
+        }
         
         json_object_array_add( poObj, poObjGeom );
     }
@@ -444,6 +476,12 @@ json_object* OGRGeoJSONWriteGeometryCollection( OGRGeometryCollection* poGeometr
 json_object* OGRGeoJSONWriteCoords( double const& fX, double const& fY, int nCoordPrecision )
 {
     json_object* poObjCoords = NULL;
+    if( CPLIsInf(fX) || CPLIsInf(fY) ||
+        CPLIsNan(fX) || CPLIsNan(fY) )
+    {
+        CPLError(CE_Warning, CPLE_AppDefined, "Infinite or NaN coordinate encountered");
+        return NULL;
+    }
     poObjCoords = json_object_new_array();
     json_object_array_add( poObjCoords, json_object_new_double_with_precision( fX, nCoordPrecision ) );
     json_object_array_add( poObjCoords, json_object_new_double_with_precision( fY, nCoordPrecision ) );
@@ -454,6 +492,12 @@ json_object* OGRGeoJSONWriteCoords( double const& fX, double const& fY, int nCoo
 json_object* OGRGeoJSONWriteCoords( double const& fX, double const& fY, double const& fZ, int nCoordPrecision )
 {
     json_object* poObjCoords = NULL;
+    if( CPLIsInf(fX) || CPLIsInf(fY) || CPLIsInf(fZ) ||
+        CPLIsNan(fX) || CPLIsNan(fY) || CPLIsNan(fZ) )
+    {
+        CPLError(CE_Warning, CPLE_AppDefined, "Infinite or NaN coordinate encountered");
+        return NULL;
+    }
     poObjCoords = json_object_new_array();
     json_object_array_add( poObjCoords, json_object_new_double_with_precision( fX, nCoordPrecision ) );
     json_object_array_add( poObjCoords, json_object_new_double_with_precision( fY, nCoordPrecision ) );
@@ -478,6 +522,11 @@ json_object* OGRGeoJSONWriteLineCoords( OGRLineString* poLine, int nCoordPrecisi
             poObjPoint = OGRGeoJSONWriteCoords( poLine->getX(i), poLine->getY(i), nCoordPrecision );
         else
             poObjPoint = OGRGeoJSONWriteCoords( poLine->getX(i), poLine->getY(i), poLine->getZ(i), nCoordPrecision );
+        if( poObjPoint == NULL )
+        {
+            json_object_put(poObjCoords);
+            return NULL;
+        }
         json_object_array_add( poObjCoords, poObjPoint );
     }
     
@@ -549,122 +598,6 @@ char* OGR_G_ExportToJsonEx( OGRGeometryH hGeometry, char** papszOptions )
 }
 
 /************************************************************************/
-/*                        json_OGRFormatDouble()                        */
-/* Copied & slightly adapted from ogrutils.cpp                          */
-/************************************************************************/
-
-static int json_OGRFormatDouble( char *pszBuffer, int nBufferLen, double dfVal,
-                                 char chDecimalSep, int nPrecision )
-{
-    int i;
-    int bHasTruncated = FALSE;
-    char szFormat[16];
-    int ret;
-    
-    sprintf(szFormat, "%%.%df", nPrecision);
-
-    ret = snprintf(pszBuffer, nBufferLen, szFormat, dfVal);
-    /* Windows CRT doesn't conform with C99 and return -1 when buffer is truncated */
-    if (ret >= nBufferLen || ret == -1)
-        return -1;
-
-    while(TRUE)
-    {
-        int nCountBeforeDot = 0;
-        int iDotPos = -1;
-        i = 0;
-        while( pszBuffer[i] != '\0' )
-        {
-            if ((pszBuffer[i] == '.' || pszBuffer[i] == ',') && chDecimalSep != '\0')
-            {
-                iDotPos = i;
-                pszBuffer[i] = chDecimalSep;
-            }
-            else if (iDotPos < 0 && pszBuffer[i] != '-')
-                nCountBeforeDot ++;
-            i++;
-        }
-
-    /* -------------------------------------------------------------------- */
-    /*      Trim trailing 00000x's as they are likely roundoff error.       */
-    /* -------------------------------------------------------------------- */
-        if( i > 10 && iDotPos >=0 )
-        {
-            if (/* && pszBuffer[i-1] == '1' &&*/
-                pszBuffer[i-2] == '0'
-                && pszBuffer[i-3] == '0'
-                && pszBuffer[i-4] == '0'
-                && pszBuffer[i-5] == '0'
-                && pszBuffer[i-6] == '0' )
-            {
-                pszBuffer[--i] = '\0';
-            }
-            else if( i - 8 > iDotPos && /* pszBuffer[i-1] == '1' */
-                  /* && pszBuffer[i-2] == '0' && */
-                    (nCountBeforeDot >= 4 || pszBuffer[i-3] == '0')
-                    && (nCountBeforeDot >= 5 || pszBuffer[i-4] == '0')
-                    && (nCountBeforeDot >= 6 || pszBuffer[i-5] == '0')
-                    && (nCountBeforeDot >= 7 || pszBuffer[i-6] == '0')
-                    && (nCountBeforeDot >= 8 || pszBuffer[i-7] == '0')
-                    && pszBuffer[i-8] == '0'
-                    && pszBuffer[i-9] == '0')
-            {
-                i -= 8;
-                pszBuffer[i] = '\0';
-            }
-        }
-
-    /* -------------------------------------------------------------------- */
-    /*      Trim trailing zeros.                                            */
-    /* -------------------------------------------------------------------- */
-        while( i > 2 && pszBuffer[i-1] == '0' && pszBuffer[i-2] != '.' )
-        {
-            pszBuffer[--i] = '\0';
-        }
-
-    /* -------------------------------------------------------------------- */
-    /*      Detect trailing 99999X's as they are likely roundoff error.     */
-    /* -------------------------------------------------------------------- */
-        if( !bHasTruncated &&
-            i > 10 &&
-            iDotPos >= 0 &&
-            nPrecision >= 15)
-        {
-            if (/*pszBuffer[i-1] == '9' && */
-                 pszBuffer[i-2] == '9'
-                && pszBuffer[i-3] == '9'
-                && pszBuffer[i-4] == '9'
-                && pszBuffer[i-5] == '9'
-                && pszBuffer[i-6] == '9' )
-            {
-                snprintf(pszBuffer, nBufferLen, "%.9f", dfVal);
-                bHasTruncated = TRUE;
-                continue;
-            }
-            else if (i - 9 > iDotPos && /*pszBuffer[i-1] == '9' && */
-                     /*pszBuffer[i-2] == '9' && */
-                    (nCountBeforeDot >= 4 || pszBuffer[i-3] == '9')
-                    && (nCountBeforeDot >= 5 || pszBuffer[i-4] == '9')
-                    && (nCountBeforeDot >= 6 || pszBuffer[i-5] == '9')
-                    && (nCountBeforeDot >= 7 || pszBuffer[i-6] == '9')
-                    && (nCountBeforeDot >= 8 || pszBuffer[i-7] == '9')
-                    && pszBuffer[i-8] == '9'
-                    && pszBuffer[i-9] == '9')
-            {
-                sprintf(szFormat, "%%.%df", MIN(5,12 - nCountBeforeDot));
-                snprintf(pszBuffer, nBufferLen, szFormat, dfVal);
-                bHasTruncated = TRUE;
-                continue;
-            }
-        }
-
-        break;
-    }
-
-    return strlen(pszBuffer);
-}
-
-/************************************************************************/
 /*               OGR_json_double_with_precision_to_string()             */
 /************************************************************************/
 
@@ -675,11 +608,13 @@ static int OGR_json_double_with_precision_to_string(struct json_object *jso,
 {
     char szBuffer[75]; 
     int nPrecision = (int) (size_t) jso->_userdata;
-    int ret = json_OGRFormatDouble( szBuffer, sizeof(szBuffer), jso->o.c_double, '.', 
-                                   (nPrecision < 0) ? 15 : nPrecision ); 
-    if (ret < 0) 
-        return ret; 
-    return printbuf_memappend(pb, szBuffer, ret); 
+    OGRFormatDouble( szBuffer, sizeof(szBuffer), jso->o.c_double, '.', 
+                     (nPrecision < 0) ? 15 : nPrecision ); 
+    if( szBuffer[0] == 't' /*oobig */ )
+    {
+        snprintf(szBuffer, sizeof(szBuffer), "%.18g", jso->o.c_double);
+    }
+    return printbuf_memappend(pb, szBuffer, strlen(szBuffer)); 
 }
 
 /************************************************************************/
@@ -691,6 +626,6 @@ json_object* json_object_new_double_with_precision(double dfVal,
 {
     json_object* jso = json_object_new_double(dfVal);
     json_object_set_serializer(jso, OGR_json_double_with_precision_to_string,
-                               (void*)nCoordPrecision, NULL );
+                               (void*)(size_t)nCoordPrecision, NULL );
     return jso;
 }

@@ -9,6 +9,7 @@
 ******************************************************************************
 * Copyright (c) 2010, Ragi Yaser Burhum
 * Copyright (c) 2011, Paul Ramsey <pramsey at cleverelephant.ca>
+ * Copyright (c) 2011-2014, Even Rouault <even dot rouault at mines-paris dot org>
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
 * copy of this software and associated documentation files (the "Software"),
@@ -406,6 +407,10 @@ bool GDBFieldTypeToWidthPrecision(std::string &gdbType, int *width, int *precisi
     else if(gdbType == "esriFieldTypeGUID" )
     {
         *width = 16;
+    }
+    else if(gdbType == "esriFieldTypeBlob" )
+    {
+        *width = 0;
     }
     else
     {

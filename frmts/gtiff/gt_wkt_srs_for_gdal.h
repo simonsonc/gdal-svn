@@ -6,7 +6,7 @@
  * Author:   Even Rouault
  *
  ******************************************************************************
- * Copyright (c) 2010, Even Rouault
+ * Copyright (c) 2010-2012, Even Rouault <even dot rouault at mines-paris dot org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -39,9 +39,21 @@ CPLErr CPL_DLL GTIFMemBufFromWkt( const char *pszWKT,
                                   const double *padfGeoTransform,
                                   int nGCPCount, const GDAL_GCP *pasGCPList,
                                   int *pnSize, unsigned char **ppabyBuffer );
+
+CPLErr GTIFMemBufFromWktEx( const char *pszWKT,
+                            const double *padfGeoTransform,
+                            int nGCPCount, const GDAL_GCP *pasGCPList,
+                            int *pnSize, unsigned char **ppabyBuffer,
+                            int bPixelIsPoint );
+
 CPLErr CPL_DLL GTIFWktFromMemBuf( int nSize, unsigned char *pabyBuffer,
                           char **ppszWKT, double *padfGeoTransform,
                           int *pnGCPCount, GDAL_GCP **ppasGCPList );
+
+CPLErr GTIFWktFromMemBufEx( int nSize, unsigned char *pabyBuffer, 
+                            char **ppszWKT, double *padfGeoTransform,
+                            int *pnGCPCount, GDAL_GCP **ppasGCPList,
+                            int *pbPixelIsPoint );
 
 CPL_C_END;
 
