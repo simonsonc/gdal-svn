@@ -3,7 +3,7 @@
 # * Purpose:  CMake build scripts
 # * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
 # ******************************************************************************
-# * Copyright (C) 2012 Bishop
+# * Copyright (C) 2014 Bishop
 # * 
 # * Permission is hereby granted, free of charge, to any person obtaining a
 # * copy of this software and associated documentation files (the "Software"),
@@ -24,22 +24,32 @@
 # * DEALINGS IN THE SOFTWARE.
 # ******************************************************************************
 
-macro(apps_macro APP_NAME APP_CSOURCES APP_HHEADERS)
-	project (${APP_NAME})
-	add_executable(${APP_NAME} ${APP_CSOURCES} ${APP_HHEADERS})
+cmake_minimum_required (VERSION 2.8.10)
 
-	set_target_properties(${APP_NAME}
-		PROPERTIES PROJECT_LABEL ${APP_NAME}
-		VERSION ${GDAL_VERSION}
-		SOVERSION 1
-		ARCHIVE_OUTPUT_DIRECTORY ${GDAL_ROOT_BINARY_DIR}
-		LIBRARY_OUTPUT_DIRECTORY ${GDAL_ROOT_BINARY_DIR}
-		RUNTIME_OUTPUT_DIRECTORY ${GDAL_ROOT_BINARY_DIR} 
-		)
+set(LIB_NAME "ogrsf_openfilegdb")
+project ("lib${LIB_NAME}")
 
-	target_link_libraries(${APP_NAME} ${GDAL_LIB_NAME})
+include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)  
+include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/ogrsf_frmts)  
+include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/ogrsf_frmts/generic)
 
-	install(TARGETS ${APP_NAME} DESTINATION bin)
-endmacro()
+if(GDAL_USE_CPL)
+	add_definitions(-DUSE_CPL)
+endif(GDAL_USE_CPL)
 
+set(LIB_HHEADERS
+    filegdbtable.h
+	filegdbtable_priv.h
+    ogr_openfilegdb.h
+)
 
+set(LIB_CSOURCES
+	filegdbindex.cpp
+	filegdbtable.cpp
+    ogropenfilegdbdatasource.cpp
+    ogropenfilegdbdriver.cpp
+    ogropenfilegdblayer.cpp
+)
+
+set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
+add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})

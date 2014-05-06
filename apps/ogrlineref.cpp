@@ -44,6 +44,7 @@
 #define FIELD_FINISH "end"
 #define FIELD_SCALE_FACTOR "scale"
 #define DELTA 0.00000001 //- delta
+#define TOLLERANCE 0.00008983153
 
 #if defined(HAVE_GEOS)
 #if GEOS_VERSION_MAJOR > 3 || (GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 2)
@@ -584,7 +585,9 @@ OGRErr CreatePartsFromLineString(OGRLineString* pPathGeom, OGRLayer* const poPkL
             }
             else
             {
-                moRepers[dfReperPos] = pPt;
+                double dfDist = pPathGeom->Distance(pPt);
+                if (dfDist < TOLLERANCE)
+                    moRepers[dfReperPos] = pPt;
             }           
         }
         OGRFeature::DestroyFeature(pReperFeature);

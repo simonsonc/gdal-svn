@@ -1,7 +1,7 @@
 # ******************************************************************************
 # * Project:  CMake4GDAL
 # * Purpose:  CMake build scripts
-# * Author: Dmitriy Baryshnikov (aka Bishop), polimax@mail.ru
+# * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
 # ******************************************************************************
 # * Copyright (C) 2012,2013 Bishop
 # * 
@@ -164,6 +164,12 @@ option(OGR_ENABLE_S57 "Set ON to build s57 driver" OFF)
 if(OGR_ENABLE_S57)
     add_definitions(-DS57_ENABLED)
     add_subdirectory(s57)
+endif()
+
+option(OGR_ENABLE_OGDB "Set ON to build OpenGDB driver" OFF)
+if(OGR_ENABLE_OGDB)
+    add_definitions(-DOPENFILEGDB_ENABLED)
+    add_subdirectory(openfilegdb)
 endif()
 
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)

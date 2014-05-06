@@ -1,7 +1,7 @@
 # ******************************************************************************
 # * Project:  CMake4GDAL
 # * Purpose:  CMake build scripts
-# * Author: Dmitriy Baryshnikov (aka Bishop), polimax@mail.ru
+# * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
 # ******************************************************************************
 # * Copyright (C) 2012,2013 Bishop
 # * 
