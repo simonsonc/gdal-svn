@@ -133,7 +133,7 @@ endif(GDAL_BUILD_SHARED)
 
 configure_file(${CMAKE_MODULE_PATH}/gdal_def.cmake ${GDAL_ROOT_SOURCE_DIR}/gcore/gdal_def.h @ONLY)
 
-list(REMOVE_DUPLICATES GDAL_TARGET_LINK_LIB)
+#list(REMOVE_DUPLICATES GDAL_TARGET_LINK_LIB)
 foreach(TL ${GDAL_TARGET_LINK_LIB})
 	message(STATUS "gdal target link lib=${TL}")
 endforeach(TL)
