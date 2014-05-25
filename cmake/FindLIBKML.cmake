@@ -20,73 +20,61 @@
 
 # try to use framework on mac
 # want clean framework path, not unix compatibility path
-IF (APPLE)
-  IF (CMAKE_FIND_FRAMEWORK MATCHES "FIRST"
-      OR CMAKE_FRAMEWORK_PATH MATCHES "ONLY"
-      OR NOT CMAKE_FIND_FRAMEWORK)
-    SET (CMAKE_FIND_FRAMEWORK_save ${CMAKE_FIND_FRAMEWORK} CACHE STRING "" FORCE)
-    SET (CMAKE_FIND_FRAMEWORK "ONLY" CACHE STRING "" FORCE)
-    #FIND_PATH(LIBKML_INCLUDE_DIR LIBKML/dom.h)
-    FIND_LIBRARY(LIBKML_LIBRARY LIBKML)
-    IF (LIBKML_LIBRARY)
-      # FIND_PATH doesn't add "Headers" for a framework
-      SET (LIBKML_INCLUDE_DIR ${LIBKML_LIBRARY}/Headers CACHE PATH "Path to a file.")
-    ENDIF (LIBKML_LIBRARY)
-    SET (CMAKE_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK_save} CACHE STRING "" FORCE)
-  ENDIF ()
-ENDIF (APPLE)
 
-FIND_PATH(LIBKML_INCLUDE_DIR_T dom.h
-  "$ENV{LIB_DIR}/include/kml"
-  "$ENV{LIB_DIR}/include"
-  /usr/include/kml
-  /usr/local/include/kml
-  #mingw
-  c:/msys/local/include/kml
-  NO_DEFAULT_PATH
-  )
-#FIND_PATH(LIBKML_INCLUDE_DIR_T dom.h)
-mark_as_advanced(LIBKML_INCLUDE_DIR_T)
+IF (NOT LIBKML_INCLUDE_DIR_T)
+    find_path(LIBKML_INCLUDE_DIR_T dom.h
+      "$ENV{LIB_DIR}/include/kml"
+      "$ENV{LIB_DIR}/include"
+      /usr/include/kml
+      /usr/local/include/kml
+      #mingw
+      c:/msys/local/include/kml
+      NO_DEFAULT_PATH
+      )
+    #FIND_PATH(LIBKML_INCLUDE_DIR_T dom.h)
+    mark_as_advanced(LIBKML_INCLUDE_DIR_T)
+ENDIF (NOT LIBKML_INCLUDE_DIR_T)
 
 get_filename_component(LIBKML_INCLUDE_DIR ${LIBKML_INCLUDE_DIR_T} PATH)
 
-    find_library(LIBKML_RELEASE
-        NAMES
-          kml.lib      
-          libkml.lib          
-        PATHS 
-          "$ENV{LIB_DIR}/lib"
-          /usr/lib
-          /usr/local/lib
-          #mingw
-          c:/msys/local/lib
-          NO_DEFAULT_PATH
-    )	
-    find_library(LIBKML_DEBUG
-        NAMES
-          kmld.lib   
-          libkmld.lib   
-        PATHS
-          "$ENV{LIB_DIR}/lib"
-          /usr/lib
-          /usr/local/lib
-          #mingw
-          c:/msys/local/lib
-          NO_DEFAULT_PATH
-    )  
-    
-    if(NOT LIBKML_RELEASE AND LIBKML_DEBUG)
-        set(LIBKML_RELEASE ${LIBKML_DEBUG})
-    endif(NOT LIBKML_RELEASE AND LIBKML_DEBUG)
-	
-    LIST(APPEND LIBKML_LIBRARY
-        debug ${LIBKML_DEBUG} optimized ${LIBKML_RELEASE}
-    )
+IF (NOT LIBKML_LIBRARY)
 
+find_library(LIBKML_RELEASE
+    NAMES
+      kml.lib      
+      libkml.lib          
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+find_library(LIBKML_DEBUG
+    NAMES
+      kmld.lib   
+      libkmld.lib   
+    PATHS
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)  
+
+if(NOT LIBKML_RELEASE AND LIBKML_DEBUG)
+    set(LIBKML_RELEASE ${LIBKML_DEBUG})
+endif(NOT LIBKML_RELEASE AND LIBKML_DEBUG)
+
+LIST(APPEND LIBKML_LIBRARY
+    debug ${LIBKML_DEBUG} optimized ${LIBKML_RELEASE}
+)
+
+ENDIF (NOT LIBKML_LIBRARY)
+  
 IF (LIBKML_INCLUDE_DIR AND LIBKML_LIBRARY)
    SET(LIBKML_FOUND TRUE)
 ENDIF (LIBKML_INCLUDE_DIR AND LIBKML_LIBRARY)
-
 
 IF (LIBKML_FOUND)
 
@@ -99,6 +87,8 @@ ELSE (LIBKML_FOUND)
 
    IF (LIBKML_FIND_REQUIRED)
       MESSAGE(FATAL_ERROR "Could not find LIBKML")
+   ELSE (LIBKML_FIND_REQUIRED)
+      MESSAGE(STATUS "Could not find LIBKML")
    ENDIF (LIBKML_FIND_REQUIRED)
 
 ENDIF (LIBKML_FOUND)
