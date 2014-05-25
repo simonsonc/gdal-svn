@@ -1,7 +1,9 @@
-# ******************************************************************************# * Project:  CMake4GDAL# * Purpose:  CMake build scripts
+# ******************************************************************************
+# * Project:  CMake4GDAL
+# * Purpose:  CMake build scripts
 # * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
 # ******************************************************************************
-# * Copyright (C) 2012,2013 Bishop
+# * Copyright (C) 2012,2013,2014 Dmitry Baryshnikov
 # * 
 # * Permission is hereby granted, free of charge, to any person obtaining a
 # * copy of this software and associated documentation files (the "Software"),
@@ -22,12 +24,11 @@
 # * DEALINGS IN THE SOFTWARE.
 # ******************************************************************************
 
-cmake_minimum_required (VERSION 2.8.10)
+cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
 
 set(PROJECT_NAME "gdallib")
 project(${PROJECT_NAME})
 
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
 set(CMAKE_COLOR_MAKEFILE ON)
 
 # parse the version number from gdal_version.h and include in GDAL_MAJOR_VERSION and GDAL_MINOR_VERSION
@@ -52,53 +53,19 @@ message(STATUS "gdal version=[${GDAL_VERSION}]")
 set(GDAL_LIB_NAME gdal${GDAL_MAJOR_VERSION}${GDAL_MINOR_VERSION})
 message(STATUS "GDAL lib name ... " ${GDAL_LIB_NAME})
 
-#diagnosing info
-message(STATUS "c++ compiler ... " ${CMAKE_CXX_COMPILER})
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(GDAL_ROOT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(GDAL_ROOT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -W4 -wd4127 -wd4251 -wd4275 -wd4786 -wd4100 -wd4245 -wd4206 -wd4018 -wd4389")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W4 -wd4127 -wd4251 -wd4275 -wd4786 -wd4100 -wd4245 -wd4206 -wd4018 -wd4389")
+set(GDAL_ROOT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
 # set path to additional CMake modules
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 # uninstall target
 configure_file(${CMAKE_MODULE_PATH}/cmake_uninstall.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake IMMEDIATE @ONLY)
    
-# For windows, do not allow the compiler to use default target (Vista).
-if(WIN32)
-  add_definitions(-D_WIN32_WINNT=0x0501 -D_USRDLL)
-endif(WIN32)
-
-if(MSVC)
-  set(CMAKE_DEBUG_POSTFIX "d")
-  add_definitions(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
-  #add_definitions(-D_MBCS)
-  set(GDAL_CSOURCES ${GDAL_CSOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/gcore/Version.rc)
-  source_group("Resource Files" FILES ${CMAKE_CURRENT_SOURCE_DIR}/gcore/Version.rc)  
-endif(MSVC)
-
-add_definitions(-DSTRICT -DHAVE_SSE_AT_COMPILE_TIME)
-if(UNIX)
-    add_definitions(-DCPL_LSB)
-endif(UNIX)
-
-if(MSVC)
-    if(CMAKE_CL_64)
-        set_target_properties(${GDAL_LIB_NAME} PROPERTIES STATIC_LIBRARY_FLAGS "/machine:x64")
-        add_definitions(-D_WIN64)
-    endif(CMAKE_CL_64)
-endif(MSVC)
-
-if(UNIX)
-     if(CMAKE_COMPILER_IS_GNUCXX OR CV_ICC)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -fno-strict-aliasing")#-Wextra -Wall -W -pthread -O2 -fno-strict-aliasing -pthrea
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fno-strict-aliasing")
-     endif()
-endif(UNIX)
+include(configure)
 
 option(GDAL_USE_CPL "Set ON to use cpl" ON)
 
@@ -131,8 +98,6 @@ else(GDAL_BUILD_SHARED)
 	add_library(${GDAL_LIB_NAME} STATIC ${GDAL_CSOURCES} ${GDAL_TARGET_OBJECTS})#${GDAL_HHEADERS} 
 endif(GDAL_BUILD_SHARED)
 
-configure_file(${CMAKE_MODULE_PATH}/gdal_def.cmake ${GDAL_ROOT_SOURCE_DIR}/gcore/gdal_def.h @ONLY)
-
 list(REMOVE_DUPLICATES GDAL_TARGET_LINK_LIB)
 foreach(TL ${GDAL_TARGET_LINK_LIB})
 	message(STATUS "gdal target link lib=${TL}")
@@ -141,10 +106,6 @@ if(GDAL_TARGET_LINK_LIB)
 	target_link_libraries(${GDAL_LIB_NAME} ${GDAL_TARGET_LINK_LIB})
 endif(GDAL_TARGET_LINK_LIB)
  
-# if(PROJ_FOUND)
-    # target_link_libraries(${GDAL_LIB_NAME} ${PROJ_LIBRARY})
-# endif(PROJ_FOUND)
-
 set_target_properties(${GDAL_LIB_NAME}
 	PROPERTIES PROJECT_LABEL ${PROJECT_NAME}
     VERSION ${GDAL_VERSION}
@@ -160,19 +121,20 @@ if(WIN32)
 			RUNTIME DESTINATION bin
 			ARCHIVE DESTINATION lib/x64
 			LIBRARY DESTINATION lib/x64)
-    else(CMAKE_CL_64)
+    else()
         install(TARGETS ${GDAL_LIB_NAME}
 			RUNTIME DESTINATION bin
 			ARCHIVE DESTINATION lib/x86
 			LIBRARY DESTINATION lib/x86)
-    endif(CMAKE_CL_64)
+    endif()
 	install(FILES ${GDAL_ROOT_SOURCE_DIR}/gcore/gdal_def.h DESTINATION include/gdal)
-else(WIN32)
+else()
     install(TARGETS ${GDAL_LIB_NAME}
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib/gdal
         LIBRARY DESTINATION lib/gdal)
 	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/gcore/gdal_def.h DESTINATION include/gdal)
-endif(WIN32) 
+endif() 
     
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+

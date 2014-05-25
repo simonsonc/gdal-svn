@@ -467,7 +467,7 @@ void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
     if (eImportFromEPSGErr != OGRERR_NONE)
     {
         CPLError( CE_Warning, CPLE_None,
-                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld, EPSG %d) import from EPSG error", iVCS, nEPSG) );
+                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) import from EPSG error", iVCS, nEPSG) );
         return;
     }
 
@@ -483,7 +483,7 @@ void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
     if (eSetVertCSErr != OGRERR_NONE)
     {
         CPLError( CE_Warning, CPLE_None,
-                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld, EPSG %d) set error", iVCS, nEPSG) );
+                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) set error", iVCS, nEPSG) );
         return;
     }
 }
@@ -593,7 +593,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
     long iEllips = anData[0];
     long iVCS = anData[1];
     long iProjSys = anData[2];
-    long iDatum = anData[3];
+    //long iDatum = anData[3]; TODO: maybe used in future
     double dfProjScale = 1;
 
     double adfPrjParams[8] = { 0 };
@@ -818,11 +818,11 @@ void OGRSXFDataSource::FillLayers()
     CPLDebug("SXF","Create layers");
 
     //2. Read all records (only classify code and offset) and add this to correspondence layer
-    long nFID;
+    GUInt32 nFID;
     int nObjectsRead;
     size_t i;
     vsi_l_offset nOffset, nOffsetSemantic;
-    int nDeletedLayerIndex;
+    size_t nDeletedLayerIndex;
 
     //get record count
     GUInt32 nRecordCountMax = 0;
@@ -1201,7 +1201,7 @@ void OGRSXFDataSource::CreateLayers(VSILFILE* fpRSC)
         GUInt16 nSematicCount;
     };
 
-    int i;
+    GUInt32 i;
     size_t nLayerStructSize = sizeof(_layer);
 
     VSIFSeekL(fpRSC, stRSCFileHeader.Layers.nOffset - sizeof(szLayersID), SEEK_SET);
