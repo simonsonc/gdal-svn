@@ -57,6 +57,7 @@ OGRSXFLayer::OGRSXFLayer(VSILFILE* fp, void** hIOMutex, GByte nID, const char* p
     m_hIOMutex = hIOMutex;
     m_dfCoeff = stSXFMapDescription.dfScale / stSXFMapDescription.nResolution;
     poFeatureDefn = new OGRFeatureDefn(pszLayerName);
+//    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
     
     poFeatureDefn->SetGeomType(wkbUnknown);
@@ -1118,11 +1119,9 @@ OGRFeature *OGRSXFLayer::TranslateLine(const SXFRecordDescription& certifInfo,
 {
     double dfX = 1.0;
     double dfY = 1.0;
-
-    GUInt32 nOffset = 0;
-    
+    GUInt32 nOffset = 0;    
     GUInt32 count;
-
+    
 	//OGRFeatureDefn *fd = poFeatureDefn->Clone();
 	//fd->SetGeomType( wkbMultiLineString );
  //   OGRFeature *poFeature = new OGRFeature(fd);
@@ -1215,11 +1214,9 @@ OGRFeature *OGRSXFLayer::TranslateVetorAngle(const SXFRecordDescription& certifI
 
     double dfX = 1.0;
     double dfY = 1.0;
-
     GUInt32 nOffset = 0;
-    
     GUInt32 count;
-
+    
     OGRFeature *poFeature = new OGRFeature(poFeatureDefn);
     OGRPoint *poPT = new OGRPoint();
 
@@ -1274,7 +1271,6 @@ OGRFeature *OGRSXFLayer::TranslatePolygon(const SXFRecordDescription& certifInfo
 {
     double dfX = 1.0;
     double dfY = 1.0;
-    
     GUInt32 nOffset = 0;
     GUInt32 count;
 
@@ -1368,10 +1364,8 @@ OGRFeature *OGRSXFLayer::TranslateText(const SXFRecordDescription& certifInfo,
 {
     double dfX = 1.0;
     double dfY = 1.0;
-    
     GUInt32 nOffset = 0;
     GUInt32 count;
-
 	//OGRFeatureDefn *fd = poFeatureDefn->Clone();
 	//fd->SetGeomType( wkbLineString );
  //   OGRFeature *poFeature = new OGRFeature(fd);

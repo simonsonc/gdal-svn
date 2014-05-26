@@ -457,8 +457,7 @@ void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
 
     if (nEPSG == 0)
     {
-        CPLError( CE_Warning, CPLE_NotSupported,
-                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld) not supported", iVCS) );
+        CPLError(CE_Warning, CPLE_NotSupported, CPLSPrintf("SXF. Vertical coordinate system (SXF index %ld) not supported", iVCS));
         return;
     }
 
@@ -466,15 +465,13 @@ void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
     OGRErr eImportFromEPSGErr = sr->importFromEPSG(nEPSG);
     if (eImportFromEPSGErr != OGRERR_NONE)
     {
-        CPLError( CE_Warning, CPLE_None,
-                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) import from EPSG error", iVCS, nEPSG) );
+        CPLError( CE_Warning, CPLE_None, CPLSPrintf("SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) import from EPSG error", iVCS, nEPSG));
         return;
     }
 
     if (sr->IsVertical() != 1)
     {
-        CPLError( CE_Warning, CPLE_None,
-                  CPLString().Printf("SXF. Coordinate system (SXF index %ld, EPSG %d) is not Vertical", iVCS, nEPSG) );
+        CPLError( CE_Warning, CPLE_None, CPLSPrintf("SXF. Coordinate system (SXF index %ld, EPSG %ld) is not Vertical", iVCS, nEPSG));
         return;
     }
 
@@ -482,8 +479,7 @@ void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
     OGRErr eSetVertCSErr = passport.stMapDescription.pSpatRef->SetVertCS(sr->GetAttrValue("VERT_CS"), sr->GetAttrValue("VERT_DATUM"));
     if (eSetVertCSErr != OGRERR_NONE)
     {
-        CPLError( CE_Warning, CPLE_None,
-                  CPLString().Printf("SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) set error", iVCS, nEPSG) );
+        CPLError(CE_Warning, CPLE_None, CPLSPrintf("SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) set error", iVCS, nEPSG));
         return;
     }
 }
@@ -733,7 +729,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
     {
         double dfCenterLongEnv = passport.stMapDescription.stGeoCoords[1] + fabs(passport.stMapDescription.stGeoCoords[5] - passport.stMapDescription.stGeoCoords[1]) / 2;
 
-        int nZoneEnv = (dfCenterLongEnv + 3.0) / 6.0 + 0.5;
+        int nZoneEnv = (int)( (dfCenterLongEnv + 3.0) / 6.0 + 0.5 );
 
         if (nZoneEnv > 1 && nZoneEnv < 33)
         {
@@ -759,7 +755,7 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
     else if (iEllips == 9 && iProjSys == 17) // WGS84 / UTM
     {
         double dfCenterLongEnv = passport.stMapDescription.stGeoCoords[1] + fabs(passport.stMapDescription.stGeoCoords[5] - passport.stMapDescription.stGeoCoords[1]) / 2;
-        int nZoneEnv = 30 + (dfCenterLongEnv + 3.0) / 6.0 + 0.5;
+        int nZoneEnv = (int)(30 + (dfCenterLongEnv + 3.0) / 6.0 + 0.5);
         bool bNorth = passport.stMapDescription.stGeoCoords[6] + (passport.stMapDescription.stGeoCoords[2] - passport.stMapDescription.stGeoCoords[6]) / 2 < 0;
         int nEPSG;
         if (bNorth)
@@ -854,7 +850,7 @@ void OGRSXFDataSource::FillLayers()
 
         if (nObjectsRead != 1 || buff[0] != IDSXFOBJ)
         {
-            CPLError(CE_Failure, CPLE_FileIO, "Read record %ld failed", nFID);
+            CPLError(CE_Failure, CPLE_FileIO, "Read record %d failed", nFID);
             return;
         }
 
