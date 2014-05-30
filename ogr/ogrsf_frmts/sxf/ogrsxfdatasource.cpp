@@ -457,7 +457,7 @@ void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
 
     if (nEPSG == 0)
     {
-        CPLError(CE_Warning, CPLE_NotSupported, CPLSPrintf("SXF. Vertical coordinate system (SXF index %ld) not supported", iVCS));
+        CPLError(CE_Warning, CPLE_NotSupported, "SXF. Vertical coordinate system (SXF index %ld) not supported", iVCS);
         return;
     }
 
@@ -465,13 +465,13 @@ void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
     OGRErr eImportFromEPSGErr = sr->importFromEPSG(nEPSG);
     if (eImportFromEPSGErr != OGRERR_NONE)
     {
-        CPLError( CE_Warning, CPLE_None, CPLSPrintf("SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) import from EPSG error", iVCS, nEPSG));
+        CPLError( CE_Warning, CPLE_None, "SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) import from EPSG error", iVCS, nEPSG);
         return;
     }
 
     if (sr->IsVertical() != 1)
     {
-        CPLError( CE_Warning, CPLE_None, CPLSPrintf("SXF. Coordinate system (SXF index %ld, EPSG %ld) is not Vertical", iVCS, nEPSG));
+        CPLError( CE_Warning, CPLE_None, "SXF. Coordinate system (SXF index %ld, EPSG %ld) is not Vertical", iVCS, nEPSG);
         return;
     }
 
@@ -479,7 +479,7 @@ void OGRSXFDataSource::SetVertCS(const long iVCS, SXFPassport& passport)
     OGRErr eSetVertCSErr = passport.stMapDescription.pSpatRef->SetVertCS(sr->GetAttrValue("VERT_CS"), sr->GetAttrValue("VERT_DATUM"));
     if (eSetVertCSErr != OGRERR_NONE)
     {
-        CPLError(CE_Warning, CPLE_None, CPLSPrintf("SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) set error", iVCS, nEPSG));
+        CPLError(CE_Warning, CPLE_None, "SXF. Vertical coordinate system (SXF index %ld, EPSG %ld) set error", iVCS, nEPSG);
         return;
     }
 }
@@ -778,10 +778,12 @@ OGRErr OGRSXFDataSource::ReadSXFMapDescription(VSILFILE* fpSXF, SXFPassport& pas
         SetVertCS(iVCS, passport);
         return eErr;
     }
-    else if (iEllips == 9 && iProjSys == 34) //Miller 54003
+    else if (iEllips == 9 && iProjSys == 34) //Miller 54003 on sphere wgs84
     {
-        passport.stMapDescription.pSpatRef = new OGRSpatialReference();
-        OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(54003);
+        passport.stMapDescription.pSpatRef = new OGRSpatialReference("PROJCS[\"World_Miller_Cylindrical\",GEOGCS[\"GCS_GLOBE\", DATUM[\"GLOBE\", SPHEROID[\"GLOBE\", 6367444.6571, 0.0]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Miller_Cylindrical\"],PARAMETER[\"False_Easting\",0],PARAMETER[\"False_Northing\",0],PARAMETER[\"Central_Meridian\",0],UNIT[\"Meter\",1],AUTHORITY[\"EPSG\",\"54003\"]]");
+        OGRErr eErr = OGRERR_NONE; //passport.stMapDescription.pSpatRef->importFromEPSG(3395);
+        //OGRErr eErr = passport.stMapDescription.pSpatRef->importFromEPSG(54003);
+
         SetVertCS(iVCS, passport);
         return eErr;
     }
