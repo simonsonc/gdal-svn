@@ -39,10 +39,11 @@ get_filename_component(LIBKML_INCLUDE_DIR ${LIBKML_INCLUDE_DIR_T} PATH)
 
 IF (NOT LIBKML_LIBRARY)
 
-find_library(LIBKML_RELEASE
+find_library(LIBKML_RELEASE1_T
     NAMES
       kml.lib      
-      libkml.lib          
+      libkml.lib 
+      libkmlbase.so        
     PATHS 
       "$ENV{LIB_DIR}/lib"
       /usr/lib
@@ -50,10 +51,80 @@ find_library(LIBKML_RELEASE
       #mingw
       c:/msys/local/lib
 )	
-find_library(LIBKML_DEBUG
+
+set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE1_T})
+
+find_library(LIBKML_RELEASE2_T
+    NAMES
+      libkmldom.so           
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE2_T})
+
+find_library(LIBKML_RELEASE3_T
+    NAMES
+      libkmlconvenience.so           
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE3_T})
+
+find_library(LIBKML_RELEASE4_T
+    NAMES
+      libkmlengine.so         
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE4_T})
+
+find_library(LIBKML_RELEASE5_T
+    NAMES
+      libkmlregionator.so         
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE5_T})
+
+find_library(LIBKML_RELEASE6_T
+    NAMES
+      libkmlxsd.so        
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE6_T})
+
+find_library(LIBKML_DEBUG1_T
     NAMES
       kmld.lib   
-      libkmld.lib   
+      libkmld.lib  
+      libkmlbase.so 
+      libkmldom.so           
     PATHS
       "$ENV{LIB_DIR}/lib"
       /usr/lib
@@ -61,6 +132,77 @@ find_library(LIBKML_DEBUG
       #mingw
       c:/msys/local/lib
 )  
+
+
+set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG1_T})
+
+find_library(LIBKML_DEBUG2_T
+    NAMES
+      libkmldom.so           
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG2_T})
+
+find_library(LIBKML_DEBUG3_T
+    NAMES
+      libkmlconvenience.so           
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+
+set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG3_T})
+
+find_library(LIBKML_DEBUG4_T
+    NAMES
+      libkmlengine.so         
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+
+set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG4_T})
+
+find_library(LIBKML_DEBUG5_T
+    NAMES
+      libkmlregionator.so         
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+
+set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG5_T})
+
+find_library(LIBKML_DEBUG6_T
+    NAMES
+      libkmlxsd.so        
+    PATHS 
+      "$ENV{LIB_DIR}/lib"
+      /usr/lib
+      /usr/local/lib
+      #mingw
+      c:/msys/local/lib
+)	
+
+set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG6_T})
 
 if(NOT LIBKML_RELEASE AND LIBKML_DEBUG)
     set(LIBKML_RELEASE ${LIBKML_DEBUG})

@@ -136,10 +136,11 @@ if(OGR_ENABLE_PG)
 	add_subdirectory(pg)
 endif()
 
-option(OGR_ENABLE_SQLITE "Set ON to build SpatialLite driver" OFF)
+option(OGR_ENABLE_SQLITE "Set ON to build SpatialLite and GeoPackage drivers" OFF)
 if(OGR_ENABLE_SQLITE)
 	add_definitions(-DSQLITE_ENABLED)
 	add_subdirectory(sqlite)
+	add_subdirectory(gpkg)	
 endif()
 
 option(OGR_ENABLE_MYSQL "Set ON to build MySQL driver" OFF)

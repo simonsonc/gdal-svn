@@ -65,7 +65,8 @@ if(UNIX)
     check_library_exists(m ccos "" HAVE_LIBM)
     check_library_exists(dl    dlopen  "" HAVE_LIBDL)
     check_library_exists(rt    clock_gettime   "" HAVE_LIBRT)
-    CHECK_LIBRARY_EXISTS(pq PQconnectdb "" HAVE_LIBPQ)
+    check_library_exists(pq PQconnectdb "" HAVE_LIBPQ)
+    check_library_exists(spatialite spatialite_init "" HAS_SPATIALITE)
 
     option(CPL_MULTIPROC_PTHREAD "Set to ON if you want to use pthreads based multiprocessing support." ON)
     mark_as_advanced(CPL_MULTIPROC_PTHREAD)
@@ -179,7 +180,7 @@ if(UNIX)
     check_function_exists(vsnprintf HAVE_VSNPRINTF)
     check_function_exists(readlink HAVE_READLINK)
     
-    if("${HAVE_FOPEN64}" STREQUAL "1" AND "${HAVE_STAT64}" STREQUAL "1")
+    if(HAVE_FOPEN64 AND HAVE_STAT64)
 	set(UNIX_STDIO_64 TRUE)
         set(VSI_LARGE_API_SUPPORTED TRUE)  
         set(VSI_FSEEK64 "fseeko64")
@@ -200,9 +201,9 @@ if(UNIX)
     set(VSI_STAT64_T ${VSI_STAT64})    
 
     check_function_exists("vprintf" HAVE_VPRINTF)
-    if(NOT ${HAVE_VPRINTF})
+    if(NOT HAVE_VPRINTF)
         check_function_exists("_doprnt" HAVE_DOPRNT)
-    endif(NOT ${HAVE_VPRINTF})
+    endif()
 
 
     test_big_endian(BIGENDIAN)    
@@ -218,7 +219,12 @@ if(UNIX)
 
     if (HAVE_STDDEF_H AND HAVE_STDINT_H)
       set(STDC_HEADERS TRUE)
-    endif (HAVE_STDDEF_H AND HAVE_STDINT_H)
+    endif ()
+    
+    #sqlite/spatialite checks
+    check_library_exists(sqlite3 sqlite3_column_table_name "" HAS_COLUMN_METADATA)
+    check_library_exists(pcre pcre_compile "" HAS_PCRE)
+    check_library_exists(spatialite spatialite_target_cpu "" HAS_SPATIALITE_412_OR_LATER)
 	
     configure_file(${CMAKE_MODULE_PATH}/cpl_config.h.cmake ${GDAL_ROOT_SOURCE_DIR}/port/cpl_config.h @ONLY)
 
@@ -231,8 +237,10 @@ if(UNIX)
      endif()	
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -W4 -wd4127 -wd4251 -wd4275 -wd4786 -wd4100 -wd4245 -wd4206 -wd4018 -wd4389")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W4 -wd4127 -wd4251 -wd4275 -wd4786 -wd4100 -wd4245 -wd4206 -wd4018 -wd4389")
+if(WIN32)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -W4 -wd4127 -wd4251 -wd4275 -wd4786 -wd4100 -wd4245 -wd4206 -wd4018 -wd4389")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W4 -wd4127 -wd4251 -wd4275 -wd4786 -wd4100 -wd4245 -wd4206 -wd4018 -wd4389")
+endif()
 
 add_definitions(-DSTRICT -DHAVE_SSE_AT_COMPILE_TIME)
 

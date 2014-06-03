@@ -55,6 +55,7 @@
 
 #cmakedefine GDAL_HAVE_EXPAT
 #cmakedefine GDAL_HAVE_SQLITE
+#cmakedefine GDAL_HAVE_SPATIALITE
 #cmakedefine GDAL_HAVE_PG
 #cmakedefine GDAL_HAVE_SQLITE
 #cmakedefine GDAL_HAVE_MYSQL

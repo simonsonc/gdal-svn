@@ -3,7 +3,7 @@
 # * Purpose:  CMake build scripts
 # * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
 # ******************************************************************************
-# * Copyright (C) 2013 Bishop
+# * Copyright (C) 2013 Dmitry Baryshnikov
 # * 
 # * Permission is hereby granted, free of charge, to any person obtaining a
 # * copy of this software and associated documentation files (the "Software"),
@@ -36,13 +36,44 @@ find_package(Sqlite3 REQUIRED)
 if(SQLITE3_FOUND)
     include_directories(${SQLITE3_INCLUDE_DIR})
     add_definitions(-DHAVE_SQLITE)
+    
+    if(HAS_COLUMN_METADATA)
+        add_definitions(-DSQLITE_HAS_COLUMN_METADATA)
+    endif()
+    
+    if(HAS_PCRE)
+        add_definitions(-DHAVE_PCRE)
+    endif()
+    
 	set(GDAL_HAVE_SQLITE ON CACHE INTERNAL "GDAL_HAVE_SQLITE")
 else(SQLITE3_FOUND)
 	MESSAGE(FATAL_ERROR "Could not find Sqlite3")
 endif(SQLITE3_FOUND)
 
+find_package(SPATIALITE REQUIRED)
+if(SPATIALITE_FOUND)
+    include_directories(${SPATIALITE_INCLUDE_DIR})
+    add_definitions(-DHAVE_SPATIALITE)
+  
+    if(HAS_SPATIALITE_412_OR_LATER)
+        add_definitions(-DSPATIALITE_412_OR_LATER)
+    endif()
+    
+    if(HAS_SPATIALITE)
+        add_definitions(-DSPATIALITE_AMALGAMATION)
+    endif()
+    
+	set(GDAL_HAVE_SPATIALITE ON CACHE INTERNAL "GDAL_HAVE_SPATIALITE")
+else(SPATIALITE_FOUND)
+	MESSAGE(FATAL_ERROR "Could not find spatialite")
+endif(SPATIALITE_FOUND)
+
 set(LIB_HHEADERS
     ogr_sqlite.h
+    ogrsqlite3ext.h
+    ogrsqliteregexp.h
+    ogrsqlitesqlfunctions.h
+    ogrsqlitevirtualogr.h
 )
 
 set(LIB_CSOURCES
@@ -54,6 +85,9 @@ set(LIB_CSOURCES
 	ogrsqlitetablelayer.cpp
 	ogrsqlitevfs.cpp
 	ogrsqliteviewlayer.cpp
+	ogrsqlitevirtualogr.cpp
+	ogrsqliteexecutesql.cpp
+	ogrsqliteapiroutines.c
 )
 
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
@@ -62,3 +96,8 @@ add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
 if(SQLITE3_FOUND)
  	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${SQLITE3_LIBRARY} PARENT_SCOPE)
 endif(SQLITE3_FOUND)
+
+if(SPATIALITE_FOUND)
+ 	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${SPATIALITE_LIBRARY} PARENT_SCOPE)
+endif(SPATIALITE_FOUND)
+

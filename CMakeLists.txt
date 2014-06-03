@@ -49,8 +49,12 @@ string (REGEX MATCH "([0-9]+)"
 # Setup package meta-data
 set(GDAL_VERSION ${GDAL_MAJOR_VERSION}.${GDAL_MINOR_VERSION}.${GDAL_REV_VERSION})
 message(STATUS "gdal version=[${GDAL_VERSION}]")
-    
-set(GDAL_LIB_NAME gdal${GDAL_MAJOR_VERSION}${GDAL_MINOR_VERSION})
+
+if(WIN32)    
+    set(GDAL_LIB_NAME gdal${GDAL_MAJOR_VERSION}${GDAL_MINOR_VERSION})
+elseif(UNIX)
+    set(GDAL_LIB_NAME gdal)
+endif()
 message(STATUS "GDAL lib name ... " ${GDAL_LIB_NAME})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -131,8 +135,8 @@ if(WIN32)
 else()
     install(TARGETS ${GDAL_LIB_NAME}
         RUNTIME DESTINATION bin
-        ARCHIVE DESTINATION lib/gdal
-        LIBRARY DESTINATION lib/gdal)
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)
 	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/gcore/gdal_def.h DESTINATION include/gdal)
 endif() 
     
