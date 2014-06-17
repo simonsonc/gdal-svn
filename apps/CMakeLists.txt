@@ -30,7 +30,7 @@ include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore/)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/alg/)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/)
 
-option(GDAL_BUILD_APPS "Set ON to build apps" OFF)
+option(GDAL_BUILD_APPS "Set ON to build apps" ON)
 if(GDAL_BUILD_APPS)
 
 	include(app)
