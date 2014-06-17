@@ -370,6 +370,11 @@ void ENVIDataset::FlushCache()
 
     CPLLocaleC  oLocaleEnforcer;
 
+    // If opening an existing file in Update mode (i.e. "r+") we need to make
+    // sure any existing content is cleared, otherwise the file may contain
+    // trailing content from the previous write.
+    VSIFTruncateL( fp, 0 ); 
+
     VSIFSeekL( fp, 0, SEEK_SET );
 /* -------------------------------------------------------------------- */
 /*      Rewrite out the header.                                           */
@@ -668,14 +673,15 @@ void ENVIDataset::WriteProjectionInfo()
 /*      Minimal case - write out simple geotransform if we have a       */
 /*      non-default geotransform.                                       */
 /* -------------------------------------------------------------------- */
-    if( pszProjection == NULL || strlen(pszProjection) == 0 )
+    if( pszProjection == NULL || strlen(pszProjection) == 0  ||
+        (strlen(pszProjection) >= 8 && strncmp(pszProjection, "LOCAL_CS", 8) == 0 ) )
     {
         if( adfGeoTransform[0] != 0.0 || adfGeoTransform[1] != 1.0
             || adfGeoTransform[2] != 0.0 || adfGeoTransform[3] != 0.0
             || adfGeoTransform[4] != 0.0 || adfGeoTransform[5] != 1.0 )
         {
             const char* pszHemisphere = "North";
-            VSIFPrintfL( fp, "map info = {Unknown, %s, %d, %s}\n",
+            VSIFPrintfL( fp, "map info = {Arbitrary, %s, %d, %s}\n",
                          osLocation.c_str(), 0, pszHemisphere);
         }
         return;
@@ -1927,7 +1933,8 @@ GDALDataset *ENVIDataset::Open( GDALOpenInfo * poOpenInfo )
     else
 	pszMode = "r";
     
-    if (poOpenInfo->papszSiblingFiles == NULL)
+    char** papszSiblingFiles = poOpenInfo->GetSiblingFiles();
+    if (papszSiblingFiles == NULL)
     {
         osHdrFilename = CPLResetExtension( poOpenInfo->pszFilename, "hdr" );
         fpHeader = VSIFOpenL( osHdrFilename, pszMode );
@@ -1962,21 +1969,21 @@ GDALDataset *ENVIDataset::Open( GDALOpenInfo * poOpenInfo )
         CPLString osPath = CPLGetPath( poOpenInfo->pszFilename );
         CPLString osName = CPLGetFilename( poOpenInfo->pszFilename );
 
-        int iFile = CSLFindString(poOpenInfo->papszSiblingFiles, 
+        int iFile = CSLFindString(papszSiblingFiles, 
                                   CPLResetExtension( osName, "hdr" ) );
         if( iFile >= 0 )
         {
-            osHdrFilename = CPLFormFilename( osPath, poOpenInfo->papszSiblingFiles[iFile], 
+            osHdrFilename = CPLFormFilename( osPath, papszSiblingFiles[iFile], 
                                              NULL );
             fpHeader = VSIFOpenL( osHdrFilename, pszMode );
         }
         else
         {
-            iFile = CSLFindString(poOpenInfo->papszSiblingFiles,
+            iFile = CSLFindString(papszSiblingFiles,
                                   CPLFormFilename( NULL, osName, "hdr" ));
             if( iFile >= 0 )
             {
-                osHdrFilename = CPLFormFilename( osPath, poOpenInfo->papszSiblingFiles[iFile], 
+                osHdrFilename = CPLFormFilename( osPath, papszSiblingFiles[iFile], 
                                                  NULL );
                 fpHeader = VSIFOpenL( osHdrFilename, pszMode );
             }
@@ -2504,6 +2511,10 @@ GDALDataset *ENVIDataset::Open( GDALOpenInfo * poOpenInfo )
 /* -------------------------------------------------------------------- */
     poDS->oOvManager.Initialize( poDS, poOpenInfo->pszFilename );
 
+    // SetMetadata() calls in Open() makes the header dirty. 
+    // Don't re-write the header if nothing external has changed the metadata 
+    poDS->bHeaderDirty = FALSE; 
+
     return( poDS );
 }
 
@@ -2699,6 +2710,7 @@ void GDALRegister_ENVI()
         poDriver = new GDALDriver();
         
         poDriver->SetDescription( "ENVI" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "ENVI .hdr Labelled" );
         poDriver->SetMetadataItem( GDAL_DMD_HELPTOPIC, 

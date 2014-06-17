@@ -38,7 +38,11 @@ CPL_CVSID("$Id$");
 
 void OGRRegisterAll()
 {
-    OGRSFDriverRegistrar::GetRegistrar()->AutoLoadDrivers();
+    GDALAllRegister();
+}
+
+void OGRRegisterAllInternal()
+{
 
 #ifdef SHAPE_ENABLED
     RegisterOGRShape();
@@ -51,9 +55,6 @@ void OGRRegisterAll()
 #endif
 #ifdef SDTS_ENABLED
     RegisterOGRSDTS();
-#endif
-#ifdef TIGER_ENABLED
-    RegisterOGRTiger();
 #endif
 #ifdef S57_ENABLED
     RegisterOGRS57();
@@ -142,9 +143,6 @@ void OGRRegisterAll()
 #ifdef INGRES_ENABLED
     RegisterOGRIngres();
 #endif
-#ifdef PCIDSK_ENABLED
-    RegisterOGRPCIDSK();
-#endif
 #ifdef SDE_ENABLED
     RegisterOGRSDE();
 #endif
@@ -157,10 +155,6 @@ void OGRRegisterAll()
 #endif
 #ifdef XPLANE_ENABLED
     RegisterOGRXPlane();
-#endif
-#ifdef AVCBIN_ENABLED
-    RegisterOGRAVCBin();
-    RegisterOGRAVCE00();
 #endif
 #ifdef DWGDIRECT_ENABLED
     RegisterOGRDXFDWG();
@@ -262,9 +256,6 @@ void OGRRegisterAll()
 #ifdef ELASTIC_ENABLED
     RegisterOGRElastic();
 #endif
-#ifdef PDF_ENABLED
-    RegisterOGRPDF();
-#endif
 #ifdef WALK_ENABLED
     RegisterOGRWalk();
 #endif
@@ -274,4 +265,17 @@ void OGRRegisterAll()
 #ifdef SXF_ENABLED
     RegisterOGRSXF();
 #endif
+#ifdef SELAFIN_ENABLED
+    RegisterOGRSelafin();
+#endif
+
+/* Put TIGER and AVCBIN at end since they need poOpenInfo->GetSiblingFiles() */
+#ifdef TIGER_ENABLED
+    RegisterOGRTiger();
+#endif
+#ifdef AVCBIN_ENABLED
+    RegisterOGRAVCBin();
+    RegisterOGRAVCE00();
+#endif
+
 } /* OGRRegisterAll */

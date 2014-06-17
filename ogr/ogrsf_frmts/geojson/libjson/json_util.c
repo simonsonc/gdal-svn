@@ -62,7 +62,6 @@
 #include "json_util.h"
 
 #include "cpl_conv.h"
-
 static int sscanf_is_broken = 0;
 static int sscanf_is_broken_testdone = 0;
 static void sscanf_is_broken_test(void);

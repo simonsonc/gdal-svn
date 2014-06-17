@@ -179,7 +179,6 @@ class OGRPGLayer : public OGRLayer
 
     int                 bWkbAsOid;
 
-    int                 bHasFid;
     char                *pszFIDColumn;
 
     int                 bCanUseBinaryCursor;
@@ -280,6 +279,9 @@ class OGRPGTableLayer : public OGRPGLayer
     int                 nForcedDimension;
     int                 bCreateSpatialIndexFlag;
     int                 bInResetReading;
+    
+    int                 bAutoFIDOnCreateViaCopy;
+    int                 bUseCopyByDefault;
 
     virtual CPLString   GetFromClauseForGetExtent() { return pszSqlTableName; }
 
@@ -339,6 +341,12 @@ public:
 
     int                 ReadTableDefinition();
     int                 HasGeometryInformation() { return bGeometryInformationSet; }
+    void                SetTableDefinition(const char* pszFIDColumnName,
+                                           const char* pszGFldName,
+                                           OGRwkbGeometryType eType,
+                                           const char* pszGeomType,
+                                           int nSRSId,
+                                           int nCoordDimension);
 
     void                SetForcedSRSId( int nForcedSRSIdIn )
                                 { nForcedSRSId = nForcedSRSIdIn; }
@@ -346,6 +354,8 @@ public:
                                 { nForcedDimension = nForcedDimensionIn; }
     void                SetCreateSpatialIndexFlag( int bFlag )
                                 { bCreateSpatialIndexFlag = bFlag; }
+    void                AllowAutoFIDOnCreateViaCopy() { bAutoFIDOnCreateViaCopy = TRUE; }
+    void                SetUseCopy() { bUseCopy = TRUE; bUseCopyByDefault = TRUE; }
 
     virtual void        ResolveSRID(OGRPGGeomFieldDefn* poGFldDefn);
 };
@@ -473,7 +483,7 @@ class OGRPGDataSource : public OGRDataSource
     OGRLayer            *GetLayer( int );
     OGRLayer            *GetLayerByName(const char * pszName);
 
-    virtual OGRLayer    *CreateLayer( const char *,
+    virtual OGRLayer    *ICreateLayer( const char *,
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );

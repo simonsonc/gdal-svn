@@ -6,7 +6,7 @@ SUBDIRS-yes	:= \
 	mitab ntf gpx rec s57 sdts shape tiger vrt \
 	geoconcept xplane georss gtm dxf pgdump gpsbabel \
 	sua openair pds htf aeronavfaa edigeo svg idrisi \
-	arcgen segukooa segy sxf openfilegdb wasp
+	arcgen segukooa segy sxf openfilegdb wasp selafin
 
 SUBDIRS-$(HAVE_DODS)	+= dods
 SUBDIRS-$(HAVE_DWGDIRECT) += dxfdwg
@@ -40,17 +40,6 @@ SUBDIRS-$(HAVE_SQLITE)	+= gpkg
 SUBDIRS-$(HAVE_SQLITE)	+= osm
 SUBDIRS-$(HAVE_SOSI)	+= sosi
 SUBDIRS-$(CURL_SETTING) += cartodb
-
-ifeq ($(PCIDSK_SETTING),internal)
-SUBDIRS-yes  += pcidsk
-endif
-ifeq ($(PCIDSK_SETTING),external)
-SUBDIRS-yes  += pcidsk
-endif
-
-ifneq ($(LIBZ_SETTING),no)
-SUBDIRS-yes  += pdf
-endif
 
 default:	$(foreach d,$(SUBDIRS-yes),$(d)-target)
 

@@ -177,6 +177,7 @@ CPLErr OGRSQLiteTableLayer::Initialize( const char *pszTableName,
         osLayerName.Printf("%s(%s)", pszTableName, pszGeomCol);
     else
         osLayerName = pszTableName;
+    SetDescription( osLayerName );
 
     pszEscapedTableName = CPLStrdup(OGRSQLiteEscape(pszTableName));
 
@@ -586,6 +587,19 @@ int OGRSQLiteTableLayer::CheckSpatialIndexTable()
     }
 
     return bHasSpatialIndex;
+}
+
+/************************************************************************/
+/*                         HasFastSpatialFilter()                       */
+/************************************************************************/
+
+int OGRSQLiteTableLayer::HasFastSpatialFilter(int iGeomCol)
+{
+    OGRPolygon oFakePoly;
+    const char* pszWKT = "POLYGON((0 0,0 1,1 1,1 0,0 0))";
+    oFakePoly.importFromWkt((char**) &pszWKT);
+    CPLString    osSpatialWhere = GetSpatialWhere(iGeomCol, &oFakePoly);
+    return osSpatialWhere.find("ROWID") == 0;
 }
 
 /************************************************************************/

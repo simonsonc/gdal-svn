@@ -99,10 +99,10 @@ static void Usage(const char* pszAdditionalMsg, int bShort = TRUE)
 
     for (int iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++)
     {
-        OGRSFDriver *poDriver = poR->GetDriver(iDriver);
+        GDALDriver *poDriver = poR->GetDriver(iDriver);
 
-        if (poDriver->TestCapability(ODrCCreateDataSource))
-            printf("     -f \"%s\"\n", poDriver->GetName());
+        if( CSLTestBoolean( CSLFetchNameValueDef(poDriver->GetMetadata(), GDAL_DCAP_CREATE, "FALSE") ) )
+            printf("     -f \"%s\"\n", poDriver->GetDescription());
     }
 
     printf(" -progress: Display progress on terminal. Only works if input layers have the \n"
@@ -139,7 +139,7 @@ static void Usage(int bShort = TRUE)
 /*                         SetupTargetLayer()                           */
 /************************************************************************/
 
-static OGRLayer* SetupTargetLayer(OGRLayer * poSrcLayer, OGRDataSource *poDstDS, char **papszLCO, const char *pszNewLayerName, const char* pszOutputSepFieldName = NULL)
+static OGRLayer* SetupTargetLayer(OGRLayer * poSrcLayer, GDALDataset *poDstDS, char **papszLCO, const char *pszNewLayerName, const char* pszOutputSepFieldName = NULL)
 {
     OGRLayer    *poDstLayer;
     OGRFeatureDefn *poSrcFDefn;
@@ -149,7 +149,7 @@ static OGRLayer* SetupTargetLayer(OGRLayer * poSrcLayer, OGRDataSource *poDstDS,
     
     if (pszNewLayerName == NULL)
     {
-        szLayerName = CPLGetBasename(poDstDS->GetName());
+        szLayerName = CPLGetBasename(poDstDS->GetDescription());
     }
     else
     {
@@ -1340,13 +1340,13 @@ int main( int nArgc, char ** papszArgv )
     /* -------------------------------------------------------------------- */
     /*      Open data source.                                               */
     /* -------------------------------------------------------------------- */
-        OGRDataSource       *poLnDS;
-        OGRDataSource       *poODS = NULL;
-        OGRSFDriver         *poDriver = NULL;
-        OGRDataSource *poPkDS = NULL;
+        GDALDataset       *poLnDS;
+        GDALDataset       *poODS = NULL;
+        GDALDriver         *poDriver = NULL;
+        GDALDataset *poPkDS = NULL;
         OGRLayer *poPkLayer = NULL;
 
-        poLnDS = OGRSFDriverRegistrar::Open( pszLineDataSource, FALSE );
+        poLnDS = (GDALDataset*) OGROpen( pszLineDataSource, FALSE, NULL );
 
     /* -------------------------------------------------------------------- */
     /*      Report failure                                                  */
@@ -1361,13 +1361,13 @@ int main( int nArgc, char ** papszArgv )
 
             for( int iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++ )
             {
-                fprintf( stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetName() );
+                fprintf( stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetDescription() );
             }
 
             exit( 1 );
         }
         
-        poPkDS = OGRSFDriverRegistrar::Open( pszPicketsDataSource, FALSE );
+        poPkDS = (GDALDataset*) OGROpen( pszPicketsDataSource, FALSE, NULL );
     /* -------------------------------------------------------------------- */
     /*      Report failure                                                  */
     /* -------------------------------------------------------------------- */
@@ -1381,7 +1381,7 @@ int main( int nArgc, char ** papszArgv )
 
             for( int iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++ )
             {
-                fprintf( stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetName() );
+                fprintf( stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetDescription() );
             }
 
             exit( 1 );
@@ -1406,12 +1406,12 @@ int main( int nArgc, char ** papszArgv )
         
             for( iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++ )
             {
-                fprintf( stderr,  "  -> `%s'\n", poR->GetDriver(iDriver)->GetName() );
+                fprintf( stderr,  "  -> `%s'\n", poR->GetDriver(iDriver)->GetDescription() );
             }
             exit( 1 );
         }
 
-        if( !poDriver->TestCapability( ODrCCreateDataSource ) )
+        if( !CSLTestBoolean( CSLFetchNameValueDef(poDriver->GetMetadata(), GDAL_DCAP_CREATE, "FALSE") ) )
         {
             fprintf( stderr,  "%s driver does not support data source creation.\n",
                     pszFormat );
@@ -1421,7 +1421,7 @@ int main( int nArgc, char ** papszArgv )
     /* -------------------------------------------------------------------- */
     /*      Create the output data source.                                  */
     /* -------------------------------------------------------------------- */
-        poODS = poDriver->CreateDataSource( pszOutputDataSource, papszDSCO );
+        poODS = poDriver->Create( pszOutputDataSource, 0, 0, 0, GDT_Unknown, papszDSCO );
         if( poODS == NULL )
         {
             fprintf( stderr,  "%s driver failed to create %s\n", 
@@ -1490,9 +1490,9 @@ int main( int nArgc, char ** papszArgv )
         }
         
         //clean up        
-        OGRDataSource::DestroyDataSource(poLnDS);
-        OGRDataSource::DestroyDataSource(poPkDS);
-        OGRDataSource::DestroyDataSource(poODS);
+        GDALClose( (GDALDatasetH)poLnDS);
+        GDALClose( (GDALDatasetH)poPkDS);
+        GDALClose( (GDALDatasetH)poODS);
             
         if (NULL != pszOutputLayerName)
             CPLFree(pszOutputLayerName);
@@ -1504,7 +1504,7 @@ int main( int nArgc, char ** papszArgv )
     else if(stOper == op_get_pos)
     {
 #ifdef HAVE_GEOS_PROJECT    
-        OGRDataSource *poPartsDS = NULL;
+        GDALDataset *poPartsDS = NULL;
         OGRLayer *poPartsLayer = NULL;
 
         if (pszPartsDataSource == NULL)
@@ -1512,7 +1512,7 @@ int main( int nArgc, char ** papszArgv )
         else if(dfX == -100000000 || dfY == -100000000)
             Usage("no coordinates provided");
             
-        poPartsDS = OGRSFDriverRegistrar::Open( pszPartsDataSource, FALSE );
+        poPartsDS = (GDALDataset*) OGROpen( pszPartsDataSource, FALSE, NULL );
     /* -------------------------------------------------------------------- */
     /*      Report failure                                                  */
     /* -------------------------------------------------------------------- */
@@ -1526,7 +1526,7 @@ int main( int nArgc, char ** papszArgv )
 
             for( int iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++ )
             {
-                fprintf( stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetName() );
+                fprintf( stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetDescription() );
             }
 
             exit( 1 );
@@ -1551,7 +1551,7 @@ int main( int nArgc, char ** papszArgv )
         eErr = GetPosition(poPartsLayer, dfX, dfY, bDisplayProgress, bQuiet);
 
         //clean up
-        OGRDataSource::DestroyDataSource(poPartsDS);
+        GDALClose( (GDALDatasetH)poPartsDS);
 #else //HAVE_GEOS_PROJECT
         fprintf( stderr, "GEOS support not enabled or incompatible version.\n" );
         exit( 1 );       
@@ -1559,7 +1559,7 @@ int main( int nArgc, char ** papszArgv )
     }
     else if(stOper == op_get_coord)
     {
-        OGRDataSource *poPartsDS = NULL;
+        GDALDataset *poPartsDS = NULL;
         OGRLayer *poPartsLayer = NULL;
 
         if (pszPartsDataSource == NULL)
@@ -1567,7 +1567,7 @@ int main( int nArgc, char ** papszArgv )
         else if(dfPos == -100000000)
             Usage("no position provided");
             
-        poPartsDS = OGRSFDriverRegistrar::Open(pszPartsDataSource, FALSE);
+        poPartsDS = (GDALDataset*) OGROpen(pszPartsDataSource, FALSE, NULL);
     /* -------------------------------------------------------------------- */
     /*      Report failure                                                  */
     /* -------------------------------------------------------------------- */
@@ -1581,7 +1581,7 @@ int main( int nArgc, char ** papszArgv )
 
             for( int iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++ )
             {
-                fprintf( stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetName() );
+                fprintf( stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetDescription() );
             }
 
             exit( 1 );
@@ -1605,7 +1605,7 @@ int main( int nArgc, char ** papszArgv )
         eErr = GetCoordinates(poPartsLayer, dfPos, bDisplayProgress, bQuiet);
 
         //clean up
-        OGRDataSource::DestroyDataSource(poPartsDS);
+        GDALClose( (GDALDatasetH)poPartsDS);
     }
     else if (stOper == op_get_subline)
     {
@@ -1621,11 +1621,11 @@ int main( int nArgc, char ** papszArgv )
         /* -------------------------------------------------------------------- */
         /*      Open data source.                                               */
         /* -------------------------------------------------------------------- */
-        OGRDataSource       *poPartsDS;
-        OGRDataSource       *poODS = NULL;
-        OGRSFDriver         *poDriver = NULL;
+        GDALDataset       *poPartsDS;
+        GDALDataset       *poODS = NULL;
+        GDALDriver         *poDriver = NULL;
 
-        poPartsDS = OGRSFDriverRegistrar::Open(pszPartsDataSource, FALSE);
+        poPartsDS = (GDALDataset*) OGROpen(pszPartsDataSource, FALSE, NULL);
 
         /* -------------------------------------------------------------------- */
         /*      Report failure                                                  */
@@ -1640,7 +1640,7 @@ int main( int nArgc, char ** papszArgv )
 
             for (int iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++)
             {
-                fprintf(stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetName());
+                fprintf(stderr, "  -> %s\n", poR->GetDriver(iDriver)->GetDescription());
             }
 
             exit(1);
@@ -1664,12 +1664,12 @@ int main( int nArgc, char ** papszArgv )
 
             for (iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++)
             {
-                fprintf(stderr, "  -> `%s'\n", poR->GetDriver(iDriver)->GetName());
+                fprintf(stderr, "  -> `%s'\n", poR->GetDriver(iDriver)->GetDescription());
             }
             exit(1);
         }
 
-        if (!poDriver->TestCapability(ODrCCreateDataSource))
+        if( !CSLTestBoolean( CSLFetchNameValueDef(poDriver->GetMetadata(), GDAL_DCAP_CREATE, "FALSE") ) )
         {
             fprintf(stderr, "%s driver does not support data source creation.\n",
                 pszFormat);
@@ -1679,7 +1679,7 @@ int main( int nArgc, char ** papszArgv )
         /* -------------------------------------------------------------------- */
         /*      Create the output data source.                                  */
         /* -------------------------------------------------------------------- */
-        poODS = poDriver->CreateDataSource(pszOutputDataSource, papszDSCO);
+        poODS = poDriver->Create(pszOutputDataSource, 0, 0, 0, GDT_Unknown, papszDSCO);
         if (poODS == NULL)
         {
             fprintf(stderr, "%s driver failed to create %s\n",
@@ -1715,8 +1715,8 @@ int main( int nArgc, char ** papszArgv )
         eErr = CreateSubline(poPartsLayer, dfPosBeg, dfPosEnd, poOutLayer, bDisplayProgress, bQuiet);
 
         //clean up        
-        OGRDataSource::DestroyDataSource(poPartsDS);
-        OGRDataSource::DestroyDataSource(poODS);
+        GDALClose( (GDALDatasetH) poPartsDS);
+        GDALClose( (GDALDatasetH) poODS);
 
         if (NULL != pszOutputLayerName)
             CPLFree(pszOutputLayerName);

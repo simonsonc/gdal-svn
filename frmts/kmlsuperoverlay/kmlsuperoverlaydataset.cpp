@@ -109,12 +109,6 @@ void GenerateTiles(std::string filename,
                 }
             }
 
-            GDALRasterBand* poBandtmp = NULL;
-            if (poTmpDataset)
-            {
-                poBandtmp = poTmpDataset->GetRasterBand(band);
-            }
-
             int yOffset = ry + row * rowOffset;
             bool bReadFailed = false;
             if (poBand)
@@ -151,8 +145,9 @@ void GenerateTiles(std::string filename,
                 }
             }
 
-            if (poBandtmp && bReadFailed == false)
+            if (bReadFailed == false)
             {
+                GDALRasterBand* poBandtmp = poTmpDataset->GetRasterBand(band);
                 poBandtmp->RasterIO(GF_Write, 0, row, dxsize, 1, pafScanline, dxsize, 1, GDT_Byte, 
                                     0, 0);
             }
@@ -2447,6 +2442,7 @@ void GDALRegister_KMLSUPEROVERLAY()
         poDriver = new GDALDriver();
       
         poDriver->SetDescription( "KMLSUPEROVERLAY" );
+        poDriver->SetMetadataItem( GDAL_DCAP_RASTER, "YES" );
         poDriver->SetMetadataItem( GDAL_DMD_LONGNAME, 
                                    "Kml Super Overlay" );
         poDriver->SetMetadataItem( GDAL_DMD_CREATIONDATATYPES, 
