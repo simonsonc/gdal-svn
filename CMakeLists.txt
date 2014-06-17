@@ -118,6 +118,7 @@ set_target_properties(${GDAL_LIB_NAME}
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 	
+option(GDAL_INSTALL_DATA_IN_VERSION "Set ON to install GDAL in path with version (i.e. usr/local/share/gdal/1.11" OFF)
 
 if(WIN32)
     if(CMAKE_CL_64)
@@ -138,6 +139,11 @@ else()
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
 	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/gcore/gdal_def.h DESTINATION include/gdal)
+	if(GDAL_INSTALL_DATA_IN_VERSION)
+	    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data/ DESTINATION share/gdal/${GDAL_VERSION} FILES_MATCHING PATTERN "*.*")
+	else()    
+	    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data/ DESTINATION share/gdal FILES_MATCHING PATTERN "*.*")
+	endif()
 endif() 
     
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)

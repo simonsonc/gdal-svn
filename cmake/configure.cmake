@@ -67,6 +67,9 @@ if(UNIX)
     check_library_exists(rt    clock_gettime   "" HAVE_LIBRT)
     check_library_exists(pq PQconnectdb "" HAVE_LIBPQ)
     check_library_exists(spatialite spatialite_init "" HAS_SPATIALITE)
+    
+    find_package(Iconv)
+    set(HAVE_ICONV ${ICONV_FOUND})
 
     option(CPL_MULTIPROC_PTHREAD "Set to ON if you want to use pthreads based multiprocessing support." ON)
     mark_as_advanced(CPL_MULTIPROC_PTHREAD)
