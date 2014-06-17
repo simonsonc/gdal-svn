@@ -31,6 +31,7 @@ project ("lib${LIB_NAME}")
 
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)  
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/ogrsf_frmts)  
+include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/ogrsf_frmts/sqlite) 
 
 find_package(Sqlite3 REQUIRED)
 if(SQLITE3_FOUND)
@@ -74,6 +75,8 @@ set(LIB_CSOURCES
 	ogrgeopackagedriver.cpp
 	ogrgeopackagelayer.cpp
 	ogrgeopackageutility.cpp
+	ogrgeopackageselectlayer.cpp
+	ogrgeopackagetablelayer.cpp
 )
 
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
