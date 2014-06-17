@@ -1652,7 +1652,8 @@ void OGROSMDataSource::ProcessWaysBatch()
                         }
                     }
                 }
-                else if( panReqIds[nIdx] != psWayFeaturePairs->panNodeRefs[i] )
+                else if( nIdx >= 0 &&
+                         panReqIds[nIdx] != psWayFeaturePairs->panNodeRefs[i] )
                     nIdx = -1;
 
                 if (nIdx >= 0)
@@ -2648,17 +2649,9 @@ static void OGROSMNotifyBounds( double dfXMin, double dfYMin,
 /*                                Open()                                */
 /************************************************************************/
 
-int OGROSMDataSource::Open( const char * pszFilename, int bUpdateIn)
+int OGROSMDataSource::Open( const char * pszFilename )
 
 {
-    const char* pszExt = CPLGetExtension(pszFilename);
-    if( !EQUAL(pszExt, "pbf") &&
-        !EQUAL(pszExt, "osm") &&
-        !EQUALN(pszFilename, "/vsicurl_streaming/", strlen("/vsicurl_streaming/")) &&
-        strcmp(pszFilename, "/vsistdin/") != 0 &&
-        strcmp(pszFilename, "/dev/stdin/") != 0 )
-        return FALSE;
-
     pszName = CPLStrdup( pszFilename );
 
     psParser = OSM_Open( pszName,
@@ -2669,13 +2662,6 @@ int OGROSMDataSource::Open( const char * pszFilename, int bUpdateIn)
                          this );
     if( psParser == NULL )
         return FALSE;
-
-    if (bUpdateIn)
-    {
-        CPLError(CE_Failure, CPLE_NotSupported,
-                 "OGR/OSM driver does not support opening a file in update mode");
-        return FALSE;
-    }
 
     /* The following 4 config options are only usefull for debugging */
     bIndexPoints = CSLTestBoolean(CPLGetConfigOption("OSM_INDEX_POINTS", "YES"));

@@ -137,14 +137,13 @@ OGRPGTableLayer::OGRPGTableLayer( OGRPGDataSource *poDSIn,
 
     bUpdateAccess = bUpdate;
 
-    iNextShapeId = 0;
-
     bGeometryInformationSet = FALSE;
 
     bLaunderColumnNames = TRUE;
     bPreservePrecision = TRUE;
     bCopyActive = FALSE;
     bUseCopy = USE_COPY_UNSET;  // unknown
+    bUseCopyByDefault = FALSE;
     bFIDColumnInCopyFields = FALSE;
     bFirstInsertion = TRUE;
 
@@ -200,7 +199,10 @@ OGRPGTableLayer::OGRPGTableLayer( OGRPGDataSource *poDSIn,
     bInResetReading = FALSE;
 
     poFeatureDefn = new OGRPGTableFeatureDefn( this, osDefnName );
+    SetDescription( poFeatureDefn->GetName() );
     poFeatureDefn->Reference();
+    
+    bAutoFIDOnCreateViaCopy = FALSE;
 }
 
 //************************************************************************/
@@ -210,7 +212,7 @@ OGRPGTableLayer::OGRPGTableLayer( OGRPGDataSource *poDSIn,
 OGRPGTableLayer::~OGRPGTableLayer()
 
 {
-    EndCopy();
+    if( bCopyActive ) EndCopy();
     CPLFree( pszSqlTableName );
     CPLFree( pszTableName );
     CPLFree( pszSqlGeomParentTableName );
@@ -376,7 +378,7 @@ int OGRPGTableLayer::ReadTableDefinition()
         hResult = OGRPG_PQexec(hPGConn, "COMMIT");
         OGRPGClearResult( hResult );
 
-        CPLError( CE_Failure, CPLE_AppDefined,
+        CPLDebug( "PG",
                   "No field definitions found for '%s', is it a table?",
                   pszTableName );
         return bTableDefinitionValid;
@@ -398,7 +400,6 @@ int OGRPGTableLayer::ReadTableDefinition()
 
         if( EQUAL(oField.GetNameRef(),osPrimaryKey) )
         {
-            bHasFid = TRUE;
             pszFIDColumn = CPLStrdup(oField.GetNameRef());
             CPLDebug("PG","Using column '%s' as FID for table '%s'", pszFIDColumn, pszTableName );
             continue;
@@ -670,6 +671,54 @@ int OGRPGTableLayer::ReadTableDefinition()
 }
 
 /************************************************************************/
+/*                         SetTableDefinition()                         */
+/************************************************************************/
+
+void OGRPGTableLayer::SetTableDefinition(const char* pszFIDColumnName,
+                                           const char* pszGFldName,
+                                           OGRwkbGeometryType eType,
+                                           const char* pszGeomType,
+                                           int nSRSId,
+                                           int nCoordDimension)
+{
+    bTableDefinitionValid = TRUE;
+    bGeometryInformationSet = TRUE;
+    if( pszFIDColumnName[0] == '"' &&
+             pszFIDColumnName[strlen(pszFIDColumnName)-1] == '"')
+    {
+        pszFIDColumn = CPLStrdup(pszFIDColumnName + 1);
+        pszFIDColumn[strlen(pszFIDColumn)-1] = '\0';
+    }
+    else
+        pszFIDColumn = CPLStrdup(pszFIDColumnName);
+    poFeatureDefn->SetGeomType(wkbNone);
+    if( eType != wkbNone )
+    {
+        OGRPGGeomFieldDefn* poGeomFieldDefn = new OGRPGGeomFieldDefn(this, pszGFldName);
+        poGeomFieldDefn->SetType(eType);
+        poGeomFieldDefn->nCoordDimension = nCoordDimension;
+
+        if( EQUAL(pszGeomType,"geometry") )
+        {
+            poGeomFieldDefn->ePostgisType = GEOM_TYPE_GEOMETRY;
+            poGeomFieldDefn->nSRSId = nSRSId;
+        }
+        else if( EQUAL(pszGeomType,"geography") )
+        {
+            poGeomFieldDefn->ePostgisType = GEOM_TYPE_GEOGRAPHY;
+            poGeomFieldDefn->nSRSId = 4326;
+        }
+        else
+        {
+            poGeomFieldDefn->ePostgisType = GEOM_TYPE_WKB;
+            if( EQUAL(pszGeomType,"OID") )
+                bWkbAsOid = TRUE;
+        }
+        poFeatureDefn->AddGeomFieldDefn(poGeomFieldDefn, FALSE);
+    }
+}
+
+/************************************************************************/
 /*                          SetSpatialFilter()                          */
 /************************************************************************/
 
@@ -791,7 +840,8 @@ void OGRPGTableLayer::ResetReading()
         return;
     bInResetReading = TRUE;
 
-    bUseCopy = USE_COPY_UNSET;
+    if( bCopyActive ) EndCopy();
+    bUseCopyByDefault = FALSE;
 
     BuildFullQueryStatement();
 
@@ -807,6 +857,8 @@ void OGRPGTableLayer::ResetReading()
 OGRFeature *OGRPGTableLayer::GetNextFeature()
 
 {
+    if( bCopyActive ) EndCopy();
+
     OGRPGGeomFieldDefn* poGeomFieldDefn = NULL;
     if( poFeatureDefn->GetGeomFieldCount() != 0 )
         poGeomFieldDefn = poFeatureDefn->myGetGeomFieldDefn(m_iGeomFieldFilter);
@@ -850,7 +902,7 @@ CPLString OGRPGTableLayer::BuildFields()
 
     poFeatureDefn->GetFieldCount();
 
-    if( bHasFid && poFeatureDefn->GetFieldIndex( pszFIDColumn ) == -1 )
+    if( pszFIDColumn != NULL && poFeatureDefn->GetFieldIndex( pszFIDColumn ) == -1 )
     {
         osFieldList += OGRPGEscapeColumnName(pszFIDColumn);
     }
@@ -1018,11 +1070,14 @@ OGRErr OGRPGTableLayer::DeleteFeature( long nFID )
         return OGRERR_FAILURE;
     }
 
+    if( bCopyActive ) EndCopy();
+    bAutoFIDOnCreateViaCopy = FALSE;
+
 /* -------------------------------------------------------------------- */
 /*      We can only delete features if we have a well defined FID       */
 /*      column to target.                                               */
 /* -------------------------------------------------------------------- */
-    if( !bHasFid )
+    if( pszFIDColumn == NULL )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "DeleteFeature(%ld) failed.  Unable to delete features in tables without\n"
@@ -1240,6 +1295,8 @@ OGRErr OGRPGTableLayer::SetFeature( OGRFeature *poFeature )
         return OGRERR_FAILURE;
     }
 
+    if( bCopyActive ) EndCopy();
+
     if( NULL == poFeature )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
@@ -1254,7 +1311,7 @@ OGRErr OGRPGTableLayer::SetFeature( OGRFeature *poFeature )
         return eErr;
     }
 
-    if( !bHasFid )
+    if( pszFIDColumn == NULL )
     {
         CPLError( CE_Failure, CPLE_AppDefined,
                   "Unable to update features in tables without\n"
@@ -1485,7 +1542,14 @@ OGRErr OGRPGTableLayer::CreateFeature( OGRFeature *poFeature )
             StartCopy(poFeature->GetFID() != OGRNullFID);
         }
 
-        return CreateFeatureViaCopy( poFeature );
+        OGRErr eErr = CreateFeatureViaCopy( poFeature );
+        if( poFeature->GetFID() != OGRNullFID )
+            bAutoFIDOnCreateViaCopy = FALSE;
+        if( eErr == CE_None && bAutoFIDOnCreateViaCopy )
+        {
+            poFeature->SetFID( ++iNextShapeId );
+        }
+        return eErr;
     }
 }
 
@@ -2154,14 +2218,14 @@ int OGRPGTableLayer::TestCapability( const char * pszCap )
                  EQUAL(pszCap,OLCDeleteFeature) )
         {
             GetLayerDefn()->GetFieldCount();
-            return bHasFid;
+            return pszFIDColumn != NULL;
         }
     }
 
     if( EQUAL(pszCap,OLCRandomRead) )
     {
         GetLayerDefn()->GetFieldCount();
-        return bHasFid;
+        return pszFIDColumn != NULL;
     }
 
     else if( EQUAL(pszCap,OLCFastFeatureCount) ||
@@ -2785,6 +2849,8 @@ OGRFeature *OGRPGTableLayer::GetFeature( long nFeatureId )
 int OGRPGTableLayer::GetFeatureCount( int bForce )
 
 {
+    if( bCopyActive ) EndCopy();
+
     if( TestCapability(OLCFastFeatureCount) == FALSE )
         return OGRPGLayer::GetFeatureCount( bForce );
 
@@ -2981,7 +3047,8 @@ OGRErr OGRPGTableLayer::EndCopy()
 
     OGRPGClearResult( hResult );
 
-    bUseCopy = USE_COPY_UNSET;
+    if( !bUseCopyByDefault )
+        bUseCopy = USE_COPY_UNSET;
 
     return result;
 }
@@ -3132,6 +3199,8 @@ OGRErr OGRPGTableLayer::GetExtent( int iGeomField, OGREnvelope *psExtent, int bF
         }
         return OGRERR_FAILURE;
     }
+
+    if( bCopyActive ) EndCopy();
 
     OGRPGGeomFieldDefn* poGeomFieldDefn =
         poFeatureDefn->myGetGeomFieldDefn(iGeomField);

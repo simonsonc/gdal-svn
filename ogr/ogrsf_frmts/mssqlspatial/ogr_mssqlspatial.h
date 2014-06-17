@@ -329,12 +329,13 @@ class OGRMSSQLSpatialDataSource : public OGRDataSource
     const char          *GetName() { return pszName; }
     int                 GetLayerCount();
     OGRLayer            *GetLayer( int );
+    OGRLayer            *GetLayerByName( const char* pszLayerName );
 
     int                 GetGeometryFormat() { return nGeometryFormat; }
     int                 UseGeometryColumns() { return bUseGeometryColumns; }
 
     virtual int         DeleteLayer( int iLayer );
-    virtual OGRLayer    *CreateLayer( const char *,
+    virtual OGRLayer    *ICreateLayer( const char *,
                                       OGRSpatialReference * = NULL,
                                       OGRwkbGeometryType = wkbUnknown,
                                       char ** = NULL );

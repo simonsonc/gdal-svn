@@ -79,7 +79,7 @@ static int OGRSQLiteInitOldSpatialite()
 /*                          InitNewSpatialite()                         */
 /************************************************************************/
 
-int OGRSQLiteDataSource::InitNewSpatialite()
+int OGRSQLiteBaseDataSource::InitNewSpatialite()
 {
     if( CSLTestBoolean(CPLGetConfigOption("SPATIALITE_LOAD", "TRUE")) )
     {
@@ -97,7 +97,7 @@ int OGRSQLiteDataSource::InitNewSpatialite()
 /*                         FinishNewSpatialite()                        */
 /************************************************************************/
 
-void OGRSQLiteDataSource::FinishNewSpatialite()
+void OGRSQLiteBaseDataSource::FinishNewSpatialite()
 {
     if( hSpatialiteCtxt != NULL )
     {
@@ -137,13 +137,71 @@ int OGRSQLiteDataSource::GetSpatialiteVersionNumber()
 }
 
 /************************************************************************/
+/*                       OGRSQLiteBaseDataSource()                      */
+/************************************************************************/
+
+OGRSQLiteBaseDataSource::OGRSQLiteBaseDataSource()
+
+{
+    pszName = NULL;
+    hDB = NULL;
+
+#ifdef HAVE_SQLITE_VFS
+    pMyVFS = NULL;
+#endif
+
+    fpMainFile = NULL; /* Do not close ! The VFS layer will do it for us */
+
+#ifdef SPATIALITE_412_OR_LATER
+    hSpatialiteCtxt = NULL;
+#endif
+}
+
+/************************************************************************/
+/*                      ~OGRSQLiteBaseDataSource()                      */
+/************************************************************************/
+
+OGRSQLiteBaseDataSource::~OGRSQLiteBaseDataSource()
+
+{
+#ifdef SPATIALITE_412_OR_LATER
+    FinishNewSpatialite();
+#endif
+
+    CloseDB();
+    CPLFree(pszName);
+}
+
+/************************************************************************/
+/*                               CloseDB()                              */
+/************************************************************************/
+
+void OGRSQLiteBaseDataSource::CloseDB()
+{
+    if( hDB != NULL )
+    {
+        sqlite3_close( hDB );
+        hDB = NULL;
+    }
+
+#ifdef HAVE_SQLITE_VFS
+    if (pMyVFS)
+    {
+        sqlite3_vfs_unregister(pMyVFS);
+        CPLFree(pMyVFS->pAppData);
+        CPLFree(pMyVFS);
+        pMyVFS = NULL;
+    }
+#endif
+}
+
+/************************************************************************/
 /*                        OGRSQLiteDataSource()                         */
 /************************************************************************/
 
 OGRSQLiteDataSource::OGRSQLiteDataSource()
 
 {
-    pszName = NULL;
     papoLayers = NULL;
     nLayers = 0;
 
@@ -158,19 +216,8 @@ OGRSQLiteDataSource::OGRSQLiteDataSource()
     bSpatialite4Layout = FALSE;
     bUpdate = FALSE;
 
-#ifdef SPATIALITE_412_OR_LATER
-    hSpatialiteCtxt = NULL;
-#endif
-
     nUndefinedSRID = -1; /* will be changed to 0 if Spatialite >= 4.0 detected */
 
-    hDB = NULL;
-
-#ifdef HAVE_SQLITE_VFS
-    pMyVFS = NULL;
-#endif
-
-    fpMainFile = NULL; /* Do not close ! The VFS layer will do it for us */
     nFileTimestamp = 0;
     bLastSQLCommandIsUpdateLayerStatistics = FALSE;
 }
@@ -195,8 +242,6 @@ OGRSQLiteDataSource::~OGRSQLiteDataSource()
 
     SaveStatistics();
 
-    CPLFree( pszName );
-
     for( i = 0; i < nLayers; i++ )
         delete papoLayers[i];
     
@@ -209,22 +254,6 @@ OGRSQLiteDataSource::~OGRSQLiteDataSource()
     }
     CPLFree( panSRID );
     CPLFree( papoSRS );
-
-#ifdef SPATIALITE_412_OR_LATER
-    FinishNewSpatialite();
-#endif
-
-    if( hDB != NULL )
-        sqlite3_close( hDB );
-
-#ifdef HAVE_SQLITE_VFS
-    if (pMyVFS)
-    {
-        sqlite3_vfs_unregister(pMyVFS);
-        CPLFree(pMyVFS->pAppData);
-        CPLFree(pMyVFS);
-    }
-#endif
 }
 
 /************************************************************************/
@@ -324,7 +353,7 @@ void OGRSQLiteDataSource::SaveStatistics()
 /*                              SetSynchronous()                        */
 /************************************************************************/
 
-int OGRSQLiteDataSource::SetSynchronous()
+int OGRSQLiteBaseDataSource::SetSynchronous()
 {
     int rc;
     const char* pszSqliteSync = CPLGetConfigOption("OGR_SQLITE_SYNCHRONOUS", NULL);
@@ -362,7 +391,7 @@ int OGRSQLiteDataSource::SetSynchronous()
 /*                              SetCacheSize()                          */
 /************************************************************************/
 
-int OGRSQLiteDataSource::SetCacheSize()
+int OGRSQLiteBaseDataSource::SetCacheSize()
 {
     int rc;
     const char* pszSqliteCacheMB = CPLGetConfigOption("OGR_SQLITE_CACHE", NULL);
@@ -418,15 +447,15 @@ int OGRSQLiteDataSource::SetCacheSize()
 }
 
 /************************************************************************/
-/*                 OGRSQLiteDataSourceNotifyFileOpened()                */
+/*               OGRSQLiteBaseDataSourceNotifyFileOpened()              */
 /************************************************************************/
 
 static
-void OGRSQLiteDataSourceNotifyFileOpened (void* pfnUserData,
+void OGRSQLiteBaseDataSourceNotifyFileOpened (void* pfnUserData,
                                               const char* pszFilename,
                                               VSILFILE* fp)
 {
-    ((OGRSQLiteDataSource*)pfnUserData)->NotifyFileOpened(pszFilename, fp);
+    ((OGRSQLiteBaseDataSource*)pfnUserData)->NotifyFileOpened(pszFilename, fp);
 }
 
 
@@ -434,7 +463,7 @@ void OGRSQLiteDataSourceNotifyFileOpened (void* pfnUserData,
 /*                          NotifyFileOpened()                          */
 /************************************************************************/
 
-void OGRSQLiteDataSource::NotifyFileOpened(const char* pszFilename,
+void OGRSQLiteBaseDataSource::NotifyFileOpened(const char* pszFilename,
                                            VSILFILE* fp)
 {
     if (strcmp(pszFilename, pszName) == 0)
@@ -447,17 +476,18 @@ void OGRSQLiteDataSource::NotifyFileOpened(const char* pszFilename,
 /*                            OpenOrCreateDB()                          */
 /************************************************************************/
 
-int OGRSQLiteDataSource::OpenOrCreateDB(int flags)
+int OGRSQLiteBaseDataSource::OpenOrCreateDB(int flags, int bRegisterOGR2SQLiteExtensions)
 {
     int rc;
     
 #ifdef HAVE_SQLITE_VFS
-    OGR2SQLITE_Register();
+    if( bRegisterOGR2SQLiteExtensions )
+        OGR2SQLITE_Register();
 
     int bUseOGRVFS = CSLTestBoolean(CPLGetConfigOption("SQLITE_USE_OGR_VFS", "NO"));
     if (bUseOGRVFS || strncmp(pszName, "/vsi", 4) == 0)
     {
-        pMyVFS = OGRSQLiteCreateVFS(OGRSQLiteDataSourceNotifyFileOpened, this);
+        pMyVFS = OGRSQLiteCreateVFS(OGRSQLiteBaseDataSourceNotifyFileOpened, this);
         sqlite3_vfs_register(pMyVFS, 0);
         rc = sqlite3_open_v2( pszName, &hDB, flags, pMyVFS->zName );
     }
@@ -607,9 +637,9 @@ int OGRSQLiteDataSource::Create( const char * pszNameIn, char **papszOptions )
 /*      Create the database file.                                       */
 /* -------------------------------------------------------------------- */
 #ifdef HAVE_SQLITE_VFS
-    if (!OpenOrCreateDB(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE))
+    if (!OpenOrCreateDB(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, TRUE))
 #else
-    if (!OpenOrCreateDB(0))
+    if (!OpenOrCreateDB(0, TRUE))
 #endif
         return FALSE;
 
@@ -990,9 +1020,9 @@ int OGRSQLiteDataSource::Open( const char * pszNewName, int bUpdateIn )
 #endif
 
 #ifdef HAVE_SQLITE_VFS
-        if (!OpenOrCreateDB((bUpdateIn) ? SQLITE_OPEN_READWRITE : SQLITE_OPEN_READONLY) )
+        if (!OpenOrCreateDB((bUpdateIn) ? SQLITE_OPEN_READWRITE : SQLITE_OPEN_READONLY, TRUE) )
 #else
-        if (!OpenOrCreateDB(0))
+        if (!OpenOrCreateDB(0, TRUE))
 #endif
             return FALSE;
 
@@ -1557,6 +1587,17 @@ OGRLayer *OGRSQLiteDataSource::GetLayerByName( const char* pszLayerName )
 }
 
 /************************************************************************/
+/*                   GetLayerWithGetSpatialWhereByName()                */
+/************************************************************************/
+
+std::pair<OGRLayer*, IOGRSQLiteGetSpatialWhere*>
+    OGRSQLiteDataSource::GetLayerWithGetSpatialWhereByName( const char* pszName )
+{
+    OGRSQLiteLayer* poRet = (OGRSQLiteLayer*) GetLayerByName(pszName);
+    return std::pair<OGRLayer*, IOGRSQLiteGetSpatialWhere*>(poRet, poRet);
+}
+
+/************************************************************************/
 /*                             ExecuteSQL()                             */
 /************************************************************************/
 
@@ -1808,11 +1849,11 @@ void OGRSQLiteDataSource::ReleaseResultSet( OGRLayer * poLayer )
 }
 
 /************************************************************************/
-/*                            CreateLayer()                             */
+/*                           ICreateLayer()                             */
 /************************************************************************/
 
 OGRLayer *
-OGRSQLiteDataSource::CreateLayer( const char * pszLayerNameIn,
+OGRSQLiteDataSource::ICreateLayer( const char * pszLayerNameIn,
                                   OGRSpatialReference *poSRS,
                                   OGRwkbGeometryType eType,
                                   char ** papszOptions )
@@ -3213,7 +3254,7 @@ void OGRSQLiteDataSource::SetName(const char* pszNameIn)
 /*                       GetEnvelopeFromSQL()                           */
 /************************************************************************/
 
-const OGREnvelope* OGRSQLiteDataSource::GetEnvelopeFromSQL(const CPLString& osSQL)
+const OGREnvelope* OGRSQLiteBaseDataSource::GetEnvelopeFromSQL(const CPLString& osSQL)
 {
     std::map<CPLString, OGREnvelope>::iterator oIter = oMapSQLEnvelope.find(osSQL);
     if (oIter != oMapSQLEnvelope.end())
@@ -3226,7 +3267,7 @@ const OGREnvelope* OGRSQLiteDataSource::GetEnvelopeFromSQL(const CPLString& osSQ
 /*                         SetEnvelopeForSQL()                          */
 /************************************************************************/
 
-void OGRSQLiteDataSource::SetEnvelopeForSQL(const CPLString& osSQL,
+void OGRSQLiteBaseDataSource::SetEnvelopeForSQL(const CPLString& osSQL,
                                             const OGREnvelope& oEnvelope)
 {
     oMapSQLEnvelope[osSQL] = oEnvelope;
