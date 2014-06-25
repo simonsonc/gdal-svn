@@ -89,6 +89,7 @@ add_subdirectory(alg)
 add_subdirectory(ogr)
 add_subdirectory(frmts)
 add_subdirectory(apps)
+add_subdirectory(gnm)
 
 list(REMOVE_DUPLICATES GDAL_TARGET_OBJECTS)
 foreach(TO ${GDAL_TARGET_OBJECTS})

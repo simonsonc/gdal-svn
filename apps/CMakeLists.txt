@@ -29,6 +29,7 @@ cmake_minimum_required (VERSION 2.8.10)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore/)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/alg/)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/)
+include_directories(${GDAL_ROOT_SOURCE_DIR}/gnm/)
 
 option(GDAL_BUILD_APPS "Set ON to build apps" ON)
 if(GDAL_BUILD_APPS)
@@ -168,7 +169,19 @@ apps_macro("gdal_grid" "${gdal_grid_CSOURCES}" "${gdal_grid_HHEADERS}")
 		ogrlineref.cpp
         commonutils.cpp
 	)
-	apps_macro("ogrlineref" "${ogrlineref_CSOURCES}" "${ogrlineref_HHEADERS}")    
+	apps_macro("ogrlineref" "${ogrlineref_CSOURCES}" "${ogrlineref_HHEADERS}") 
+	
+#gnminfo
+	set(gnminfo_HHEADERS
+	)
+
+	set(gnminfo_CSOURCES
+		gnminfo.cpp
+        commonutils.cpp
+	)
+	apps_macro("gnminfo" "${gnminfo_CSOURCES}" "${gnminfo_HHEADERS}") 
+
+    	   
 
 endif(GDAL_BUILD_APPS)
 
