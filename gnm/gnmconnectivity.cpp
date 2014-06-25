@@ -42,7 +42,8 @@ GNMConnectivity::GNMConnectivity()
     _meta_srs_i = -1;
     _meta_gfidcntr_i = -1;
     _meta_name_i = -1;
-    _meta_alias_i = -1;
+    _meta_descr_i = -1;
+    _ownDataset = false;
 }
 
 /************************************************************************/
@@ -52,7 +53,9 @@ GNMConnectivity::~GNMConnectivity()
 {
     if (_poSpatialRef != NULL) _poSpatialRef->Release();
 
-    // NOTE: We must not delete _poDataSet here.
+    // We delete _poDataSet here if it is owned by the GNMConnectivity
+    // object.
+    if (_ownDataset) GDALClose(_poDataSet);
 }
 
 /************************************************************************/
@@ -227,17 +230,17 @@ GNMErr GNMConnectivity::_create (GDALDataset *poDS,
 
     // Write additional metaparameters.
 
-    const char *conAlias = CSLFetchNameValue(papszOptions, GNM_CREATE_OPTIONPAIR_ALIAS);
-    if (conAlias != NULL)
+    const char *conDescr = CSLFetchNameValue(papszOptions, GNM_CREATE_OPTIONPAIR_DESCR);
+    if (conDescr != NULL)
     {
         feature = OGRFeature::CreateFeature(newLayer->GetLayerDefn());
-        feature->SetField(GNM_SYSFIELD_PARAMNAME, GNM_METAPARAM_ALIAS);
-        feature->SetField(GNM_SYSFIELD_PARAMVALUE, conAlias);
+        feature->SetField(GNM_SYSFIELD_PARAMNAME, GNM_METAPARAM_DESCR);
+        feature->SetField(GNM_SYSFIELD_PARAMVALUE, conDescr);
         if(newLayer->CreateFeature(feature) != OGRERR_NONE)
         {
             // CPL Warning
         }
-        _meta_alias_i = feature->GetFID();
+        _meta_descr_i = feature->GetFID();
         OGRFeature::DestroyFeature(feature);
     }
 
@@ -351,6 +354,7 @@ GNMErr GNMConnectivity::_create (GDALDataset *poDS,
 
     CSLDestroy(classes);
 
+    // TODO: Do we need FlushCache here?
     _poDataSet->FlushCache();
 
     return GNMERR_NONE;
@@ -378,7 +382,7 @@ GNMErr GNMConnectivity::_open(GDALDataset *poDS)
 
         if (strcmp(paramName,GNM_METAPARAM_VERSION) == 0
             && paramValue != NULL
-            && paramValue != "")
+            && strcmp(paramValue,"") != 0)
         {
             // TODO: somehow check the version as regular expression: X.X.X
             // TODO: Check if GNM version is equal to opening connectivity version.
@@ -411,9 +415,9 @@ GNMErr GNMConnectivity::_open(GDALDataset *poDS)
             _meta_name_i = feature->GetFID();
         }
 
-        else if (strcmp(paramName,GNM_METAPARAM_ALIAS) == 0)
+        else if (strcmp(paramName,GNM_METAPARAM_DESCR) == 0)
         {
-            _meta_alias_i = feature->GetFID();
+            _meta_descr_i = feature->GetFID();
         }
 
         OGRFeature::DestroyFeature(feature);
@@ -572,6 +576,36 @@ void GNMConnectivity::FlushCache ()
     _poDataSet->FlushCache();
 
     // TODO (?): save gfidCounter?
+}
+
+
+/************************************************************************/
+/*                        GetMetaParamValues()                          */
+/************************************************************************/
+/**
+ * \brief Returns all metaparams as a CSL Name-Value array of pairs. The
+ * parameter names see in the gnm.h defines
+ *
+ * NOTE: Use CSLDestroy to delete returned string list
+ *
+ * @since GDAL 2.0
+ */
+char **GNMConnectivity::GetMetaParamValues ()
+{
+    char **ret = NULL;
+
+    OGRLayer *layer = _poDataSet->GetLayerByName(GNM_SYSLAYER_META);
+    OGRFeature *feature;
+    layer->ResetReading();
+    while ((feature = layer->GetNextFeature()) != NULL)
+    {
+        ret = CSLAddNameValue(ret,
+                        feature->GetFieldAsString(GNM_SYSFIELD_PARAMNAME),
+                        feature->GetFieldAsString(GNM_SYSFIELD_PARAMVALUE));
+        OGRFeature::DestroyFeature(feature);
+    }
+
+    return ret;
 }
 
 

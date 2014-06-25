@@ -69,20 +69,20 @@ typedef int GNMDirection;
 
 // Names of options in the pair name & value, which can be passed
 // when the connectivity is being created.
-#define GNM_CREATE_OPTIONPAIR_COMMONSRS "common_srs"
 //#define GNM_CREATE_OPTION_NOTTRANSFORMALL "not_transform_all"
-#define GNM_CREATE_OPTIONPAIR_ALIAS "con_alias"
+//#define GNM_CREATE_OPTIONPAIR_ALIAS "con_alias"
 #define GNM_CREATE_OPTIONPAIR_NAME "con_name"
+#define GNM_CREATE_OPTIONPAIR_DESCR "con_descr"
 
 // Connectivity metadata parameter names.
 #define GNM_METAPARAM_VERSION "gnm_version"
 #define GNM_METAPARAM_SRS "common_srs"
 #define GNM_METAPARAM_GFIDCNT "gfid_counter" // the current is that we should assign
 #define GNM_METAPARAM_NAME "con_name"
-#define GNM_METAPARAM_ALIAS "con_alias"
+#define GNM_METAPARAM_DESCR "con_descr" // connectivity description
 
 // System field names.
-// FORMAT NOTE: Shapefile driver does not support field names more than 10 characters.
+// FORMAT NOTE: Shapefile driver does not support names more than 10 characters.
 #define GNM_SYSFIELD_PARAMNAME "param_name"
 #define GNM_SYSFIELD_PARAMVALUE "param_val"
 #define GNM_SYSFIELD_SOURCE "source"
@@ -112,7 +112,8 @@ class CPL_DLL GNMConnectivity
     long _meta_srs_i;
     long _meta_gfidcntr_i;
     long _meta_name_i;
-    long _meta_alias_i;
+    long _meta_descr_i;
+    bool _ownDataset;
 
     protected:
 
@@ -148,6 +149,8 @@ class CPL_DLL GNMConnectivity
     GDALDataset *GetDataset ();
 
     void FlushCache ();
+
+    char **GetMetaParamValues ();
 
  // Interface for reimplementing in subclasses:
 
@@ -197,6 +200,12 @@ class CPL_DLL GNMManager
 {
     public:
 
+    static GNMConnectivity *CreateConnectivity (const char *pszName,
+                                                    const char *pszFormat,
+                                                    char *pszSrsInput,
+                                                    char **papszConOptions = NULL,
+                                                    char **papszDatasetOptions = NULL);
+
     static GNMConnectivity *CreateConnectivity (GDALDataset *poDS,
                                                 char *pszSrsInput,
                                                 char **papszOptions = NULL,
@@ -207,7 +216,6 @@ class CPL_DLL GNMManager
 
     static void CloseConnectivity (GNMConnectivity *poCon);
 
-    //static GNMErr RemoveConnectivity (GNMConnectivity *poCon);
     static GNMErr RemoveConnectivity (GDALDataset *poDS,
                                       int bNative);
 

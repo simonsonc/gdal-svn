@@ -32,6 +32,66 @@
 
 
 /************************************************************************/
+/*                      CreateVoidConnectivity()                            */
+/************************************************************************/
+/**
+ * \brief Convenient method to create a connectivity on an instantly
+ * created void dataset
+ *
+ * NOTE: the created GNMConnectivity must be freed via GNMManager::
+ * CloseConnectivity()
+ * NOTE: the created according dataset remains owned by the GNMConnectivity
+ *
+ * @param pszName The path and the name of the creted dataset
+ * @param pszFormat The name of the dataset format (e.g. ESRI Shapefile)
+ * @param pszSrsInput The name of the SRS in order to set it from user
+ * input (via SetFromUserInput() method)
+ * @param papszConOptions Various creation option-pairs formed with
+ * CSLAddNameValue(), for example:
+ * 1. "con_name" "my_connectivity" // Inner connectivty name.
+ * 2. "con_descr" "This is my connectivity" // Connectivity description.
+ * @param papszDatasetOptions List of driver specific control parameters.
+ * @return GNMConnectivity object or NULL if failed
+ *
+ * @since GDAL 2.0
+ */
+GNMConnectivity *GNMManager::CreateConnectivity (const char *pszName,
+                                                const char *pszFormat,
+                                                char *pszSrsInput,
+                                                char **papszConOptions,
+                                                char **papszDatasetOptions)
+{
+    //GDALAllRegister();
+
+    GDALDriver *poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
+    if(poDriver == NULL)
+    {
+        //CPLErr
+        return NULL;
+    }
+
+    GDALDataset *poDS;
+    poDS = poDriver->Create(pszName, 0, 0, 0, GDT_Unknown, papszDatasetOptions);
+    if(poDS == NULL)
+    {
+        //CPLErr
+        return NULL;
+    }
+
+    GNMConnectivity *poCon;
+    poCon = CreateConnectivity(poDS,pszSrsInput,papszConOptions,FALSE);
+    if (poCon == NULL)
+    {
+        //CPLErr
+        return NULL;
+    }
+
+    poCon->_ownDataset = true;
+    return poCon;
+}
+
+
+/************************************************************************/
 /*                      CreateConnectivity()                            */
 /************************************************************************/
 /**
@@ -66,7 +126,9 @@ GNMConnectivity *GNMManager::CreateConnectivity (GDALDataset *poDS,
         {
             // TODO: Try to use the special connectivity format if it is found
             // among registered connectivity-formats.
-
+            //TEMP-------------------------
+            return NULL;
+            //-----------------------------
         }
 
         if (poCon->_create(poDS,pszSrsInput,papszOptions) == GNMERR_NONE)
@@ -103,7 +165,9 @@ GNMConnectivity *GNMManager::OpenConnectivity(GDALDataset *poDS, int bNative)
             else
             {
                 // TODO: ...
-
+                //TEMP-------------------------
+                return NULL;
+                //-----------------------------
             }
 
             if (poCon->_open(poDS) == GNMERR_NONE)
