@@ -29,10 +29,6 @@ cmake_minimum_required (VERSION 2.8.10)
 set(LIB_NAME "frmts_gtiff")
 project ("lib${LIB_NAME}")
 
-include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts)
-include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)
-include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore)
-
 set(GDAL_ENABLE_FRMT_GTIFF ON CACHE INTERNAL "GDAL_ENABLE_FRMT_GTIFF")
 
 option(GDAL_USE_LIBTIFF_INTERNAL "Set ON to use internal libtiff" OFF)

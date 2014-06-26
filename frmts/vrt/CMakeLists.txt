@@ -30,9 +30,6 @@ set(LIB_NAME "frmts_vrt")
 project ("lib${LIB_NAME}")
 
 include_directories(${GDAL_ROOT_SOURCE_DIR}/alg)
-include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts)
-include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)
-include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts/raw)
 
 set(LIB_HHEADERS

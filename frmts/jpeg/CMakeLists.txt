@@ -29,9 +29,7 @@ cmake_minimum_required (VERSION 2.8.10)
 set(LIB_NAME "frmts_jpeg")
 project ("lib${LIB_NAME}")
 
-include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)
-include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts/mem)
 
 option(GDAL_USE_LIBJPEG_INTERNAL "Set ON to use internal libjpeg" OFF)

@@ -29,10 +29,6 @@ cmake_minimum_required (VERSION 2.8.10)
 set(LIB_NAME "frmts_ozi")
 project ("lib${LIB_NAME}")
 
-include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts)
-include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)
-include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore)
-
 #check zip and internal zip
 if(GDAL_USE_LIBZ)
 	add_definitions(-DHAVE_LIBZ -DZIP_SUPPORT)

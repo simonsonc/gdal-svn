@@ -29,8 +29,6 @@ cmake_minimum_required (VERSION 2.8.10)
 set(LIB_NAME "ogrsf_libkml")
 project ("lib${LIB_NAME}")
 
-include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)  
-include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/ogrsf_frmts)  
 
 find_package(Boost REQUIRED)    #COMPONENTS system thread regex program
 if(Boost_FOUND)

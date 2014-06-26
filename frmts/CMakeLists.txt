@@ -30,6 +30,7 @@ set(LIB_NAME "frmts")
 project ("lib${LIB_NAME}")
 
 include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore)
+include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/ogrsf_frmts)
 

@@ -52,7 +52,9 @@ find_library(LIBKML_RELEASE1_T
       c:/msys/local/lib
 )	
 
-set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE1_T})
+if(LIBKML_RELEASE1_T)
+    set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE1_T})
+endif()  
 
 find_library(LIBKML_RELEASE2_T
     NAMES
@@ -65,7 +67,9 @@ find_library(LIBKML_RELEASE2_T
       c:/msys/local/lib
 )	
 
-set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE2_T})
+if(LIBKML_RELEASE2_T)
+    set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE2_T})
+endif()    
 
 find_library(LIBKML_RELEASE3_T
     NAMES
@@ -78,7 +82,9 @@ find_library(LIBKML_RELEASE3_T
       c:/msys/local/lib
 )	
 
-set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE3_T})
+if(LIBKML_RELEASE3_T)
+    set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE3_T})
+endif()  
 
 find_library(LIBKML_RELEASE4_T
     NAMES
@@ -91,7 +97,9 @@ find_library(LIBKML_RELEASE4_T
       c:/msys/local/lib
 )	
 
-set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE4_T})
+if(LIBKML_RELEASE4_T)
+    set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE4_T})
+endif()
 
 find_library(LIBKML_RELEASE5_T
     NAMES
@@ -104,7 +112,9 @@ find_library(LIBKML_RELEASE5_T
       c:/msys/local/lib
 )	
 
-set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE5_T})
+if(LIBKML_RELEASE5_T)
+    set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE5_T})
+endif()
 
 find_library(LIBKML_RELEASE6_T
     NAMES
@@ -117,7 +127,9 @@ find_library(LIBKML_RELEASE6_T
       c:/msys/local/lib
 )	
 
-set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE6_T})
+if(LIBKML_RELEASE6_T)
+    set (LIBKML_RELEASE ${LIBKML_RELEASE} ${LIBKML_RELEASE6_T})
+endif()
 
 find_library(LIBKML_DEBUG1_T
     NAMES
@@ -133,8 +145,9 @@ find_library(LIBKML_DEBUG1_T
       c:/msys/local/lib
 )  
 
-
-set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG1_T})
+if(LIBKML_DEBUG1_T)
+    set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG1_T})
+endif()
 
 find_library(LIBKML_DEBUG2_T
     NAMES
@@ -147,7 +160,9 @@ find_library(LIBKML_DEBUG2_T
       c:/msys/local/lib
 )	
 
-set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG2_T})
+if(LIBKML_DEBUG2_T)
+    set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG2_T})
+endif()
 
 find_library(LIBKML_DEBUG3_T
     NAMES
@@ -160,8 +175,9 @@ find_library(LIBKML_DEBUG3_T
       c:/msys/local/lib
 )	
 
-
+if(LIBKML_DEBUG3_T)
 set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG3_T})
+endif()
 
 find_library(LIBKML_DEBUG4_T
     NAMES
@@ -174,8 +190,9 @@ find_library(LIBKML_DEBUG4_T
       c:/msys/local/lib
 )	
 
-
+if(LIBKML_DEBUG4_T)
 set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG4_T})
+endif()
 
 find_library(LIBKML_DEBUG5_T
     NAMES
@@ -188,8 +205,9 @@ find_library(LIBKML_DEBUG5_T
       c:/msys/local/lib
 )	
 
-
+if(LIBKML_DEBUG5_T)
 set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG5_T})
+endif()
 
 find_library(LIBKML_DEBUG6_T
     NAMES
@@ -202,7 +220,9 @@ find_library(LIBKML_DEBUG6_T
       c:/msys/local/lib
 )	
 
+if(LIBKML_DEBUG6_T)
 set (LIBKML_DEBUG ${LIBKML_DEBUG} ${LIBKML_DEBUG6_T})
+endif()
 
 if(NOT LIBKML_RELEASE AND LIBKML_DEBUG)
     set(LIBKML_RELEASE ${LIBKML_DEBUG})

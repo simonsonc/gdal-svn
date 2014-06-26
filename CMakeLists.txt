@@ -79,6 +79,9 @@ if(GDAL_ENABLE_OGR)
 endif()
 
 include_directories(${GDAL_ROOT_SOURCE_DIR}/port)
+if(WIN32)
+    include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)   
+endif()
 
 set(GDAL_TARGET_OBJECTS "")
 set(GDAL_TARGET_LINK_LIB "")
