@@ -1,10 +1,12 @@
 /******************************************************************************
  * Project:  geography network utility
  * Purpose:  main source file
- * Author:   Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
+ * Authors:   Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
+ *            Mikhail Gusev, gusevmihs at gmail dot com
  *
  ******************************************************************************
  * Copyright (C) 2014 Dmitry Baryshnikov
+ * Copyright (C) 2014 Mikhail Gusev
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -46,10 +48,9 @@ static void Usage(const char* pszAdditionalMsg, int bShort = TRUE)
 
 
     printf("Usage: gnminfo [--help-general] [-progress] [-quiet]\n"
-        "               [-f format_name]\n"
-        "               [-create name]  [[-dsco NAME=VALUE] ...]\n"
+        "               [-create [-f format_name] [-t_srs srs_name] [-dsco NAME=VALUE]... ]\n"
         "               [-i]\n"
-        "               [-a src_datasource_name] [-an layer_name]\n"
+        "               [-cp src_dataset_name] [-l layer_name]\n"
         "               gnm_name\n");
 
     if (bShort)
@@ -62,20 +63,17 @@ static void Usage(const char* pszAdditionalMsg, int bShort = TRUE)
 
     printf("\n -f format_name: output file format name, possible values are:\n");
 
-    //TODO: show only supported drivers
-    for (int iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++)
-    {
-        GDALDriver *poDriver = poR->GetDriver(iDriver);
+    // Show only supported drivers
 
-        if( CSLTestBoolean( CSLFetchNameValueDef(poDriver->GetMetadata(), GDAL_DCAP_CREATE, "FALSE") ) )
-            printf("     -f \"%s\"\n", poDriver->GetDescription());
-    }
+    int i;
+    for (i = 0; GNMSupportedDatasets[i] != NULL; ++i)
+        printf("    [%s]\n", GNMSupportedDatasets[i]);
 
     printf(" -progress: Display progress on terminal. Only works if input layers have the \n"
         "                                          \"fast feature count\" capability\n"
         " -dsco NAME=VALUE: Dataset creation option (format specific)\n"
-        " -a src_datasource_name: Datasource to add\n"
-        " -an layer_name: Layer name in datasource (optional)\n"
+        " -cp src_datasource_name: Datasource to copy\n"
+        " -l layer_name: Layer name in datasource (optional)\n"
         );
 
     if (pszAdditionalMsg)
@@ -179,16 +177,16 @@ void CheckDestDataSourceNameConsistency(const char* pszDestFilename,
 int main( int nArgc, char ** papszArgv )
 
 {
-    OGRErr       eErr = OGRERR_NONE;
-    int          bQuiet = FALSE;
-    const char  *pszFormat = "ESRI Shapefile";
+    OGRErr eErr = OGRERR_NONE;
+    int bQuiet = FALSE;
+    char *pszFormat = "ESRI Shapefile";
+    char *pszSRS = "EPSG:4326";
 
-    const char  *pszInputDataSource = NULL;
-    const char  *pszDataSource = NULL;
-    char        **papszLayers = NULL;
-    const char  *pszGNMName = NULL;
+    char *pszDataSource = NULL;
+    char **papszDSCO = NULL;
 
-    char        **papszDSCO = NULL;
+    char *pszInputDataset = NULL;
+    char *pszInputLayer = NULL;
 
     operation stOper = op_unknown;
 
@@ -203,7 +201,8 @@ int main( int nArgc, char ** papszArgv )
 /* -------------------------------------------------------------------- */
 /*      Register format(s).                                             */
 /* -------------------------------------------------------------------- */
-    OGRRegisterAll();
+    //OGRRegisterAll();
+    GDALAllRegister();
 
 /* -------------------------------------------------------------------- */
 /*      Processing command line arguments.                              */
@@ -221,8 +220,12 @@ int main( int nArgc, char ** papszArgv )
                    papszArgv[0], GDAL_RELEASE_NAME, GDALVersionInfo("RELEASE_NAME"));
             return 0;
         }
+
         else if( EQUAL(papszArgv[iArg],"--help") )
+        {
             Usage();
+        }
+
         else if ( EQUAL(papszArgv[iArg], "--long-usage") )
         {
             Usage(FALSE);
@@ -232,70 +235,295 @@ int main( int nArgc, char ** papszArgv )
         {
             bQuiet = TRUE;
         }
+
         else if( EQUAL(papszArgv[iArg],"-f") )
         {
             CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(1);
             pszFormat = papszArgv[++iArg];
         }
+
         else if( EQUAL(papszArgv[iArg],"-dsco") )
         {
             CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(1);
             papszDSCO = CSLAddString(papszDSCO, papszArgv[++iArg] );
         }
+
         else if( EQUAL(papszArgv[iArg],"-create") )
         {
             stOper = op_create;
         }
+
+        else if( EQUAL(papszArgv[iArg],"-t_srs") )
+        {
+            CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(1);
+            pszSRS = papszArgv[++iArg];
+        }
+
         else if( EQUAL(papszArgv[iArg],"-i") )
         {
             stOper = op_info;
         }
-        else if( EQUAL(papszArgv[iArg],"-a") )
+
+        else if( EQUAL(papszArgv[iArg],"-cp") )
         {
             stOper = op_add_layer;
-            pszInputDataSource = papszArgv[++iArg];
+            pszInputDataset = papszArgv[++iArg];
         }
-        else if( EQUAL(papszArgv[iArg],"-an") )
+
+        else if( EQUAL(papszArgv[iArg],"-l") )
         {
-            papszLayers = CSLAddString(papszLayers, papszArgv[++iArg]);
+            pszInputLayer = papszArgv[++iArg];
         }
 
         else if( papszArgv[iArg][0] == '-' )
         {
             Usage(CPLSPrintf("Unknown option name '%s'", papszArgv[iArg]));
         }
+
         else if( pszDataSource == NULL )
             pszDataSource = papszArgv[iArg];
     }
 
-
     if(stOper == op_create)
     {
-        if( pszDataSource == NULL)
-            Usage("no output datasource provided");
-        else if(pszFormat == NULL)
-            Usage("no output driver provided");
-        else  if(pszGNMName == NULL)
-            Usage("no name provided");
-        //TODO: create new gnm and output status (success or failed)
+        char** options = NULL;
+        const char *pszGNMName = CSLFetchNameValue(papszDSCO,GNM_CREATE_OPTIONPAIR_NAME);
 
+        // TODO: read other parameters.
+
+        if( pszDataSource == NULL)
+            Usage("no dataset name provided");
+        else if(pszFormat == NULL)
+            Usage("no driver name provided");
+        else  if(pszGNMName == NULL)
+            //Usage("no connectivity name provided");
+            printf("\nWarning: No connectivity name provided, using default ...\n");
+        else
+        {
+            options = CSLAddNameValue(options, GNM_CREATE_OPTIONPAIR_NAME, pszGNMName);
+        }
+
+        //Create new gnm and output status (success or failed)
+        GNMConnectivity *poCon;
+        poCon = GNMManager::CreateConnectivity(pszDataSource,
+                                               pszFormat,
+                                               pszSRS,
+                                               options,
+                                               NULL);
+        if (poCon != NULL)
+        {
+            if (bQuiet == FALSE)
+                printf("\nConnectivity created successfully in a "
+                   "new dataset at %s\n",pszDataSource);
+        }
+        else
+        {
+            fprintf(stderr, "\nFAILURE: Failed to create connectivity in a new dataset at "
+                   "%s and with driver %s\n",pszDataSource,pszFormat);
+        }
+
+        GNMManager::CloseConnectivity(poCon);
+        CSLDestroy(options);
     }
+
     else if(stOper == op_info)
     {
-        if( pszDataSource == NULL)
-            Usage("no datasource provided");
-        //TODO: output info
+        if(pszDataSource == NULL)
+            Usage("no dataset provided");
+
+        GDALDataset *poDS;
+        poDS = (GDALDataset*) GDALOpenEx(pszDataSource,
+                                         GDAL_OF_VECTOR | GDAL_OF_READONLY,
+                                         NULL, NULL, NULL );
+        if(poDS == NULL)
+        {
+            fprintf(stderr, "\nFAILURE: Failed to open connectivity at %s\n",pszDataSource);
+            exit(1);
+        }
+
+        //Output info
+        GNMConnectivity *poCon;
+        poCon = GNMManager::OpenConnectivity(poDS);
+        if (poCon != NULL)
+        {
+            if (bQuiet == FALSE)
+                printf("\nConnectivity opened successfully at %s\n",pszDataSource);
+
+            GDALDataset* poDS = poCon->GetDataset();
+            if (poDS != NULL)
+            {
+                for (int iLayer = 0; iLayer < poDS->GetLayerCount(); iLayer++)
+                {
+                    OGRLayer        *poLayer = poDS->GetLayer(iLayer);
+
+                    if (poLayer == NULL)
+                    {
+                        printf("FAILURE: Couldn't fetch advertised layer %d!\n",
+                            iLayer);
+                        exit(1);
+                    }
+
+                    printf("%d: %s",
+                        iLayer + 1,
+                        poLayer->GetName());
+
+                    int nGeomFieldCount =
+                        poLayer->GetLayerDefn()->GetGeomFieldCount();
+                    if (nGeomFieldCount > 1)
+                    {
+                        printf(" (");
+                        for (int iGeom = 0; iGeom < nGeomFieldCount; iGeom++)
+                        {
+                            if (iGeom > 0)
+                                printf(", ");
+                            OGRGeomFieldDefn* poGFldDefn =
+                                poLayer->GetLayerDefn()->GetGeomFieldDefn(iGeom);
+                            printf("%s",
+                                OGRGeometryTypeToName(
+                                poGFldDefn->GetType()));
+                        }
+                        printf(")");
+                    }
+                    else if (poLayer->GetGeomType() != wkbUnknown)
+                        printf(" (%s)",
+                        OGRGeometryTypeToName(
+                        poLayer->GetGeomType()));
+
+                    printf("\n");
+                }
+            }
+
+            char** params = poCon->GetMetaParamValues();
+
+            if (params == NULL)
+            {
+                fprintf(stderr, "\nFAILURE: Failed to read connectivity metadata at %s\n",pszDataSource);
+            }
+            else
+            {
+                printf("\nConnectivity metadata [Name=Value]:\n");
+
+                // We don't know the actual count of parameters.
+                int i = 0;
+                while (params[i] != NULL)
+                {
+                    printf("    [%s]\n",params[i]);
+                    i++;
+                }
+            }
+            CSLDestroy(params);
+
+            char    *pszWKT;
+            const OGRSpatialReference* poSRS = poCon->GetSpatialReference();
+            if (poSRS == NULL)
+                pszWKT = CPLStrdup("(unknown)");
+            else
+            {
+                poSRS->exportToPrettyWkt(&pszWKT);
+            }
+
+            printf("SRS WKT:\n%s\n", pszWKT);
+            CPLFree(pszWKT);
+
+            //TODO: output some stats about graph
+
+            GNMManager::CloseConnectivity(poCon);
+        }
+        else
+        {
+            fprintf(stderr, "\nFAILURE: Failed to open connectivity at %s\n",pszDataSource);
+        }
+
+        GDALClose(poDS);
     }
+
     else if(stOper == op_add_layer)
     {
-       if( pszInputDataSource == NULL)
-            Usage("no input datasource provided");
+       if(pszDataSource == NULL)
+            Usage("no dataset provided");
+       if(pszInputDataset == NULL)
+            Usage("no input dataset name provided");
 
-        GDALDataset *poSrcDS = NULL;
-        OGRLayer *poSrcLayer = NULL;
+        // Copy layer
+        GDALDataset *poDS;
+        poDS = (GDALDataset*) GDALOpenEx(pszDataSource,
+                                         GDAL_OF_VECTOR | GDAL_OF_UPDATE,
+                                         NULL, NULL, NULL );
+        if(poDS == NULL)
+        {
+            fprintf(stderr, "\nFAILURE: Failed to open connectivity at %s\n",pszDataSource);
+            exit(1);
+        }
 
+        //Output info
+        GNMConnectivity *poCon;
+        poCon = GNMManager::OpenConnectivity(poDS);
+        if (poCon != NULL)
+        {
+            GDALDataset *poSrcDS;
+            poSrcDS = (GDALDataset*) GDALOpenEx(pszInputDataset,
+                                                GDAL_OF_VECTOR | GDAL_OF_READONLY,
+                                                NULL, NULL, NULL );
+            if(poSrcDS == NULL)
+            {
+                fprintf(stderr, "\nFAILURE: Can not open dataset at %s\n",
+                        pszInputDataset);
+                exit(1);
+            }
 
+            OGRLayer *poSrcLayer;
+            if (pszInputLayer != NULL)
+                poSrcLayer = poSrcDS->GetLayerByName(pszInputLayer);
+            else
+                poSrcLayer = poSrcDS->GetLayer(0);
+
+            if (poSrcLayer == NULL)
+            {
+                if (pszInputLayer != NULL)
+                    fprintf(stderr, "\nFAILURE: Can not open layer %s in %s\n",
+                        pszInputLayer,pszInputDataset);
+                else
+                    fprintf(stderr, "\nFAILURE: Can not open layer in %s\n",
+                    pszInputDataset);
+
+                GDALClose(poSrcDS);
+                exit(1);
+            }
+
+            GNMErr err = poCon->CopyLayer(poSrcLayer, poSrcLayer->GetName());
+            if (err != GNMERR_NONE)
+            {
+                if (pszInputLayer != NULL)
+                    fprintf(stderr, "\nFAILURE: Can not copy layer %s from %s\n",
+                        pszInputLayer,pszInputDataset);
+                else
+                    fprintf(stderr, "\nFAILURE: Can not copy layer from %s\n",
+                    pszInputDataset);
+                GDALClose(poSrcDS);
+                exit(1);
+            }
+
+            if (bQuiet == FALSE)
+            {
+                if (pszInputLayer != NULL)
+                    printf("\nLayer %s successfully copied from %s and added to the connectivity at %s\n",
+                    pszInputLayer, pszInputDataset, pszDataSource);
+                else
+                    printf("\nLayer successfully copied from %s and added to the connectivity at %s\n",
+                    pszInputDataset, pszDataSource);
+            }
+
+            GDALClose(poSrcDS);
+            GNMManager::CloseConnectivity(poCon);
+        }
+        else
+        {
+            printf("Failed to open connectivity at %s",pszDataSource);
+        }
+
+        GDALClose(poDS);
     }
+
     else
     {
         Usage("no operation provided");
@@ -304,8 +532,6 @@ int main( int nArgc, char ** papszArgv )
 /* -------------------------------------------------------------------- */
 /*      Close down.                                                     */
 /* -------------------------------------------------------------------- */
-
-    CSLDestroy( papszLayers );
 
     OGRCleanupAll();
 

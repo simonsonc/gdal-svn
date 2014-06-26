@@ -4,7 +4,8 @@ include GDALmake.opt
 GDAL_OBJ	=	$(GDAL_ROOT)/frmts/o/*.o \
 			$(GDAL_ROOT)/gcore/*.o \
 			$(GDAL_ROOT)/port/*.o \
-			$(GDAL_ROOT)/alg/*.o
+			$(GDAL_ROOT)/alg/*.o \
+            $(GDAL_ROOT)/gnm/*.o
 
 GDAL_OBJ += $(GDAL_ROOT)/ogr/ogrsf_frmts/o/*.o
 
@@ -52,6 +53,9 @@ port-target:
 
 ogr-target:
 	(cd ogr; $(MAKE) lib )
+    
+gnm-target:
+	(cd gnm; $(MAKE) lib )    
 
 core-target:
 	(cd gcore; $(MAKE))
@@ -79,6 +83,7 @@ swig-modules:	apps-target
 clean:	lclean
 	(cd port; $(MAKE) clean)
 	(cd ogr; $(MAKE) clean)
+    (cd gnm; $(MAKE) clean)
 	(cd gcore; $(MAKE) clean)
 	(cd frmts; $(MAKE) clean)
 	(cd alg; $(MAKE) clean)
@@ -174,6 +179,7 @@ endif
 	(cd frmts; $(MAKE) install)
 	(cd alg; $(MAKE) install)
 	(cd ogr; $(MAKE) install)
+    (cd gnm; $(MAKE) install)
 	(cd apps; $(MAKE) install)
 ifneq ($(BINDINGS),)
 	(cd swig; $(MAKE) install)

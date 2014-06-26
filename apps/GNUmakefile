@@ -11,7 +11,7 @@ DEP_LIBS =	$(EXE_DEP_LIBS) $(XTRAOBJ)
 BIN_LIST =	gdalinfo$(EXE) gdalserver$(EXE) gdal_translate$(EXE) \
 		gdaladdo$(EXE) gdalwarp$(EXE) nearblack$(EXE) gdalmanage$(EXE) \
 		gdalenhance$(EXE) gdaltransform$(EXE) gdaldem$(EXE) \
-		gdallocationinfo$(EXE) gdalsrsinfo$(EXE) 
+		gdallocationinfo$(EXE) gdalsrsinfo$(EXE) gnminfo$(EXE)
 
 ifeq ($(OGR_ENABLED),yes)
 BIN_LIST += 	gdal_contour$(EXE) \
@@ -135,6 +135,9 @@ gdalasyncread$(EXE):	gdalasyncread.$(OBJ_EXT) $(DEP_LIBS)
 
 testreprojmulti$(EXE):	testreprojmulti.$(OBJ_EXT) $(DEP_LIBS)
 	$(LD) $(LNK_FLAGS) $< $(XTRAOBJ) $(CONFIG_LIBS) -o $@
+    
+gnminfo$(EXE):	gnminfo.$(OBJ_EXT) commonutils.$(OBJ_EXT) $(DEP_LIBS)
+	$(LD) $(LNK_FLAGS) $< commonutils.$(OBJ_EXT) $(XTRAOBJ) $(CONFIG_LIBS) -o $@    
 
 clean:
 	$(RM) *.o $(BIN_LIST) core gdal-config gdal-config-inst

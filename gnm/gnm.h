@@ -82,7 +82,7 @@ typedef int GNMDirection;
 #define GNM_METAPARAM_DESCR "con_descr" // connectivity description
 
 // System field names.
-// FORMAT NOTE: Shapefile driver does not support names more than 10 characters.
+// FORMAT NOTE: Shapefile driver does not support field names more than 10 characters.
 #define GNM_SYSFIELD_PARAMNAME "param_name"
 #define GNM_SYSFIELD_PARAMVALUE "param_val"
 #define GNM_SYSFIELD_SOURCE "source"
@@ -95,12 +95,12 @@ typedef int GNMDirection;
 #define GNM_SYSFIELD_LAYERNAME "layer_name"
 //#define GNM_SYSFIELD_FID "fid"
 
-
+	
 /************************************************************************/
 /*                      GNMConnectivity                               */
 /************************************************************************/
 class CPL_DLL GNMConnectivity
-{
+{ 
     friend class GNMManager;
 
  // Fields:
@@ -122,6 +122,10 @@ class CPL_DLL GNMConnectivity
  // Additional:
 
     OGRFeature *_findConnection (OGRLayer *l,GNMGFID s,GNMGFID t,GNMGFID c);
+
+    bool _isClassLayer (const char *layerName);
+
+    char *_makeNewLayerName (const char *name, OGRwkbGeometryType geotype);
 
  // Interface:
 
@@ -152,9 +156,11 @@ class CPL_DLL GNMConnectivity
 
     char **GetMetaParamValues ();
 
+    const OGRSpatialReference* GetSpatialReference() const;
+
  // Interface for reimplementing in subclasses:
 
-    virtual GNMErr CreateLayer (const char *pszName,
+    virtual OGRLayer *CreateLayer (const char *pszName,
                              OGRFeatureDefn *FeatureDefn,
                              OGRwkbGeometryType eGType = wkbPoint,
                              char **papszOptions = NULL);
@@ -191,7 +197,7 @@ class CPL_DLL GNMConnectivity
 /************************************************************************/
 /**
  * \brief Provides an abstraction to manage the connectivities. This class
- * desides which connectivity format exectly to manipulate, while user
+ * decides which connectivity format exactly to manipulate, while user
  * works only with GNMConnectivity.
  *
  * @since GDAL 2.0

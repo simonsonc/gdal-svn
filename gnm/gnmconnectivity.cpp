@@ -77,6 +77,89 @@ OGRFeature *GNMConnectivity::_findConnection(OGRLayer *l, GNMGFID s,
     return f;
 }
 
+/************************************************************************/
+/*                          _findClassLayer()                         */
+/************************************************************************/
+bool GNMConnectivity::_isClassLayer (const char *layerName)
+{
+    OGRLayer *classLayer = _poDataSet->GetLayerByName(GNM_SYSLAYER_CLASSES);
+
+    // TODO: implement the search via SetAttributeFilter as below.
+    // Understand why the filter can not be set with query for example:
+    // "layer_name = _gnm_connectivity_building-point_point".
+    /*
+    char filter[100];
+    sprintf(filter,"%s = %s",GNM_SYSFIELD_LAYERNAME,layerName);
+    if (classLayer->SetAttributeFilter(filter) != OGRERR_NONE)
+        return false;
+    classLayer->ResetReading();
+    OGRFeature *classFeature;
+    while ((classFeature = classLayer->GetNextFeature()) != NULL)
+    {
+        // It is a class layer.
+        OGRFeature::DestroyFeature(classFeature);
+        classLayer->SetAttributeFilter(NULL);
+        return true;
+    }
+    classLayer->SetAttributeFilter(NULL);
+    */
+
+// TEMP ------------------------------------------------------------------
+    classLayer->ResetReading();
+    OGRFeature *classFeature;
+    while ((classFeature = classLayer->GetNextFeature()) != NULL)
+    {
+
+        if (strcmp(classFeature->GetFieldAsString(GNM_SYSFIELD_LAYERNAME),
+                   layerName) == 0)
+        {
+            // It is a class layer.
+            OGRFeature::DestroyFeature(classFeature);
+            return true;
+        }
+        OGRFeature::DestroyFeature(classFeature);
+    }
+// -----------------------------------------------------------------------
+
+    // TODO: Check if this is a system layer.
+
+    // We have not found any layer with this name.
+    return false;
+}
+
+/************************************************************************/
+/*                          _makeNewLayerName()                         */
+/************************************************************************/
+char *GNMConnectivity::_makeNewLayerName (const char *name,
+                                          OGRwkbGeometryType geotype)
+{
+    char *newName = new char [100];
+
+    // Define network name.
+    OGRFeature *f = _poDataSet->GetLayerByName(GNM_SYSLAYER_META)
+                              ->GetFeature(_meta_name_i);
+    //const char* conName = f->GetFieldAsString(GNM_SYSFIELD_PARAMVALUE);
+    const char *conName = f->GetFieldAsString(GNM_SYSFIELD_PARAMVALUE);
+
+    // Define layer geometry type.
+    char *typeName = new char [20];
+    switch (wkbFlatten(geotype))
+    {
+        case wkbPoint: strcpy(typeName,"point"); break;
+        case wkbLineString: strcpy(typeName,"line"); break;
+        case wkbPolygon: strcpy(typeName, "plg"); break;
+        case wkbGeometryCollection: strcpy(typeName, "coll"); break;
+        default: strcpy(typeName,"undefgeom"); break;
+    }
+
+    sprintf(newName,"%s_%s_%s",conName,name,typeName);
+
+    delete[] typeName;
+    OGRFeature::DestroyFeature(f);
+
+    return newName;
+}
+
 
 /************************************************************************/
 /*                             _create()                                */
@@ -130,6 +213,12 @@ GNMErr GNMConnectivity::_create (GDALDataset *poDS,
         return GNMERR_UNABLE_CREATE_SYSFIELD;
     }
 
+    if (_poDataSet->TestCapability(ODsCDeleteLayer) == FALSE)
+    {
+        //CPLError
+        return GNMERR_FAILURE;
+    }
+
     // Load all dataset layer names, while these layers become classes
     // in the context of connectivity/network.
     char **classes = NULL;
@@ -174,11 +263,14 @@ GNMErr GNMConnectivity::_create (GDALDataset *poDS,
         || _poSpatialRef->SetFromUserInput(pszSrsInput) != OGRERR_NONE)
     {
         //CPLError
-        delete _poSpatialRef;
+        // NOTE: we do not need to delete _poSpatialRef here. It will be
+        // made in destructor when delete GNMConnectivity occures.
         return GNMERR_FAILURE;
     }
     feature = OGRFeature::CreateFeature(newLayer->GetLayerDefn());
     feature->SetField(GNM_SYSFIELD_PARAMNAME, GNM_METAPARAM_SRS);
+    //TODO: User usually provides short srs in input parameteres, but if we create connectivity programmatically, we can set SRS via OGRSDpatialReference. 
+    //The usual way to store SRS is WKT, which can be more than 255 chars, so we need to store srs in file for shape file/dbf case.
     feature->SetField(GNM_SYSFIELD_PARAMVALUE, pszSrsInput);
     if(newLayer->CreateFeature(feature) != OGRERR_NONE)
     {
@@ -218,7 +310,7 @@ GNMErr GNMConnectivity::_create (GDALDataset *poDS,
     if (conName != NULL)
         feature->SetField(GNM_SYSFIELD_PARAMVALUE, conName);
     else // default name
-        feature->SetField(GNM_SYSFIELD_PARAMVALUE, "_gnm_connectivity");
+        feature->SetField(GNM_SYSFIELD_PARAMVALUE, "_gnm");
     if(newLayer->CreateFeature(feature) != OGRERR_NONE)
     {
         //CPLError
@@ -491,7 +583,7 @@ GNMErr GNMConnectivity::_remove(GDALDataset *poDS)
 
 
 /************************************************************************/
-/*                     _has()                               */
+/*                            _has()                                    */
 /************************************************************************/
 bool GNMConnectivity::_has (GDALDataset *poDS)
 {
@@ -608,6 +700,19 @@ char **GNMConnectivity::GetMetaParamValues ()
     return ret;
 }
 
+/************************************************************************/
+/*                       GetSpatialReference()                          */
+/************************************************************************/
+/**
+* \brief Returns spatial reference of GNMConnectivity
+*
+* @since GDAL 2.0
+*/
+const OGRSpatialReference* GNMConnectivity::GetSpatialReference() const
+{
+    return _poSpatialRef;
+}
+
 
 /************************************************************************/
 /*                       CreateLayer()                               */
@@ -619,20 +724,34 @@ char **GNMConnectivity::GetMetaParamValues ()
  *
  * @since GDAL 2.0
  */
-GNMErr GNMConnectivity::CreateLayer (const char *pszName,
+OGRLayer *GNMConnectivity::CreateLayer(const char *pszName,
                                         OGRFeatureDefn *FeatureDefn,
                                         OGRwkbGeometryType eGType,
                                         char **papszOptions)
 {
     // FORMAT NOTE: some datasets does not support names with "-" symbol.
 
+    // Construct the special unique name for new layer, accordingly
+    // to the special naming conventions.
+    const char* newName = _makeNewLayerName(pszName,eGType);
+
+    // Check if there is already a layer with this name.
+    // This layer can not have system layer name so we can use _isClassLayer().
+    if (this->_isClassLayer(newName))
+    {
+        //CPLErr
+        delete[] newName;
+        return NULL;
+    }
+
     // Create void layer in a dataset.
     OGRLayer *newLayer;
-    newLayer = _poDataSet->CreateLayer(pszName,_poSpatialRef,eGType,papszOptions);
+    newLayer = _poDataSet->CreateLayer(newName,_poSpatialRef,eGType,papszOptions);
     if (newLayer == NULL)
     {
         //CPLErr
-        return GNMERR_FAILURE;
+        delete[] newName;
+        return NULL;
     }
 
     // Create fields for the layer.
@@ -643,7 +762,8 @@ GNMErr GNMConnectivity::CreateLayer (const char *pszName,
         {
             //CPLError
             // TODO: delete layer.
-            return GNMERR_FAILURE;
+            delete[] newName;
+            return NULL;
         }
     }
 
@@ -658,7 +778,8 @@ GNMErr GNMConnectivity::CreateLayer (const char *pszName,
         {
             //CPLError
             // TODO: delete layer.
-            return GNMERR_FAILURE;
+            delete[] newName;
+            return NULL;
         }
     }
     else
@@ -668,24 +789,28 @@ GNMErr GNMConnectivity::CreateLayer (const char *pszName,
         {
             //CPLError
             // TODO: delete layer.
-            return GNMERR_FAILURE;
+            delete[] newName;
+            return NULL;
         }
     }
 
     // Register layer in the according system table.
-    OGRLayer *layer = _poDataSet->GetLayerByName(GNM_SYSLAYER_CLASSES);
-    OGRFeature *feature = OGRFeature::CreateFeature(layer->GetLayerDefn());
-    feature->SetField(GNM_SYSFIELD_LAYERNAME, pszName);
-    if(layer->CreateFeature(feature) != OGRERR_NONE)
+    OGRLayer *classLayer = _poDataSet->GetLayerByName(GNM_SYSLAYER_CLASSES);
+    OGRFeature *feature = OGRFeature::CreateFeature(classLayer->GetLayerDefn());
+    feature->SetField(GNM_SYSFIELD_LAYERNAME, newName);
+    if(classLayer->CreateFeature(feature) != OGRERR_NONE)
     {
+        delete[] newName;
         OGRFeature::DestroyFeature(feature);
         //CPLError
         // TODO: delete layer.
-        return GNMERR_FAILURE;
+        return NULL;
     }
     OGRFeature::DestroyFeature(feature);
 
-    return GNMERR_NONE;
+    delete[] newName;
+
+    return newLayer;
 }
 
 
@@ -714,15 +839,10 @@ GNMErr GNMConnectivity::CopyLayer (OGRLayer *poSrcLayer, const char *pszNewName)
     // TODO: Ensure that the passed layer is not the system layer of
     // this connectivity (simply by name).
 
-    // TODO: Check if this layer has a unique for the connectivity name.
-    //setAttributeFilter()
-
-    // TODO (?): construct the special unique name for new layer, accordingly
-    // to the special naming conventions?
-
     // Create new layer in a connectivity.
     OGRFeatureDefn *fDefn = poSrcLayer->GetLayerDefn();
-    if (this->CreateLayer(pszNewName, fDefn, poSrcLayer->GetGeomType()) != GNMERR_NONE)
+    OGRLayer *newLayer = this->CreateLayer(pszNewName, fDefn, poSrcLayer->GetGeomType());
+    if (newLayer == NULL)
     {
         //CPLErr
         return GNMERR_FAILURE;
@@ -743,7 +863,7 @@ GNMErr GNMConnectivity::CopyLayer (OGRLayer *poSrcLayer, const char *pszNewName)
     OGRLayer *gfidLayer = _poDataSet->GetLayerByName(GNM_SYSLAYER_META);
     OGRFeature *gfidFeature = gfidLayer->GetFeature(_meta_gfidcntr_i);
     GNMGFID gfidCounter = gfidFeature->GetFieldAsInteger(GNM_SYSFIELD_PARAMVALUE);
-    OGRLayer *newLayer = _poDataSet->GetLayerByName(pszNewName);
+    //OGRLayer *newLayer = _poDataSet->GetLayerByName(newName);
     int count = fDefn->GetFieldCount();
     OGRFeature *sourceFeature;
     poSrcLayer->ResetReading();
@@ -821,7 +941,8 @@ GNMErr GNMConnectivity::CopyLayer (OGRLayer *poSrcLayer, const char *pszNewName)
     gfidLayer->SetFeature(gfidFeature);
     OGRFeature::DestroyFeature(gfidFeature);
 
-    if (allowTransformation) OCTDestroyCoordinateTransformation(transform);
+    if (allowTransformation)
+        OCTDestroyCoordinateTransformation(transform);
 
     return GNMERR_NONE;
 }
