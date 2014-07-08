@@ -88,8 +88,8 @@ build32
 build64
 lib
 include
-port/cpl_config.h
-gcore/gdal_def.h
 bin
 #temp files
 *.*~
+*.save
+*~

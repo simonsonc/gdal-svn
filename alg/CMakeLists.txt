@@ -3,7 +3,7 @@
 # * Purpose:  CMake build scripts
 # * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
 # ******************************************************************************
-# * Copyright (C) 2012,2013 Bishop
+# * Copyright (C) 2012,2013,2014 Bishop
 # * 
 # * Permission is hereby granted, free of charge, to any person obtaining a
 # * copy of this software and associated documentation files (the "Software"),
@@ -98,6 +98,7 @@ set(LIB_CSOURCES
     thinplatespline.cpp 
 	gdal_simplesurf.cpp
 	gdal_octave.cpp
+	gdaltransformgeolocs.cpp
 )
 
 find_package(OpenCL)

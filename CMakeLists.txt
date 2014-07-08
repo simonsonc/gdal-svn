@@ -61,6 +61,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(GDAL_ROOT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(GDAL_ROOT ${GDAL_ROOT_SOURCE_DIR})
 set(GDAL_ROOT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 # set path to additional CMake modules
@@ -79,20 +80,23 @@ if(GDAL_ENABLE_OGR)
 endif()
 
 include_directories(${GDAL_ROOT_SOURCE_DIR}/port)
+include_directories(${GDAL_ROOT_BINARY_DIR}/port)
 if(WIN32)
     include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)   
 endif()
 
 set(GDAL_TARGET_OBJECTS "")
 set(GDAL_TARGET_LINK_LIB "")
+set(GDAL_FORMATS "")
 
 add_subdirectory(port)
 add_subdirectory(gcore)
 add_subdirectory(alg)
 add_subdirectory(ogr)
 add_subdirectory(frmts)
-add_subdirectory(apps)
 add_subdirectory(gnm)
+add_subdirectory(swig)
+add_subdirectory(apps)
 
 list(REMOVE_DUPLICATES GDAL_TARGET_OBJECTS)
 foreach(TO ${GDAL_TARGET_OBJECTS})
@@ -107,8 +111,10 @@ else(GDAL_BUILD_SHARED)
 endif(GDAL_BUILD_SHARED)
 
 #list(REMOVE_DUPLICATES GDAL_TARGET_LINK_LIB)
+set(LIBS "")
 foreach(TL ${GDAL_TARGET_LINK_LIB})
 	message(STATUS "gdal target link lib=${TL}")
+	set(LIBS ${LIBS} " -l${TL}")
 endforeach(TL)
 if(GDAL_TARGET_LINK_LIB)
 	target_link_libraries(${GDAL_LIB_NAME} ${GDAL_TARGET_LINK_LIB})
@@ -136,18 +142,15 @@ if(WIN32)
 			ARCHIVE DESTINATION lib/x86
 			LIBRARY DESTINATION lib/x86)
     endif()
-	install(FILES ${GDAL_ROOT_SOURCE_DIR}/gcore/gdal_def.h DESTINATION include/gdal)
+	install(FILES ${GDAL_ROOT_BINARY_DIR}/gcore/gdal_def.h DESTINATION include/gdal)
 else()
     install(TARGETS ${GDAL_LIB_NAME}
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
-	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/gcore/gdal_def.h DESTINATION include/gdal)
-	if(GDAL_INSTALL_DATA_IN_VERSION)
-	    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data/ DESTINATION share/gdal/${GDAL_VERSION} FILES_MATCHING PATTERN "*.*")
-	else()    
-	    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data/ DESTINATION share/gdal FILES_MATCHING PATTERN "*.*")
-	endif()
+	install(FILES ${GDAL_ROOT_BINARY_DIR}/gcore/gdal_def.h DESTINATION include/gdal)
+	
+	include(install_gdal_config)
 endif() 
     
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)

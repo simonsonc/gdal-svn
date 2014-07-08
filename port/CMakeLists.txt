@@ -41,7 +41,6 @@ if(GDAL_USE_ICONV)
 endif(GDAL_USE_ICONV)
 
 set(LIB_HHEADERS
-	cpl_config.h 
     cplkeywordparser.h
     cpl_atomic_ops.h
     cpl_config_extras.h
@@ -119,6 +118,9 @@ else(WIN32)
     set(LIB_CSOURCES ${LIB_CSOURCES} cpl_vsil_unix_stdio_64.cpp)
 endif(WIN32)
 
+set(LIB_HHEADERS ${LIB_HHEADERS}
+	${GDAL_ROOT_BINARY_DIR}/port/cpl_config.h 
+)
 
 #check zip and internal zip
 option(GDAL_USE_LIBZ "Set ON to use libz" ON)
