@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
 
+if(UNIX)
     set(GDAL_DATA "")
 	if(GDAL_INSTALL_DATA_IN_VERSION)
 	    set(GDAL_DATA ${CMAKE_INSTALL_PREFIX}/share/gdal/${GDAL_VERSION})
@@ -23,4 +24,4 @@ cmake_minimum_required (VERSION 2.8.10 FATAL_ERROR)
     execute_process(COMMAND chmod 777 ${GDAL_ROOT_BINARY_DIR}/gdal-config)   
     configure_file(${CMAKE_MODULE_PATH}/gdal-config-inst.in.cmake ${GDAL_ROOT_BINARY_DIR}/gdal-config-inst @ONLY)    
     install(PROGRAMS ${GDAL_ROOT_BINARY_DIR}/gdal-config-inst DESTINATION bin RENAME gdal-config)
-
+endif()

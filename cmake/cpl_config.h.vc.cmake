@@ -1,3 +1,5 @@
+#ifndef CPL_CONFIG_H_INCLUDED
+#define CPL_CONFIG_H_INCLUDED
 
 /* We define this here in general so that a VC++ build will publically
    declare STDCALL interfaces even if an application is built against it
@@ -126,3 +128,4 @@
 
 /* #define CPL_DISABLE_DLL */
 
+#endif /* ndef CPL_CONFIG_H_INCLUDED */

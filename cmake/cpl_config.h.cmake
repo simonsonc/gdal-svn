@@ -1,3 +1,6 @@
+#ifndef CPL_CONFIG_H_INCLUDED
+#define CPL_CONFIG_H_INCLUDED
+
 /* port/cpl_config.h.in.  Generated from configure.in by autoheader.  */
 
 /* Define if you want to use pthreads based multiprocessing support */
@@ -204,3 +207,5 @@
    newish ( XCode >= 3/28/11) XCodes */
 /* #include "cpl_config_extras.h" */
 @CPL_CONFIG_EXTRAS@
+
+#endif /* ndef CPL_CONFIG_H_INCLUDED */
