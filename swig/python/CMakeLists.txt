@@ -1,4 +1,4 @@
-# ******************************************************************************
+B# ******************************************************************************
 # * Project:  CMake4GDAL
 # * Purpose:  CMake build scripts
 # * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
@@ -180,7 +180,7 @@ if(PYTHONLIBS_FOUND)
         set(VC_DIR "")
         if(MSVC)
             if(EXISTS "$ENV{VS100COMNTOOLS}../../VC") 
-               set(VC_DIR $ENV{VS110COMNTOOLS}) 
+               set(VC_DIR $ENV{VS100COMNTOOLS}) 
             endif() 
             if(EXISTS "$ENV{VS110COMNTOOLS}../../VC") 
                set(VC_DIR $ENV{VS110COMNTOOLS}) 

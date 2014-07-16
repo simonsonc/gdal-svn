@@ -39,14 +39,21 @@ set(LIB_CSOURCES
 )
 
 add_definitions(-DFRMT_gtiff)
-set(GDAL_FORMATS ${GDAL_FORMATS} " gtiff")
 add_subdirectory(gtiff)
+set(GDAL_FORMATS ${GDAL_FORMATS} " gtiff")
+
 add_definitions(-DFRMT_hfa)
 add_subdirectory(hfa)
 set(GDAL_FORMATS ${GDAL_FORMATS} " hfa")
+
 add_definitions(-DFRMT_vrt)
 add_subdirectory(vrt)
 set(GDAL_FORMATS ${GDAL_FORMATS} " vrt")
+
+add_definitions(-DFRMT_raw)
+add_subdirectory(raw)
+set(GDAL_FORMATS ${GDAL_FORMATS} " raw")
+
 #maybe make depended by s57 ogr driver
 add_definitions(-DFRMT_iso8211)
 add_subdirectory(iso8211)
@@ -73,12 +80,12 @@ if(GDAL_ENABLE_FRMT_MEM)
 	set(GDAL_FORMATS ${GDAL_FORMATS} " mem")
 endif(GDAL_ENABLE_FRMT_MEM)
 
-option(GDAL_ENABLE_FRMT_RAW "Set ON to build raw driver" ON)
-if(GDAL_ENABLE_FRMT_RAW)
-	add_definitions(-DFRMT_raw)
-	add_subdirectory(raw)
-	set(GDAL_FORMATS ${GDAL_FORMATS} " raw")
-endif(GDAL_ENABLE_FRMT_RAW)
+#option(GDAL_ENABLE_FRMT_RAW "Set ON to build raw driver" ON)
+#if(GDAL_ENABLE_FRMT_RAW)
+#	add_definitions(-DFRMT_raw)
+#	add_subdirectory(raw)
+#	set(GDAL_FORMATS ${GDAL_FORMATS} " raw")
+#endif(GDAL_ENABLE_FRMT_RAW)
 
 # need by apps
 # option(GDAL_ENABLE_FRMT_VRT "Set ON to build virtual raster driver" OFF)
