@@ -1,4 +1,4 @@
-B# ******************************************************************************
+# ******************************************************************************
 # * Project:  CMake4GDAL
 # * Purpose:  CMake build scripts
 # * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
@@ -202,8 +202,13 @@ if(PYTHONLIBS_FOUND)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/include/osrPYTHON_wrap.cxx" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/osr_wrap.cpp"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_SOURCE_DIR}/swig/${BINDING}/README.txt" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/README.txt"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_SOURCE_DIR}/swig/${BINDING}/gdalnumeric.py" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/gdalnumeric.py" 
-            COMMAND ${CMAKE_COMMAND} -E copy_directory "${GDAL_ROOT_SOURCE_DIR}/swig/${BINDING}/osgeo" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osgeo"
-            COMMAND ${CMAKE_COMMAND} -E copy_directory "${GDAL_ROOT_SOURCE_DIR}/swig/${BINDING}/osgeo" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osgeo"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_SOURCE_DIR}/swig/${BINDING}/osgeo/gdalnumeric.py" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osgeo/gdalnumeric.py" 
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/gdal.py" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osgeo/gdal.py"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/gdalconst.py" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osgeo/gdalconst.py"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/ogr.py" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osgeo/ogr.py"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osr.py" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osgeo/osr.py"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_SOURCE_DIR}/swig/${BINDING}/osgeo/__init__.py" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osgeo/__init__.py"
+
             COMMAND set VS90COMNTOOLS=${VC_DIR}
             COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py" "build" 
             WORKING_DIRECTORY  ${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/
