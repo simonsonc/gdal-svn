@@ -1,4 +1,4 @@
-# This modul is taken from https://github.com/LuaDist/im/blob/master/cmake/FindECW.cmake
+# This module is taken from https://github.com/LuaDist/im/blob/master/cmake/FindECW.cmake
 
 # Find the ECW library - Enhanced Compression Wavelets for JPEG2000.
 #

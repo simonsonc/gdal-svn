@@ -1,9 +1,11 @@
 # ******************************************************************************
 # * Project:  CMake4GDAL
 # * Purpose:  CMake build scripts
-# * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
+# * Author:   Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
+# *           Alexandr Lisovenko, alexander.lisovenko@gmail.com
 # ******************************************************************************
-# * Copyright (C) 2012 Bishop
+# * Copyright (C) 2012,2014 Dmitry Baryshnikov
+# * Copyright (C) 2014 NextGIS
 # * 
 # * Permission is hereby granted, free of charge, to any person obtaining a
 # * copy of this software and associated documentation files (the "Software"),

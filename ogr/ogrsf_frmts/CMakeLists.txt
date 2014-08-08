@@ -1,9 +1,10 @@
 # ******************************************************************************
 # * Project:  CMake4GDAL
 # * Purpose:  CMake build scripts
-# * Author: Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
+# * Author:   Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
 # ******************************************************************************
-# * Copyright (C) 2012,2013 Bishop
+# * Copyright (C) 2012-2014 Dmitry Baryshnikov
+# * Copyright (C) 2014 NextGIS
 # * 
 # * Permission is hereby granted, free of charge, to any person obtaining a
 # * copy of this software and associated documentation files (the "Software"),
@@ -124,7 +125,10 @@ if(OGR_ENABLE_SHP)
 	add_subdirectory(shape)
 endif()
 
-option(OGR_ENABLE_WFS "Set ON to build WFS driver" OFF)
+include(CMakeDependentOption)
+
+CMAKE_DEPENDENT_OPTION(OGR_ENABLE_WFS "Set ON to build wfs driver" OFF "GDAL_USE_CURL" OFF)
+#option(OGR_ENABLE_WFS "Set ON to build WFS driver" OFF)
 if(OGR_ENABLE_WFS)
 	add_definitions(-DWFS_ENABLED)
 	add_subdirectory(wfs)
@@ -171,6 +175,19 @@ option(OGR_ENABLE_OGDB "Set ON to build OpenGDB driver" ON)
 if(OGR_ENABLE_OGDB)
     add_definitions(-DOPENFILEGDB_ENABLED)
     add_subdirectory(openfilegdb)
+endif()
+
+
+option(OGR_ENABLE_XLS "Set ON to build XLS - MS Excel format driver" OFF)
+if(OGR_ENABLE_XLS)
+    add_definitions(-DFREEXL_ENABLED)
+    add_subdirectory(xls)
+endif()
+
+option(OGR_ENABLE_XLSX "Set ON to build XLSX - MS Office Open XML spreadsheet driver" OFF)
+if(OGR_ENABLE_XLSX)
+    add_definitions(-DXLSX_ENABLED)
+    add_subdirectory(xlsx)
 endif()
 
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)

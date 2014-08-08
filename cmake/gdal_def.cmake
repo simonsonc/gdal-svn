@@ -61,6 +61,7 @@
 #cmakedefine GDAL_HAVE_MYSQL
 #cmakedefine GDAL_HAVE_BOOST
 #cmakedefine GDAL_HAVE_HAVE_LIBKML
+#cmakedefine GDAL_HAVE_HAVE_FREEXL
 
 #cmakedefine GDAL_ENABLE_OGR
 #cmakedefine OGR_USE_JSONC_INTERNAL
@@ -77,6 +78,12 @@
 #cmakedefine GDAL_ENABLE_FRMT_PNG
 #cmakedefine GDAL_ENABLE_FRMT_GIF
 #cmakedefine GDAL_ENABLE_FRMT_TIL
+#cmakedefine GDAL_ENABLE_FRMT_OZI
+#cmakedefine GDAL_ENABLE_FRMT_OZIMAP
+#cmakedefine GDAL_ENABLE_FRMT_POSTGISRASTER
+#cmakedefine GDAL_ENABLE_FRMT_ECW
+#cmakedefine GDAL_ENABLE_FRMT_GEORASTER
+#cmakedefine GDAL_ENABLE_FRMT_WMS
 
 /*** VECTOR FORMATS ***/
 #cmakedefine OGR_ENABLE_MITAB
@@ -94,3 +101,9 @@
 #cmakedefine OGR_ENABLE_LIBKML
 #cmakedefine OGR_ENABLE_GML
 #cmakedefine OGR_ENABLE_KML
+#cmakedefine OGR_ENABLE_SXF
+#cmakedefine OGR_ENABLE_S57
+#cmakedefine OGR_ENABLE_OGDB
+#cmakedefine OGR_ENABLE_XLS
+#cmakedefine OGR_ENABLE_XLSX
+

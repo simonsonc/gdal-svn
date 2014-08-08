@@ -3,7 +3,8 @@
 # * Purpose:  CMake build scripts
 # * Author:   Dmitry Baryshnikov (aka Bishop), polimax@mail.ru
 # ******************************************************************************
-# * Copyright (C) 2013 Dmitry Baryshnikov
+# * Copyright (C) 2014 Dmitry Baryshnikov
+# * Copyright (C) 2014 NextGIS
 # * 
 # * Permission is hereby granted, free of charge, to any person obtaining a
 # * copy of this software and associated documentation files (the "Software"),
@@ -26,40 +27,27 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "ogrsf_kml")
-project ("lib${LIB_NAME}")
-
-
-set(LIB_HHEADERS
-	ogr_kml.h
-)
-
-set(LIB_CSOURCES
-	ogr2kmlgeometry.cpp
-	ogrkmldatasource.cpp
-	ogrkmldriver.cpp
-	ogrkmllayer.cpp
-)
-
 if(EXPAT_FOUND)
-set(LIB_HHEADERS ${LIB_HHEADERS}
-	kml.h
-	kmlnode.h
-	kmlutility.h
-	kmlvector.h
-)
+    set(LIB_NAME "ogrsf_xlsx")
+    project ("lib${LIB_NAME}")
 
-set(LIB_CSOURCES ${LIB_CSOURCES}
-	kml.cpp
-	kmlnode.cpp
-	kmlvector.cpp
-)
-endif(EXPAT_FOUND)
+    if(GDAL_USE_CPL)
+	    add_definitions(-DUSE_CPL)
+    endif(GDAL_USE_CPL)
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
+    set(LIB_HHEADERS
+        ogr_xlsx.h
+    )
 
-if(EXPAT_FOUND)
+    set(LIB_CSOURCES
+	    ogrxlsxdatasource.cpp
+	    ogrxlsxdriver.cpp
+    )
+
+    set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
+    add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
+
+
 	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${EXPAT_LIBRARIES} PARENT_SCOPE)
 endif(EXPAT_FOUND)
 
