@@ -150,6 +150,18 @@ if(GDAL_ENABLE_FRMT_POSTGISRASTER)
 	set(GDAL_FORMATS ${GDAL_FORMATS} " postgisraster")
 endif(GDAL_ENABLE_FRMT_POSTGISRASTER)
 
+option(GDAL_ENABLE_FRMT_ECW  "Set ON to build ERDAS Compressed Wavelets (.ecw) raster driver" OFF)
+if(GDAL_ENABLE_FRMT_ECW)
+	add_definitions(-DFRMT_ecw)
+	add_subdirectory(ecw)
+endif(GDAL_ENABLE_FRMT_ECW)
+
+option(GDAL_ENABLE_FRMT_GEORASTER  "Set ON to build Oracle Spatial GeoRaster raster driver" OFF)
+if(GDAL_ENABLE_FRMT_GEORASTER)
+	add_definitions(-DFRMT_georaster)
+	add_subdirectory(georaster)
+endif(GDAL_ENABLE_FRMT_GEORASTER)
+
 include(CMakeDependentOption)
 
 CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_WMS "Set ON to build wms driver" OFF "GDAL_USE_CURL" OFF)
