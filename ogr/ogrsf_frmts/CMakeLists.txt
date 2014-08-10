@@ -190,6 +190,12 @@ if(OGR_ENABLE_XLSX)
     add_subdirectory(xlsx)
 endif()
 
+option(OGR_ENABLE_AVC "Set ON to build Arc/Info Binary Coverage driver" OFF)
+if(OGR_ENABLE_AVC)
+	add_definitions(-DAVC_ENABLED)
+	add_subdirectory(avc)
+endif()
+
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
 set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)
 add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})

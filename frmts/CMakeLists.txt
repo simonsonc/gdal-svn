@@ -156,13 +156,43 @@ option(GDAL_ENABLE_FRMT_ECW  "Set ON to build ERDAS Compressed Wavelets (.ecw) r
 if(GDAL_ENABLE_FRMT_ECW)
 	add_definitions(-DFRMT_ecw)
 	add_subdirectory(ecw)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " ecw")
 endif(GDAL_ENABLE_FRMT_ECW)
 
 option(GDAL_ENABLE_FRMT_GEORASTER  "Set ON to build Oracle Spatial GeoRaster raster driver" OFF)
 if(GDAL_ENABLE_FRMT_GEORASTER)
 	add_definitions(-DFRMT_georaster)
 	add_subdirectory(georaster)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " georaster")
 endif(GDAL_ENABLE_FRMT_GEORASTER)
+
+option(GDAL_ENABLE_FRMT_AAIGRID  "Set ON to build Arc/Info ASCII Grid raster driver" OFF)
+if(GDAL_ENABLE_FRMT_AAIGRID)
+	add_definitions(-DFRMT_aaigrid)
+	add_subdirectory(aaigrid)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " AAIGrid")
+endif(GDAL_ENABLE_FRMT_AAIGRID)
+
+option(GDAL_ENABLE_FRMT_AIG  "Set ON to build Arc/Info Binary Grid (.adf) raster driver" OFF)
+if(GDAL_ENABLE_FRMT_AIG)
+	add_definitions(-DFRMT_aigrid)
+	add_subdirectory(aigrid)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " AIG")
+endif(GDAL_ENABLE_FRMT_AIG)
+
+option(GDAL_ENABLE_FRMT_PDS  "Set ON to build NASA Planetary Data System raster driver" OFF)
+if(GDAL_ENABLE_FRMT_PDS )
+	add_definitions(-DFRMT_pds)
+	add_subdirectory(pds)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " PDS")
+endif(GDAL_ENABLE_FRMT_PDS )
+
+option(GDAL_ENABLE_FRMT_HDF4  "Set ON to build Hierarchical Data Format Release 4 (HDF4) raster driver" OFF)
+if(GDAL_ENABLE_FRMT_HDF4 )
+	add_definitions(-DFRMT_hdf4)
+	add_subdirectory(hdf4)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " HDF4")
+endif(GDAL_ENABLE_FRMT_HDF4 )
 
 include(CMakeDependentOption)
 
