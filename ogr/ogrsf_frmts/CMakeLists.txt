@@ -196,6 +196,12 @@ if(OGR_ENABLE_AVC)
 	add_subdirectory(avc)
 endif()
 
+option(OGR_ENABLE_ODS "Set ON to build ODS - Open Document Spreadsheet format driver" OFF)
+if(OGR_ENABLE_ODS)
+    add_definitions(-DODS_ENABLED)
+    add_subdirectory(ods)
+endif()
+
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
 set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)
 add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})

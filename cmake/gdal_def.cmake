@@ -106,4 +106,5 @@
 #cmakedefine OGR_ENABLE_OGDB
 #cmakedefine OGR_ENABLE_XLS
 #cmakedefine OGR_ENABLE_XLSX
+#cmakedefine OGR_ENABLE_ODS
 
