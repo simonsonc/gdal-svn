@@ -1,9 +1,10 @@
 # ******************************************************************************
 # * Project:  CMake4GDAL
 # * Purpose:  CMake build scripts
-# * Author: 
+# * Author:   Alexander Lisovenko, alexander.lisovenko@gmail.com
 # ******************************************************************************
-# * Copyright (C) 2014
+# * Copyright (C) 2014 Alexander Lisovenko
+# * Copyright (C) 2014 NextGIS
 # * 
 # * Permission is hereby granted, free of charge, to any person obtaining a
 # * copy of this software and associated documentation files (the "Software"),

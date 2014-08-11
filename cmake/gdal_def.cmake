@@ -84,6 +84,11 @@
 #cmakedefine GDAL_ENABLE_FRMT_ECW
 #cmakedefine GDAL_ENABLE_FRMT_GEORASTER
 #cmakedefine GDAL_ENABLE_FRMT_WMS
+#cmakedefine GDAL_ENABLE_FRMT_AAIGRID
+#cmakedefine GDAL_ENABLE_FRMT_AIG
+#cmakedefine GDAL_ENABLE_FRMT_PDS
+#cmakedefine GDAL_ENABLE_FRMT_HDF4
+#cmakedefine GDAL_ENABLE_FRMT_HDF5
 
 /*** VECTOR FORMATS ***/
 #cmakedefine OGR_ENABLE_MITAB
@@ -107,4 +112,5 @@
 #cmakedefine OGR_ENABLE_XLS
 #cmakedefine OGR_ENABLE_XLSX
 #cmakedefine OGR_ENABLE_ODS
+#cmakedefine OGR_ENABLE_AVC
 

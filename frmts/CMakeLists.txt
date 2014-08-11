@@ -194,6 +194,13 @@ if(GDAL_ENABLE_FRMT_HDF4 )
     set(GDAL_FORMATS ${GDAL_FORMATS} " HDF4")
 endif(GDAL_ENABLE_FRMT_HDF4 )
 
+option(GDAL_ENABLE_FRMT_HDF5  "Set ON to build Hierarchical Data Format Release 5 (HDF5) raster driver" OFF)
+if(GDAL_ENABLE_FRMT_HDF5 )
+	add_definitions(-DFRMT_hdf5)
+	add_subdirectory(hdf5)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " HDF5")
+endif(GDAL_ENABLE_FRMT_HDF5 )
+
 include(CMakeDependentOption)
 
 CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_WMS "Set ON to build wms driver" OFF "GDAL_USE_CURL" OFF)
