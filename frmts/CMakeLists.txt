@@ -222,6 +222,13 @@ if(GDAL_ENABLE_FRMT_PDF )
     set(GDAL_FORMATS ${GDAL_FORMATS} " PDF")
 endif(GDAL_ENABLE_FRMT_PDF )
 
+option(GDAL_ENABLE_FRMT_MrSID   "Set ON to build Multi-resolution Seamless Image Database raster driver" OFF)
+if(GDAL_ENABLE_FRMT_MrSID )
+	add_definitions(-DFRMT_mrsid)
+	add_subdirectory(mrsid)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " MrSID")
+endif(GDAL_ENABLE_FRMT_MrSID )
+
 include(CMakeDependentOption)
 
 CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_WCS "Set ON to build OGC Web Coverage Service driver" OFF "GDAL_USE_CURL" OFF)

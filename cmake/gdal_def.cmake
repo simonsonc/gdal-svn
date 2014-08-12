@@ -93,6 +93,7 @@
 #cmakedefine GDAL_ENABLE_FRMT_JDEM
 #cmakedefine GDAL_ENABLE_FRMT_WCS
 #cmakedefine GDAL_ENABLE_FRMT_PDF
+#cmakedefine GDAL_ENABLE_FRMT_MrSID
 
 /*** VECTOR FORMATS ***/
 #cmakedefine OGR_ENABLE_MITAB
