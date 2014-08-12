@@ -89,6 +89,10 @@
 #cmakedefine GDAL_ENABLE_FRMT_PDS
 #cmakedefine GDAL_ENABLE_FRMT_HDF4
 #cmakedefine GDAL_ENABLE_FRMT_HDF5
+#cmakedefine GDAL_ENABLE_FRMT_E00GRID
+#cmakedefine GDAL_ENABLE_FRMT_JDEM
+#cmakedefine GDAL_ENABLE_FRMT_WCS
+#cmakedefine GDAL_ENABLE_FRMT_PDF
 
 /*** VECTOR FORMATS ***/
 #cmakedefine OGR_ENABLE_MITAB
