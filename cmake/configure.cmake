@@ -226,7 +226,6 @@ if(UNIX)
     
     #sqlite/spatialite checks
     check_library_exists(sqlite3 sqlite3_column_table_name "" HAS_COLUMN_METADATA)
-    check_library_exists(pcre pcre_compile "" HAS_PCRE)
     check_library_exists(spatialite spatialite_target_cpu "" HAS_SPATIALITE_412_OR_LATER)
 	
     configure_file(${CMAKE_MODULE_PATH}/cpl_config.h.cmake ${GDAL_ROOT_BINARY_DIR}/port/cpl_config.h @ONLY)
