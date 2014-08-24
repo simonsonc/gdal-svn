@@ -39,10 +39,6 @@ if(SQLITE3_FOUND)
         add_definitions(-DSQLITE_HAS_COLUMN_METADATA)
     endif()
     
-    if(HAS_PCRE)
-        add_definitions(-DHAVE_PCRE)
-    endif()
-    
 	set(GDAL_HAVE_SQLITE ON CACHE INTERNAL "GDAL_HAVE_SQLITE")
 else(SQLITE3_FOUND)
 	MESSAGE(FATAL_ERROR "Could not find Sqlite3")
@@ -65,6 +61,12 @@ if(SPATIALITE_FOUND)
 else(SPATIALITE_FOUND)
 	MESSAGE(FATAL_ERROR "Could not find spatialite")
 endif(SPATIALITE_FOUND)
+
+# PCRE is optional
+find_package(PCRE)
+if(PCRE_FOUND)
+    add_definitions(-DHAVE_PCRE)
+endif()
 
 set(LIB_HHEADERS
     ogr_sqlite.h
@@ -98,4 +100,8 @@ endif(SQLITE3_FOUND)
 if(SPATIALITE_FOUND)
  	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${SPATIALITE_LIBRARY} PARENT_SCOPE)
 endif(SPATIALITE_FOUND)
+
+if(PCRE_FOUND)
+	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${PCRE_LIBRARIES} PARENT_SCOPE)
+endif(PCRE_FOUND)
 
