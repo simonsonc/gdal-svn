@@ -166,6 +166,7 @@ if(EXPAT_FOUND)
 	)
 endif(EXPAT_FOUND)
 
+add_definitions(-DHAVE_MITAB) #as mitab always on, so add this definition here
 add_subdirectory(ogrsf_frmts)
 
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)

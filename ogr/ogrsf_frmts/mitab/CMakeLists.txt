@@ -29,7 +29,7 @@ cmake_minimum_required (VERSION 2.8.10)
 set(LIB_NAME "ogrsf_mitab")
 project ("lib${LIB_NAME}")
 
-add_definitions(-DHAVE_MITAB -DOGR -DMITAB_USE_OFTDATETIME)
+add_definitions(-DOGR -DMITAB_USE_OFTDATETIME)
 
 set(LIB_HHEADERS
     mitab.h
