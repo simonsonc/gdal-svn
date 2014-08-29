@@ -29,7 +29,7 @@ cmake_minimum_required (VERSION 2.8.10)
 set(LIB_NAME "frmts_jp2openjpeg")
 project ("lib${LIB_NAME}")
 
-find_package(OpenJPEG REQUIRED)
+find_package(OpenJPEG 2.0 REQUIRED)
 if(OPENJPEG_FOUND)
 	include_directories(${OPENJPEG_INCLUDE_DIR})
     
