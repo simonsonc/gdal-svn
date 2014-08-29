@@ -190,35 +190,35 @@ static OGRGeometry* LoadGeometry( const char* pszDS,
     OGRLayer            *poLyr;
     OGRFeature          *poFeat;
     OGRGeometry         *poGeom = NULL;
-        
+
     poDS = (GDALDataset*) OGROpen( pszDS, FALSE, NULL );
     if (poDS == NULL)
         return NULL;
 
     if (pszSQL != NULL)
-        poLyr = poDS->ExecuteSQL( pszSQL, NULL, NULL ); 
+        poLyr = poDS->ExecuteSQL( pszSQL, NULL, NULL );
     else if (pszLyr != NULL)
         poLyr = poDS->GetLayerByName(pszLyr);
     else
         poLyr = poDS->GetLayer(0);
-        
+
     if (poLyr == NULL)
     {
         fprintf( stderr, "Failed to identify source layer from datasource.\n" );
         GDALClose(( GDALDatasetH) poDS);
         return NULL;
     }
-    
+
     if (pszWhere)
         poLyr->SetAttributeFilter(pszWhere);
-        
+
     while ((poFeat = poLyr->GetNextFeature()) != NULL)
     {
         OGRGeometry* poSrcGeom = poFeat->GetGeometryRef();
         if (poSrcGeom)
         {
             OGRwkbGeometryType eType = wkbFlatten( poSrcGeom->getGeometryType() );
-            
+
             if (poGeom == NULL)
                 poGeom = OGRGeometryFactory::createGeometry( wkbMultiPolygon );
 
@@ -246,14 +246,14 @@ static OGRGeometry* LoadGeometry( const char* pszDS,
                 return NULL;
             }
         }
-    
+
         OGRFeature::DestroyFeature(poFeat);
     }
-    
+
     if( pszSQL != NULL )
         poDS->ReleaseResultSet( poLyr );
     GDALClose(( GDALDatasetH) poDS);
-    
+
     return poGeom;
 }
 
@@ -380,15 +380,15 @@ int  OGRSplitListFieldLayer::BuildLayerDefn(GDALProgressFunc pfnProgress,
                                             void *pProgressArg)
 {
     CPLAssert(poFeatureDefn == NULL);
-    
+
     OGRFeatureDefn* poSrcFieldDefn = poSrcLayer->GetLayerDefn();
-    
+
     int nSrcFields = poSrcFieldDefn->GetFieldCount();
     pasListFields =
             (ListFieldDesc*)CPLCalloc(sizeof(ListFieldDesc), nSrcFields);
     nListFieldCount = 0;
     int i;
-    
+
     /* Establish the list of fields of list type */
     for(i=0;i<nSrcFields;i++)
     {
@@ -475,7 +475,7 @@ int  OGRSplitListFieldLayer::BuildLayerDefn(GDALProgressFunc pfnProgress,
             OGRFeatureDefn::CreateFeatureDefn( poSrcFieldDefn->GetName() );
     poFeatureDefn->Reference();
     poFeatureDefn->SetGeomType( wkbNone );
-    
+
     for(i=0;i<poSrcFieldDefn->GetGeomFieldCount();i++)
     {
         poFeatureDefn->AddGeomFieldDefn(poSrcFieldDefn->GetGeomFieldDefn(i));
@@ -657,17 +657,17 @@ public:
         if( nReqOrder < 0 )
         {
             bUseTPS = TRUE;
-            hTransformArg = 
+            hTransformArg =
                 GDALCreateTPSTransformer( nGCPCount, pasGCPList, FALSE );
         }
         else
         {
             bUseTPS = FALSE;
-            hTransformArg = 
+            hTransformArg =
                 GDALCreateGCPTransformer( nGCPCount, pasGCPList, nReqOrder, FALSE );
         }
         this->poSRS = poSRS;
-        if( poSRS) 
+        if( poSRS)
             poSRS->Reference();
     }
 
@@ -682,14 +682,14 @@ public:
             else
                 GDALDestroyGCPTransformer(hTransformArg);
         }
-        if( poSRS) 
+        if( poSRS)
             poSRS->Dereference();
     }
 
     virtual OGRSpatialReference *GetSourceCS() { return poSRS; }
     virtual OGRSpatialReference *GetTargetCS() { return poSRS; }
 
-    virtual int Transform( int nCount, 
+    virtual int Transform( int nCount,
                            double *x, double *y, double *z = NULL )
     {
         int *pabSuccess = (int *) CPLMalloc(sizeof(int) * nCount );
@@ -711,15 +711,15 @@ public:
         return bOverallSuccess;
     }
 
-    virtual int TransformEx( int nCount, 
+    virtual int TransformEx( int nCount,
                              double *x, double *y, double *z = NULL,
                              int *pabSuccess = NULL )
     {
         if( bUseTPS )
-            return GDALTPSTransform( hTransformArg, FALSE, 
+            return GDALTPSTransform( hTransformArg, FALSE,
                                  nCount, x, y, z, pabSuccess );
         else
-            return GDALGCPTransform( hTransformArg, FALSE, 
+            return GDALGCPTransform( hTransformArg, FALSE,
                                  nCount, x, y, z, pabSuccess );
     }
 };
@@ -759,7 +759,7 @@ public:
                poCT1 ? poCT1->GetTargetCS() : NULL;
     }
 
-    virtual int Transform( int nCount, 
+    virtual int Transform( int nCount,
                            double *x, double *y, double *z = NULL )
     {
         int nResult = TRUE;
@@ -770,7 +770,7 @@ public:
         return nResult;
     }
 
-    virtual int TransformEx( int nCount, 
+    virtual int TransformEx( int nCount,
                              double *x, double *y, double *z = NULL,
                              int *pabSuccess = NULL )
     {
@@ -873,7 +873,7 @@ int main( int nArgc, char ** papszArgv )
     int          nCoordDim = -1;
     char       **papszOpenOptions = NULL;
     char       **papszDestOpenOptions = NULL;
- 
+
     int          nGCPCount = 0;
     GDAL_GCP    *pasGCPs = NULL;
     int          nTransformOrder = 0;  /* Default to 0 for now... let the lib decide */
@@ -893,7 +893,7 @@ int main( int nArgc, char ** papszArgv )
 /*      Processing command line arguments.                              */
 /* -------------------------------------------------------------------- */
     nArgc = OGRGeneralCmdLineProcessor( nArgc, &papszArgv, 0 );
-    
+
     if( nArgc < 1 )
         exit( -nArgc );
 
@@ -1101,7 +1101,7 @@ int main( int nArgc, char ** papszArgv )
         {
             CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(1);
             pszSelect = papszArgv[++iArg];
-            papszSelFields = CSLTokenizeStringComplex(pszSelect, " ,", 
+            papszSelFields = CSLTokenizeStringComplex(pszSelect, " ,",
                                                       FALSE, FALSE );
         }
         else if( EQUAL(papszArgv[iArg],"-segmentize") )
@@ -1120,7 +1120,7 @@ int main( int nArgc, char ** papszArgv )
         {
             CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(1);
             papszFieldTypesToString =
-                    CSLTokenizeStringComplex(papszArgv[++iArg], " ,", 
+                    CSLTokenizeStringComplex(papszArgv[++iArg], " ,",
                                              FALSE, FALSE );
             char** iter = papszFieldTypesToString;
             while(*iter)
@@ -1168,7 +1168,7 @@ int main( int nArgc, char ** papszArgv )
         else if( EQUAL(papszArgv[iArg],"-datelineoffset") && iArg < nArgc-1 )
         {
             pszDateLineOffset = papszArgv[++iArg];
-        }        
+        }
         else if( EQUAL(papszArgv[iArg],"-clipsrc") )
         {
             if (iArg + 1 >= nArgc)
@@ -1177,8 +1177,8 @@ int main( int nArgc, char ** papszArgv )
             VSIStatBufL  sStat;
             bClipSrc = TRUE;
             if ( IsNumber(papszArgv[iArg+1])
-                 && papszArgv[iArg+2] != NULL 
-                 && papszArgv[iArg+3] != NULL 
+                 && papszArgv[iArg+2] != NULL
+                 && papszArgv[iArg+3] != NULL
                  && papszArgv[iArg+4] != NULL)
             {
                 OGRLinearRing  oRing;
@@ -1240,8 +1240,8 @@ int main( int nArgc, char ** papszArgv )
 
             VSIStatBufL  sStat;
             if ( IsNumber(papszArgv[iArg+1])
-                 && papszArgv[iArg+2] != NULL 
-                 && papszArgv[iArg+3] != NULL 
+                 && papszArgv[iArg+2] != NULL
+                 && papszArgv[iArg+3] != NULL
                  && papszArgv[iArg+4] != NULL)
             {
                 OGRLinearRing  oRing;
@@ -1326,7 +1326,7 @@ int main( int nArgc, char ** papszArgv )
             /* -gcp pixel line easting northing [elev] */
 
             nGCPCount++;
-            pasGCPs = (GDAL_GCP *) 
+            pasGCPs = (GDAL_GCP *)
                 CPLRealloc( pasGCPs, sizeof(GDAL_GCP) * nGCPCount );
             GDALInitGCPs( 1, pasGCPs + nGCPCount - 1 );
 
@@ -1334,7 +1334,7 @@ int main( int nArgc, char ** papszArgv )
             pasGCPs[nGCPCount-1].dfGCPLine = atof(papszArgv[++iArg]);
             pasGCPs[nGCPCount-1].dfGCPX = atof(papszArgv[++iArg]);
             pasGCPs[nGCPCount-1].dfGCPY = atof(papszArgv[++iArg]);
-            if( papszArgv[iArg+1] != NULL 
+            if( papszArgv[iArg+1] != NULL
                 && (CPLStrtod(papszArgv[iArg+1], &endptr) != 0.0 || papszArgv[iArg+1][0] == '0') )
             {
                 /* Check that last argument is really a number and not a filename */
@@ -1358,7 +1358,7 @@ int main( int nArgc, char ** papszArgv )
         {
             CHECK_HAS_ENOUGH_ADDITIONAL_ARGS(1);
             pszFieldMap = papszArgv[++iArg];
-            papszFieldMap = CSLTokenizeStringComplex(pszFieldMap, ",", 
+            papszFieldMap = CSLTokenizeStringComplex(pszFieldMap, ",",
                                                       FALSE, FALSE );
         }
         else if( papszArgv[iArg][0] == '-' )
@@ -1419,7 +1419,7 @@ int main( int nArgc, char ** papszArgv )
                              "bounding box, WKT string or datasource must be specified");
         }
     }
-    
+
     if( pszClipDstDS != NULL)
     {
         poClipDst = LoadGeometry(pszClipDstDS, pszClipDstSQL, pszClipDstLayer, pszClipDstWhere);
@@ -1490,7 +1490,7 @@ int main( int nArgc, char ** papszArgv )
     if( poDS == NULL )
     {
         OGRSFDriverRegistrar    *poR = OGRSFDriverRegistrar::GetRegistrar();
-        
+
         fprintf( stderr, "FAILURE:\n"
                 "Unable to open datasource `%s' with the following drivers.\n",
                 pszDataSource );
@@ -1565,7 +1565,7 @@ int main( int nArgc, char ** papszArgv )
         {
             fprintf( stderr, "Unable to find driver `%s'.\n", pszFormat );
             fprintf( stderr,  "The following drivers are available:\n" );
-        
+
             for( iDriver = 0; iDriver < poR->GetDriverCount(); iDriver++ )
             {
                 fprintf( stderr,  "  -> `%s'\n", poR->GetDriver(iDriver)->GetDescription() );
@@ -1613,7 +1613,7 @@ int main( int nArgc, char ** papszArgv )
         poODS = poDriver->Create( pszDestDataSource, 0, 0, 0, GDT_Unknown, papszDSCO );
         if( poODS == NULL )
         {
-            fprintf( stderr,  "%s driver failed to create %s\n", 
+            fprintf( stderr,  "%s driver failed to create %s\n",
                     pszFormat, pszDestDataSource );
             exit( 1 );
         }
@@ -1627,7 +1627,7 @@ int main( int nArgc, char ** papszArgv )
         poOutputSRS = (OGRSpatialReference*)OSRNewSpatialReference(NULL);
         if( poOutputSRS->SetFromUserInput( pszOutputSRSDef ) != OGRERR_NONE )
         {
-            fprintf( stderr,  "Failed to process SRS definition: %s\n", 
+            fprintf( stderr,  "Failed to process SRS definition: %s\n",
                     pszOutputSRSDef );
             exit( 1 );
         }
@@ -1641,12 +1641,12 @@ int main( int nArgc, char ** papszArgv )
         poSourceSRS = (OGRSpatialReference*)OSRNewSpatialReference(NULL);
         if( poSourceSRS->SetFromUserInput( pszSourceSRSDef ) != OGRERR_NONE )
         {
-            fprintf( stderr,  "Failed to process SRS definition: %s\n", 
+            fprintf( stderr,  "Failed to process SRS definition: %s\n",
                     pszSourceSRSDef );
             exit( 1 );
         }
     }
- 
+
 /* -------------------------------------------------------------------- */
 /*      Create a transformation object from the source to               */
 /*      destination coordinate system.                                  */
@@ -1654,8 +1654,8 @@ int main( int nArgc, char ** papszArgv )
     GCPCoordTransformation *poGCPCoordTrans = NULL;
     if( nGCPCount > 0 )
     {
-        poGCPCoordTrans = new GCPCoordTransformation( nGCPCount, pasGCPs, 
-                                                      nTransformOrder, 
+        poGCPCoordTrans = new GCPCoordTransformation( nGCPCount, pasGCPs,
+                                                      nTransformOrder,
                                                       poSourceSRS ? poSourceSRS : poOutputSRS );
         if( !(poGCPCoordTrans->IsValid()) )
         {
@@ -1687,9 +1687,9 @@ int main( int nArgc, char ** papszArgv )
             fprintf( stderr,  "-where clause ignored in combination with -sql.\n" );
         if( CSLCount(papszLayers) > 0 )
             fprintf( stderr,  "layer names ignored in combination with -sql.\n" );
-        
+
         poResultSet = poDS->ExecuteSQL( pszSQLStatement,
-                                        (pszGeomField == NULL) ? poSpatialFilter : NULL, 
+                                        (pszGeomField == NULL) ? poSpatialFilter : NULL,
                                         pszDialect );
 
         if( poResultSet != NULL )
@@ -1783,7 +1783,7 @@ int main( int nArgc, char ** papszArgv )
                                  nSrcFileSize, NULL,
                                  pfnProgress, pProgressArg ))
             {
-                CPLError( CE_Failure, CPLE_AppDefined, 
+                CPLError( CE_Failure, CPLE_AppDefined,
                           "Terminating translation prematurely after failed\n"
                           "translation from sql statement." );
 
@@ -2021,8 +2021,8 @@ int main( int nArgc, char ** papszArgv )
             nLayerCount = poDS->GetLayerCount();
             papoLayers = (OGRLayer**)CPLMalloc(sizeof(OGRLayer*) * nLayerCount);
 
-            for( int iLayer = 0; 
-                 iLayer < nLayerCount; 
+            for( int iLayer = 0;
+                 iLayer < nLayerCount;
                  iLayer++ )
             {
                 OGRLayer        *poLayer = poDS->GetLayer(iLayer);
@@ -2045,8 +2045,8 @@ int main( int nArgc, char ** papszArgv )
             nLayerCount = CSLCount(papszLayers);
             papoLayers = (OGRLayer**)CPLMalloc(sizeof(OGRLayer*) * nLayerCount);
 
-            for( int iLayer = 0; 
-                papszLayers[iLayer] != NULL; 
+            for( int iLayer = 0;
+                papszLayers[iLayer] != NULL;
                 iLayer++ )
             {
                 OGRLayer        *poLayer = poDS->GetLayerByName(papszLayers[iLayer]);
@@ -2082,8 +2082,8 @@ int main( int nArgc, char ** papszArgv )
         int iLayer;
 
         /* First pass to apply filters and count all features if necessary */
-        for( iLayer = 0; 
-            iLayer < nLayerCount; 
+        for( iLayer = 0;
+            iLayer < nLayerCount;
             iLayer++ )
         {
             OGRLayer        *poLayer = papoLayers[iLayer];
@@ -2119,8 +2119,8 @@ int main( int nArgc, char ** papszArgv )
         }
 
         /* Second pass to do the real job */
-        for( iLayer = 0; 
-            iLayer < nLayerCount && nRetCode == 0; 
+        for( iLayer = 0;
+            iLayer < nLayerCount && nRetCode == 0;
             iLayer++ )
         {
             OGRLayer        *poLayer = papoLayers[iLayer];
@@ -2136,7 +2136,7 @@ int main( int nArgc, char ** papszArgv )
                 if (bDisplayProgress && nMaxSplitListSubFields != 1)
                 {
                     pfnProgress = GDALScaledProgress;
-                    pProgressArg = 
+                    pProgressArg =
                         GDALCreateScaledProgress(nAccCountFeatures * 1.0 / nCountLayersFeatures,
                                                 (nAccCountFeatures + panLayerCountFeatures[iLayer] / 2) * 1.0 / nCountLayersFeatures,
                                                 GDALTermProgress,
@@ -2216,9 +2216,9 @@ int main( int nArgc, char ** papszArgv )
                                   pfnProgress, pProgressArg ))
                 && !bSkipFailures )
             {
-                CPLError( CE_Failure, CPLE_AppDefined, 
+                CPLError( CE_Failure, CPLE_AppDefined,
                         "Terminating translation prematurely after failed\n"
-                        "translation of layer %s (use -skipfailures to skip errors)\n", 
+                        "translation of layer %s (use -skipfailures to skip errors)\n",
                         poLayer->GetName() );
 
                 nRetCode = 1;
@@ -2241,7 +2241,7 @@ int main( int nArgc, char ** papszArgv )
 /* -------------------------------------------------------------------- */
 
     poODS->SetStyleTable( poDS->GetStyleTable () );
-    
+
 /* -------------------------------------------------------------------- */
 /*      Close down.                                                     */
 /* -------------------------------------------------------------------- */
@@ -2279,7 +2279,7 @@ int main( int nArgc, char ** papszArgv )
 #ifdef DBMALLOC
     malloc_dump(1);
 #endif
-    
+
     return nRetCode;
 }
 
@@ -2351,13 +2351,13 @@ static void Usage(const char* pszAdditionalMsg, int bShort)
             " -progress: Display progress on terminal. Only works if input layers have the \n"
             "                                          \"fast feature count\" capability\n"
             " -select field_list: Comma-delimited list of fields from input layer to\n"
-            "                     copy to the new layer (defaults to all)\n" 
-            " -where restricted_where: Attribute query (like SQL WHERE)\n" 
+            "                     copy to the new layer (defaults to all)\n"
+            " -where restricted_where: Attribute query (like SQL WHERE)\n"
             " -wrapdateline: split geometries crossing the dateline meridian\n"
-            "                (long. = +/- 180deg)\n" 
+            "                (long. = +/- 180deg)\n"
             " -datelineoffset: offset from dateline in degrees\n"
             "                (default long. = +/- 10deg,\n"
-            "                geometries within 170deg to -170deg will be splited)\n" 
+            "                geometries within 170deg to -170deg will be splited)\n"
             " -sql statement: Execute given SQL statement and save result.\n"
             " -dialect value: select a dialect, usually OGRSQL to avoid native sql.\n"
             " -skipfailures: skip features or layers that fail to convert\n"
@@ -2392,7 +2392,7 @@ static void Usage(const char* pszAdditionalMsg, int bShort)
     printf(" -a_srs srs_def: Assign an output SRS\n"
            " -t_srs srs_def: Reproject/transform to this SRS on output\n"
            " -s_srs srs_def: Override source SRS\n"
-           "\n" 
+           "\n"
            " Srs_def can be a full WKT definition (hard to escape properly),\n"
            " or a well known definition (ie. EPSG:4326) or a file with a WKT\n"
            " definition.\n" );
@@ -3103,7 +3103,7 @@ static int SetupCT( TargetLayerInfo* psInfo,
         OGRSpatialReference* poSourceSRS = NULL;
         OGRCoordinateTransformation* poCT = NULL;
         char** papszTransformOptions = NULL;
-        
+
         int iSrcGeomField;
         if( psInfo->iRequestedSrcGeomField >= 0 )
             iSrcGeomField = psInfo->iRequestedSrcGeomField;
@@ -3113,7 +3113,7 @@ static int SetupCT( TargetLayerInfo* psInfo,
                 poDstLayer->GetLayerDefn()->GetGeomFieldDefn(iGeom)->GetNameRef());
             if( iSrcGeomField < 0 )
             {
-                if( nDstGeomFieldCount == 1 && 
+                if( nDstGeomFieldCount == 1 &&
                     poSrcLayer->GetLayerDefn()->GetGeomFieldCount() > 0 )
                 {
                     iSrcGeomField = 0;
@@ -3122,7 +3122,7 @@ static int SetupCT( TargetLayerInfo* psInfo,
                     continue;
             }
         }
-        
+
         if( bTransform || bWrapDateline )
         {
             if( psInfo->nFeaturesRead == 0 )
@@ -3292,14 +3292,14 @@ static int TranslateLayer( TargetLayerInfo* psInfo,
         }
 
     }
-    
+
     if( wkbFlatten(eGType) == wkbPolygon )
         bForceToPolygon = TRUE;
     else if( wkbFlatten(eGType) == wkbMultiPolygon )
         bForceToMultiPolygon = TRUE;
     else if( wkbFlatten(eGType) == wkbMultiLineString )
         bForceToMultiLineString = TRUE;
-    
+
     if( bExplodeCollections && nDstGeomFieldCount > 1 )
     {
         bExplodeCollections = FALSE;
@@ -3425,7 +3425,7 @@ static int TranslateLayer( TargetLayerInfo* psInfo,
 
             if( bPreserveFID )
                 poDstFeature->SetFID( poFeature->GetFID() );
-            
+
             for( int iGeom = 0; iGeom < nDstGeomFieldCount; iGeom ++ )
             {
                 OGRGeometry* poDstGeometry = poDstFeature->GetGeomFieldRef(iGeom);
@@ -3485,7 +3485,7 @@ static int TranslateLayer( TargetLayerInfo* psInfo,
                     poDstFeature->SetGeomFieldDirectly(iGeom, poClipped);
                     poDstGeometry = poClipped;
                 }
-                
+
                 OGRCoordinateTransformation* poCT = psInfo->papoCT[iGeom];
                 if( !bTransform )
                     poCT = poGCPCoordTrans;
@@ -3533,21 +3533,21 @@ static int TranslateLayer( TargetLayerInfo* psInfo,
 
                 if( bForceToPolygon )
                 {
-                    poDstFeature->SetGeomFieldDirectly(iGeom, 
+                    poDstFeature->SetGeomFieldDirectly(iGeom,
                         OGRGeometryFactory::forceToPolygon(
                             poDstFeature->StealGeometry(iGeom) ) );
                 }
                 else if( bForceToMultiPolygon ||
                         (bPromoteToMulti && wkbFlatten(poDstGeometry->getGeometryType()) == wkbPolygon) )
                 {
-                    poDstFeature->SetGeomFieldDirectly(iGeom, 
+                    poDstFeature->SetGeomFieldDirectly(iGeom,
                         OGRGeometryFactory::forceToMultiPolygon(
                             poDstFeature->StealGeometry(iGeom) ) );
                 }
                 else if ( bForceToMultiLineString ||
                         (bPromoteToMulti && wkbFlatten(poDstGeometry->getGeometryType()) == wkbLineString) )
                 {
-                    poDstFeature->SetGeomFieldDirectly(iGeom, 
+                    poDstFeature->SetGeomFieldDirectly(iGeom,
                         OGRGeometryFactory::forceToMultiLineString(
                             poDstFeature->StealGeometry(iGeom) ) );
                 }
