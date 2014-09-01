@@ -299,6 +299,13 @@ if(GDAL_ENABLE_FRMT_JAXAPALSAR)
     set(GDAL_FORMATS ${GDAL_FORMATS} " jaxapalsar")
 endif(GDAL_ENABLE_FRMT_JAXAPALSAR)
 
+option(GDAL_ENABLE_FRMT_GFF "Set ON to build Ground-based SAR Applications Testbed File Format raster river" ON)
+if(GDAL_ENABLE_FRMT_GFF)
+	add_definitions(-DFRMT_gff)
+	add_subdirectory(gff)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " gff")
+endif(GDAL_ENABLE_FRMT_GFF)
+
 include(CMakeDependentOption)
 
 CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_WCS "Set ON to build OGC Web Coverage Service driver" OFF "GDAL_USE_CURL" OFF)
