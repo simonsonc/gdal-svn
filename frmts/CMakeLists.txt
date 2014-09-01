@@ -292,6 +292,13 @@ if(GDAL_ENABLE_FRMT_CEOS2)
     set(GDAL_FORMATS ${GDAL_FORMATS} " ceos2")
 endif(GDAL_ENABLE_FRMT_CEOS2)
 
+option(GDAL_ENABLE_FRMT_JAXAPALSAR "Set ON to build JAXA PALSAR Product Reader raster river" ON)
+if(GDAL_ENABLE_FRMT_JAXAPALSAR)
+	add_definitions(-DFRMT_jaxapalsar)
+	add_subdirectory(jaxapalsar)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " jaxapalsar")
+endif(GDAL_ENABLE_FRMT_JAXAPALSAR)
+
 include(CMakeDependentOption)
 
 CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_WCS "Set ON to build OGC Web Coverage Service driver" OFF "GDAL_USE_CURL" OFF)
