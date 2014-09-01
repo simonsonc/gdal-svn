@@ -271,6 +271,13 @@ endif(GDAL_ENABLE_FRMT_JP2OpenJPEG)
 #    set(GDAL_FORMATS ${GDAL_FORMATS} " JPEG2000")
 #endif(GDAL_ENABLE_FRMT_JPEG2000)
 
+option(GDAL_ENABLE_FRMT_ELAS "Set ON to build Earth Resources Laboratory Applications Software raster river" ON)
+if(GDAL_ENABLE_FRMT_ELAS)
+	add_definitions(-DFRMT_elas)
+	add_subdirectory(elas)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " elas")
+endif(GDAL_ENABLE_FRMT_ELAS)
+
 include(CMakeDependentOption)
 
 CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_WCS "Set ON to build OGC Web Coverage Service driver" OFF "GDAL_USE_CURL" OFF)
