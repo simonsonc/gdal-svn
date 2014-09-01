@@ -278,6 +278,20 @@ if(GDAL_ENABLE_FRMT_ELAS)
     set(GDAL_FORMATS ${GDAL_FORMATS} " elas")
 endif(GDAL_ENABLE_FRMT_ELAS)
 
+option(GDAL_ENABLE_FRMT_CEOS "Set ON to build CEOS raster driver" ON)
+if(GDAL_ENABLE_FRMT_CEOS)
+	add_definitions(-DFRMT_ceos)
+	add_subdirectory(ceos)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " ceos")
+endif(GDAL_ENABLE_FRMT_CEOS)
+
+option(GDAL_ENABLE_FRMT_CEOS2 "Set ON to build SAR CEOS raster driver" ON)
+if(GDAL_ENABLE_FRMT_CEOS2)
+	add_definitions(-DFRMT_ceos2)
+	add_subdirectory(ceos2)
+    set(GDAL_FORMATS ${GDAL_FORMATS} " ceos2")
+endif(GDAL_ENABLE_FRMT_CEOS2)
+
 include(CMakeDependentOption)
 
 CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_WCS "Set ON to build OGC Web Coverage Service driver" OFF "GDAL_USE_CURL" OFF)
