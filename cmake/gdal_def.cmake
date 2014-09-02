@@ -98,6 +98,22 @@
 #cmakedefine GDAL_ENABLE_FRMT_L1B
 #cmakedefine GDAL_ENABLE_FRMT_NGSGEOID
 #cmakedefine GDAL_ENABLE_FRMT_NITF
+#cmakedefine GDAL_ENABLE_FRMT_ISO8211
+#cmakedefine GDAL_ENABLE_FRMT_SAGA
+#cmakedefine GDAL_ENABLE_FRMT_JP2OpenJPEG
+#cmakedefine GDAL_ENABLE_FRMT_ELAS
+#cmakedefine GDAL_ENABLE_FRMT_CEOS
+#cmakedefine GDAL_ENABLE_FRMT_CEOS2
+#cmakedefine GDAL_ENABLE_FRMT_JAXAPALSAR
+#cmakedefine GDAL_ENABLE_FRMT_GFF
+#cmakedefine GDAL_ENABLE_FRMT_GFF
+#cmakedefine GDAL_ENABLE_FRMT_BSB
+#cmakedefine GDAL_ENABLE_FRMT_DTED
+#cmakedefine GDAL_ENABLE_FRMT_ENVISAT
+#cmakedefine GDAL_ENABLE_FRMT_ERS
+#cmakedefine GDAL_ENABLE_FRMT_SDTS
+#cmakedefine GDAL_ENABLE_FRMT_XPM
+
 
 /*** VECTOR FORMATS ***/
 #cmakedefine OGR_ENABLE_MITAB
@@ -122,4 +138,11 @@
 #cmakedefine OGR_ENABLE_XLSX
 #cmakedefine OGR_ENABLE_ODS
 #cmakedefine OGR_ENABLE_AVC
+#cmakedefine OGR_ENABLE_GME
+#cmakedefine OGR_ENABLE_GMT
+#cmakedefine OGR_ENABLE_GPSTrackMaker
+#cmakedefine OGR_ENABLE_HTF
+#cmakedefine OGR_ENABLE_DGN
+#cmakedefine OGR_ENABLE_PGDump
+
 

@@ -39,7 +39,6 @@ set(LIB_HHEADERS ${LIB_INST_HEADERS}
 set(LIB_CSOURCES
 	aigdataset.cpp
     gridlib.c
-    aitest.c
     aigopen.c
     aigccitt.c
 )
