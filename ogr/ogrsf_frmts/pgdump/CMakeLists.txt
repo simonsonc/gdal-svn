@@ -1,10 +1,11 @@
 # ******************************************************************************
 # * Project:  CMake4GDAL
 # * Purpose:  CMake build scripts
-# * Author: Carl Simonson <simonsonc@gmail.com>
+# * Author:   Alexander Lisovenko, alexander.lisovenko@gmail.com
 # ******************************************************************************
-# * Copyright (C) 2014 Carl Simonson
-# *
+# * Copyright (C) 2014 Alexander Lisovenko
+# * Copyright (C) 2014 NextGIS
+# * 
 # * Permission is hereby granted, free of charge, to any person obtaining a
 # * copy of this software and associated documentation files (the "Software"),
 # * to deal in the Software without restriction, including without limitation
@@ -26,19 +27,18 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_xpm")
+set(LIB_NAME "ogrsf_pgdump")
 project ("lib${LIB_NAME}")
 
-include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts/mem)
-
-set(HHEADERS
+set(LIB_HHEADERS
+    ogr_pgdump.h
 )
 
 set(LIB_CSOURCES
-    xpmdataset.cpp
+	ogrpgdumpdatasource.cpp
+    ogrpgdumpdriver.cpp
+    ogrpgdumplayer.cpp
 )
 
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_CSOURCES})
-
-set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)
+add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
