@@ -31,6 +31,12 @@ cmake_minimum_required (VERSION 2.8.10)
 set(LIB_NAME "frmts")
 project ("lib${LIB_NAME}")
 
+macro(add_frmt_subdir frmt_name)
+    add_definitions(-DFRMT_${frmt_name})
+    add_subdirectory(${frmt_name})
+    set(GDAL_FORMATS ${GDAL_FORMATS} " ${frmt_name}")
+endmacro()
+
 include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)
@@ -305,6 +311,13 @@ if(GDAL_ENABLE_FRMT_GFF)
 	add_subdirectory(gff)
     set(GDAL_FORMATS ${GDAL_FORMATS} " gff")
 endif(GDAL_ENABLE_FRMT_GFF)
+
+add_frmt_subdir(bsb)
+add_frmt_subdir(dted)
+add_frmt_subdir(envisat)
+add_frmt_subdir(ers)
+add_frmt_subdir(sdts)
+add_frmt_subdir(xpm)
 
 include(CMakeDependentOption)
 
