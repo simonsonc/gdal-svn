@@ -113,6 +113,7 @@
 #cmakedefine GDAL_ENABLE_FRMT_ERS
 #cmakedefine GDAL_ENABLE_FRMT_SDTS
 #cmakedefine GDAL_ENABLE_FRMT_XPM
+#cmakedefine GDAL_ENABLE_FRMT_AIRSAR
 
 
 /*** VECTOR FORMATS ***/
