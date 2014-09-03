@@ -37,6 +37,15 @@ macro(add_frmt_subdir frmt_name)
     set(GDAL_FORMATS ${GDAL_FORMATS} " ${frmt_name}")
 endmacro()
 
+macro(add_optional_frmt_subdir frmt_name optstring optval)
+    string(TOUPPER ${frmt_name} frmt_name_upper)
+    set(optname GDAL_ENABLE_FRMT_${frmt_name_upper})
+    option(${optname} "Set ON to build ${optstring} driver" ${optval})
+    if(${optname})
+        add_frmt_subdir(${frmt_name})
+    endif()
+endmacro()
+
 include(CMakeDependentOption)
 
 include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore)
@@ -301,6 +310,8 @@ CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_WMS "Set ON to build wms driver" OFF "GD
 if(GDAL_ENABLE_FRMT_WMS)
     add_frmt_subdir(wms)
 endif(GDAL_ENABLE_FRMT_WMS)
+
+add_optional_frmt_subdir(airsar "AIRSAR Polarimetric" ON)
 
 set(GDAL_FORMATS ${GDAL_FORMATS} PARENT_SCOPE)
 
