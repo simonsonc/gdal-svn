@@ -312,6 +312,15 @@ if(GDAL_ENABLE_FRMT_WMS)
 endif(GDAL_ENABLE_FRMT_WMS)
 
 add_optional_frmt_subdir(airsar "AIRSAR Polarimetric" ON)
+add_optional_frmt_subdir(rs2 "RadarSat2 XML" ON)
+add_optional_frmt_subdir(ilwis "ILWIS Raster Map" ON)
+add_optional_frmt_subdir(sgi "SGI Image Format" ON)
+add_optional_frmt_subdir(srtmhgt "SRTM HGT Format" ON)
+add_optional_frmt_subdir(leveller "Daylon Leveller Heightfield" ON)
+add_optional_frmt_subdir(terragen "Terragen Heightfield" ON)
+add_optional_frmt_subdir(fit "FIT" ON)
+add_optional_frmt_subdir(rmf "Raster Matrix Format" ON)
+add_optional_frmt_subdir(gsg "Golden Software" ON)
 
 set(GDAL_FORMATS ${GDAL_FORMATS} PARENT_SCOPE)
 
