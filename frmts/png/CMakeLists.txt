@@ -26,9 +26,6 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_png")
-project ("lib${LIB_NAME}")
-
 option(GDAL_USE_LIBPNG_INTERNAL "Set ON to use internal libjpeg" OFF)
 if(GDAL_USE_LIBPNG_INTERNAL)	
 	include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts/png/libpng)
@@ -65,17 +62,12 @@ set(LIB_CSOURCES
 	pngdataset.cpp
 )
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_CSOURCES})	
-
-set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB})
+add_frmt_library(png ${LIB_CSOURCES})	
 
 if(PNG_FOUND)
-    set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${PNG_LIBRARIES})
+    frmt_link_libraries(png ${PNG_LIBRARIES})
 endif(PNG_FOUND)
 
 if(ZLIB_FOUND)
-	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${ZLIB_LIBRARIES})
+    frmt_link_libraries(png ${ZLIB_LIBRARIES})
 endif(ZLIB_FOUND)
-
-set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)

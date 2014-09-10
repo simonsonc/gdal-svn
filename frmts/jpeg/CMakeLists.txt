@@ -26,9 +26,6 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_jpeg")
-project ("lib${LIB_NAME}")
-
 include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts/mem)
 
@@ -83,17 +80,12 @@ if(GDAL_JPEG12_SUPPORTED)
 	)
 endif(GDAL_JPEG12_SUPPORTED)
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_CSOURCES})	
-
-set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB})
+add_frmt_library(jpeg ${LIB_CSOURCES})
 
 if(JPEG_FOUND)
-	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${JPEG_LIBRARIES})
+    frmt_link_libraries(jpeg ${JPEG_LIBRARIES})
 endif(JPEG_FOUND)
 
 if(ZLIB_FOUND)
-	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${ZLIB_LIBRARIES})
+    frmt_link_libraries(jpeg ${ZLIB_LIBRARIES})
 endif(ZLIB_FOUND)
-
-set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)

@@ -26,12 +26,8 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_map")
-project ("lib${LIB_NAME}")
-
 set(LIB_CSOURCES
 	mapdataset.cpp
 )
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_CSOURCES})	
+add_frmt_library(map ${LIB_CSOURCES})	

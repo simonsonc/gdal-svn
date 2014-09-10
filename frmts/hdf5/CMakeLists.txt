@@ -26,8 +26,6 @@
 # ******************************************************************************
 
 cmake_minimum_required (VERSION 2.8.10)
-set(LIB_NAME "frmts_hdf5")
-project ("lib${LIB_NAME}")
 
 find_package(HDF5 REQUIRED)
 if(HDF5_FOUND)
@@ -50,15 +48,10 @@ set(LIB_CSOURCES
     hdf5dataset.cpp
     gh5_convenience.cpp
     bagdataset.cpp
-)
+    )
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
+add_frmt_library(hdf5 OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
 
 if(HDF5_FOUND)
-    if(WIN32)
-		set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${HDF5_LIBRARY} PARENT_SCOPE)
-	else(WIN32)	
-		set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${HDF5_LIBRARY} PARENT_SCOPE)
-    endif(WIN32)
+    frmt_link_libraries(hdf5 ${HDF5_LIBRARY})
 endif(HDF5_FOUND)

@@ -26,9 +26,6 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_raw")
-project ("lib${LIB_NAME}")
-
 include_directories(${GDAL_ROOT_SOURCE_DIR}/alg)
 include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts/raw)
 
@@ -69,5 +66,4 @@ set(LIB_CSOURCES
 	snodasdataset.cpp
 )
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})	
+add_frmt_library(raw ${LIB_HHEADERS} ${LIB_CSOURCES})	

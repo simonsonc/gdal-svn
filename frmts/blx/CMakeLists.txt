@@ -26,9 +26,6 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_blx")
-project ("lib${LIB_NAME}")
-
 add_definitions(-DGDALDRIVER)
 include_directories(.)
 
@@ -41,7 +38,4 @@ set(LIB_CSOURCES
     blxdataset.cpp
 )
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_CSOURCES})
-
-set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)
+add_frmt_library(blx ${LIB_CSOURCES})

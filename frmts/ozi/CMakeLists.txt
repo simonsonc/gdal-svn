@@ -26,9 +26,6 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_ozi")
-project ("lib${LIB_NAME}")
-
 #check zip and internal zip
 if(GDAL_USE_LIBZ)
 	add_definitions(-DHAVE_LIBZ -DZIP_SUPPORT)
@@ -52,5 +49,4 @@ set(LIB_CSOURCES
 	ozidataset.cpp
 )
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_CSOURCES})	
+add_frmt_library(ozi ${LIB_CSOURCES})	

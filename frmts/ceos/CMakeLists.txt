@@ -26,9 +26,6 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_ceos")
-project ("lib${LIB_NAME}")
-
 set(HHEADERS
     ceosopen.h
 )
@@ -38,7 +35,4 @@ set(LIB_CSOURCES
     ceosopen.c
 )
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_CSOURCES})
-
-set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)
+add_frmt_library(ceos ${LIB_CSOURCES})

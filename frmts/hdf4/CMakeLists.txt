@@ -26,8 +26,6 @@
 # ******************************************************************************
 
 cmake_minimum_required (VERSION 2.8.10)
-set(LIB_NAME "frmts_hdf4")
-project ("lib${LIB_NAME}")
 
 find_package(HDF4 REQUIRED)
 if(HDF4_FOUND)
@@ -50,13 +48,8 @@ set(LIB_CSOURCES
 	hdf4imagedataset.cpp
 )
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
+add_frmt_library(hdf4 ${LIB_HHEADERS} ${LIB_CSOURCES})
 
 if(HDF4_FOUND)
-    if(WIN32)
-		set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${HDF4_LIBRARIES} PARENT_SCOPE)
-	else(WIN32)	
-		set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${HDF4_LIBRARIES} PARENT_SCOPE)
-    endif(WIN32)
+    frmt_link_libraries(hdf4 ${HDF4_LIBRARIES})
 endif(HDF4_FOUND)

@@ -35,6 +35,7 @@ option(GDAL_USE_LIBTIFF_INTERNAL "Set ON to use internal libtiff" OFF)
 if(GDAL_USE_LIBTIFF_INTERNAL)
 	include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts/gtiff/libtiff)
 	add_subdirectory(${GDAL_ROOT_SOURCE_DIR}/frmts/gtiff/libtiff ${GDAL_ROOT_BINARY_DIR}/frmts/gtiff/libtiff)
+    set(TIFF_LIBRARIES tiff)
 else(GDAL_USE_LIBTIFF_INTERNAL)
 	find_package(TIFF 4.0 REQUIRED)
 	if(TIFF_FOUND)
@@ -90,17 +91,13 @@ set(LIB_CSOURCES
 # source_group("Header Files\\port" FILES ${LIB_HHEADERS})
 # source_group("Source Files\\port" FILES ${LIB_CSOURCES})
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})	
-
-set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB})
+add_frmt_library(gtiff ${LIB_HHEADERS} ${LIB_CSOURCES})	
+frmt_link_libraries(gtiff geotiff)
 
 if(TIFF_FOUND)
-	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${TIFF_LIBRARIES})
+	frmt_link_libraries(gtiff ${TIFF_LIBRARIES})
 endif(TIFF_FOUND)
 
 if(JPEG_FOUND)
-	set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${JPEG_LIBRARIES})
+	frmt_link_libraries(gtiff ${JPEG_LIBRARIES})
 endif(JPEG_FOUND)
-
-set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)

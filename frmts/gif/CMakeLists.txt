@@ -26,13 +26,12 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_gif")
-project ("lib${LIB_NAME}")
-
 option(GDAL_USE_LIBGIF_INTERNAL "Set ON to use internal libjpeg" ON)
 if(GDAL_USE_LIBGIF_INTERNAL)	
 	include_directories(${GDAL_ROOT_SOURCE_DIR}/frmts/gif/giflib)
 	add_subdirectory(${GDAL_ROOT_SOURCE_DIR}/frmts/gif/giflib ${GDAL_ROOT_BINARY_DIR}/frmts/gif/giflib)
+    set(GIF_LIBRARIES frmts_libgif)
+    set(GIF_FOUND TRUE)
 else(GDAL_USE_LIBGIF_INTERNAL)
 	find_package(GIF REQUIRED)
 	if(GIF_FOUND)
@@ -52,9 +51,8 @@ set(LIB_CSOURCES
 	gifdataset.cpp
 )
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})	
+add_frmt_library(gif ${LIB_HHEADERS} ${LIB_CSOURCES})	
 
 if(GIF_FOUND)
-    set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${GIF_LIBRARIES} PARENT_SCOPE)
+    frmt_link_libraries(gif ${GIF_LIBRARIES})
 endif(GIF_FOUND)

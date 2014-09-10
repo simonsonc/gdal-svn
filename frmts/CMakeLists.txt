@@ -46,6 +46,29 @@ macro(add_optional_frmt_subdir frmt_name optstring optval)
     endif()
 endmacro()
 
+#macro(add_frmt_library name)
+#    set(LIB_NAME "frmts_${name}")
+#    project ("lib${LIB_NAME}")
+#    set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
+#    add_library(${LIB_NAME} OBJECT ${ARGN})
+#endmacro()
+
+#macro(frmt_link_libraries name)
+#    set(LIBS_frmts_${name} ${LIBS_frmts_${name}} ${ARGN})
+#    set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${LIBS_frmts_${name}} PARENT_SCOPE)
+#endmacro()
+
+macro(add_frmt_library name)
+    set(LIB_NAME "frmts_${name}")
+    project ("lib${LIB_NAME}")
+    add_library(${LIB_NAME} STATIC ${ARGN})
+    set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${LIB_NAME} PARENT_SCOPE)
+endmacro()
+
+macro(frmt_link_libraries name)
+    target_link_libraries(frmts_${name} ${ARGN})
+endmacro()
+
 include(CMakeDependentOption)
 
 include_directories(${GDAL_ROOT_SOURCE_DIR}/gcore)

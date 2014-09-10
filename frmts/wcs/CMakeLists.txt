@@ -27,9 +27,6 @@
 
 cmake_minimum_required (VERSION 2.8.10)
 
-set(LIB_NAME "frmts_wcs")
-project ("lib${LIB_NAME}")
-
 set(LIB_HHEADERS
 )
 
@@ -45,5 +42,4 @@ if(CURL_FOUND)
 endif(CURL_FOUND)
 
 
-set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
-add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})	
+add_frmt_library(wcs ${LIB_HHEADERS} ${LIB_CSOURCES})	
