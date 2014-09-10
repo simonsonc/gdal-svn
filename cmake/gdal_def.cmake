@@ -123,6 +123,20 @@
 #cmakedefine GDAL_ENABLE_FRMT_FIT
 #cmakedefine GDAL_ENABLE_FRMT_RMF
 #cmakedefine GDAL_ENABLE_FRMT_GSG
+#cmakedefine GDAL_ENABLE_FRMT_COSAR
+#cmakedefine GDAL_ENABLE_FRMT_TSX
+#cmakedefine GDAL_ENABLE_FRMT_COASP
+#cmakedefine GDAL_ENABLE_FRMT_R
+#cmakedefine GDAL_ENABLE_FRMT_USGSDEM
+#cmakedefine GDAL_ENABLE_FRMT_GXF
+#cmakedefine GDAL_ENABLE_FRMT_NORTHWOOD
+#cmakedefine GDAL_ENABLE_FRMT_ADRG
+#cmakedefine GDAL_ENABLE_FRMT_BLX
+#cmakedefine GDAL_ENABLE_FRMT_XYZ
+#cmakedefine GDAL_ENABLE_FRMT_HF2
+#cmakedefine GDAL_ENABLE_FRMT_CTG
+#cmakedefine GDAL_ENABLE_FRMT_ZMAP
+#cmakedefine GDAL_ENABLE_FRMT_IRIS
 
 
 /*** VECTOR FORMATS ***/
