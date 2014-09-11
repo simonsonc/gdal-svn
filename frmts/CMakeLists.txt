@@ -161,7 +161,7 @@ if(GDAL_ENABLE_FRMT_PDS )
     set(GDAL_FORMATS ${GDAL_FORMATS} " PDS")
 endif(GDAL_ENABLE_FRMT_PDS )
 
-option(GDAL_ENABLE_FRMT_HDF4  "Set ON to build Hierarchical Data Format Release 4 (HDF4) raster driver" OFF)
+CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_HDF4 "Set ON to build Hierarchical Data Format Release 4 (HDF4) raster driver" OFF "GDAL_ENABLE_FRMT_PDS" OFF)
 if(GDAL_ENABLE_FRMT_HDF4 )
 	add_definitions(-DFRMT_hdf4)
 	add_subdirectory(hdf4)
