@@ -1006,6 +1006,7 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
                     }
 
                     poFeature->SetField(oFieldName, dst);
+                    CPLFree(dst);
                     CPLFree(value);
 
                     offset += nLen;
