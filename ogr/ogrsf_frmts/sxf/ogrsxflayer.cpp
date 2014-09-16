@@ -979,7 +979,7 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
                 case SXF_RAT_UNICODE:
                 {
                     unsigned nLen = (unsigned(stAttInfo.nScale) + 1) * 2;
-                    if( nLen > nSemanticsSize || nSemanticsSize - nLen < offset )
+                    if(nLen < 2 || nLen > nSemanticsSize || nSemanticsSize - nLen < offset )
                     {
                         nSemanticsSize = 0;
                         break;
@@ -987,13 +987,12 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
                     char* value = (char*)CPLMalloc(nLen);
                     memcpy(value, psSemanticsdBuf + offset, nLen);
                     value[nLen-1] = 0;
-                    //value[nLen-2] = 0;
+                    value[nLen-2] = 0;
                     char* dst = (char*)CPLMalloc(nLen);
                     int nCount = 0;
                     for(int i = 0; i < nLen; i += 2)
                     {
                          unsigned char ucs = value[i];
-                         unsigned char y = value[i+1];
 
                          if (ucs < 0x80U)
                          {
