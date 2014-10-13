@@ -256,6 +256,12 @@ if(OGR_ENABLE_OSM)
     add_subdirectory(osm)
 endif()
 
+option(OGR_ENABLE_GRASS "Set ON to build GRASS - GRASS Vector Format" OFF)
+if(OGR_ENABLE_GRASS)
+    add_definitions(-DGRASS_ENABLED)
+    add_subdirectory(grass)
+endif()
+
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
 set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)
 add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
