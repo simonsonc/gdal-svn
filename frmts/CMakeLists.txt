@@ -298,7 +298,12 @@ endif(GDAL_ENABLE_FRMT_SDTS)
 option(GDAL_ENABLE_FRMT_XPM "Set ON to build X11 Pixmap driver" ON)
 if(GDAL_ENABLE_FRMT_XPM)   
     add_frmt_subdir(xpm)
-endif(GDAL_ENABLE_FRMT_XPM)  
+endif(GDAL_ENABLE_FRMT_XPM) 
+ 
+option(GDAL_ENABLE_FRMT_GRASS "Set ON to build GRASS Raster Format" ON)
+if(GDAL_ENABLE_FRMT_GRASS)   
+    add_frmt_subdir(grass)
+endif(GDAL_ENABLE_FRMT_GRASS) 
 
 CMAKE_DEPENDENT_OPTION(GDAL_ENABLE_FRMT_WCS "Set ON to build OGC Web Coverage Service driver" OFF "GDAL_USE_CURL" OFF)
 if(GDAL_ENABLE_FRMT_WCS)
