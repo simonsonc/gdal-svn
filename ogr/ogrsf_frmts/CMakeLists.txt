@@ -250,6 +250,12 @@ if(OGR_ENABLE_ODBC)
     add_subdirectory(odbc)
 endif()
 
+option(OGR_ENABLE_OSM "Set ON to build OSM - OpenStreetMap XML and PBF" OFF)
+if(OGR_ENABLE_OSM)
+    add_definitions(-DOSM_ENABLED)
+    add_subdirectory(osm)
+endif()
+
 set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PARENT_SCOPE)
 set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} PARENT_SCOPE)
 add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
