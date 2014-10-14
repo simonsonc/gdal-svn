@@ -25,15 +25,15 @@
 # ******************************************************************************
 
 cmake_minimum_required (VERSION 2.8.10)
-
 set(LIB_NAME "ogrsf_grass")
 project ("lib${LIB_NAME}")
 
 find_package(GRASS REQUIRED)
 if(GRASS_FOUND)
-    include_directories(${GRASS_INCLUDE_DIRS})
-    add_definitions(-DGRASS_GISBASE="${GRASS_GISBASE}") 
-    
+    include_directories(${GRASS_INCLUDE_DIR})
+    add_definitions(-DHAVE_grass)
+    set(GDAL_HAVE_GRASS ON CACHE INTERNAL "GDAL_HAVE_GRASS")
+    add_definitions(-DGRASS_GISBASE="${GRASS_HOME}")
 else(GRASS_FOUND)
     MESSAGE(FATAL_ERROR "Could not find GRASS")
 endif(GRASS_FOUND)
@@ -42,8 +42,7 @@ find_package(PROJ REQUIRED)
 if(PROJ_FOUND)
     include_directories(${PROJ_INCLUDE_DIR})
 endif(PROJ_FOUND)
-#include_directories(${GDAL_ROOT_SOURCE_DIR}/ogr/ogrsf_frmts/sqlite)
- 
+
 
 set(LIB_HHEADERS
     ogrgrass.h
@@ -59,5 +58,5 @@ set(GDAL_TARGET_OBJECTS ${GDAL_TARGET_OBJECTS} $<TARGET_OBJECTS:${LIB_NAME}> PAR
 add_library(${LIB_NAME} OBJECT ${LIB_HHEADERS} ${LIB_CSOURCES})
 
 if(GRASS_FOUND AND PROJ_FOUND)
-    set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${GRASS_LIBRARY} ${PROJ_LIBRARY} PARENT_SCOPE)
+        set(GDAL_TARGET_LINK_LIB ${GDAL_TARGET_LINK_LIB} ${GRASS_LIBRARIES} ${PROJ_LIBRARY} PARENT_SCOPE)
 endif(GRASS_FOUND AND PROJ_FOUND)
