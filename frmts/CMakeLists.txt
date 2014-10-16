@@ -300,7 +300,7 @@ if(GDAL_ENABLE_FRMT_XPM)
     add_frmt_subdir(xpm)
 endif(GDAL_ENABLE_FRMT_XPM) 
  
-option(GDAL_ENABLE_FRMT_GRASS "Set ON to build GRASS Raster Format" ON)
+option(GDAL_ENABLE_FRMT_GRASS "Set ON to build GRASS Raster Format" OFF)
 if(GDAL_ENABLE_FRMT_GRASS)   
     add_frmt_subdir(grass)
 endif(GDAL_ENABLE_FRMT_GRASS) 

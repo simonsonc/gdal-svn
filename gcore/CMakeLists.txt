@@ -94,6 +94,8 @@ set(LIB_CSOURCES
     gdalgeorefpamdataset.cpp  
     gdaljp2abstractdataset.cpp
     gdalvirtualmem.cpp    
+    gdalrescaledalphaband.cpp
+    gdaloverviewdataset.cpp
 )
         
 if(GDAL_PAM_ENABLED)
