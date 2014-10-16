@@ -617,8 +617,9 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
         return NULL;
     }
 
-    SXFGeometryType eGeomType;
-    GByte code;
+    SXFGeometryType eGeomType = SXF_GT_Unknown;
+    GByte code = 0;
+
     if (m_nSXFFormatVer == 3)
     {
         if (CHECK_BIT(stRecordHeader.nRef[2], 3))
@@ -688,10 +689,11 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
     }
     else if (code == 0x05) // xxxx0101
         eGeomType = SXF_GT_TextTemplate;
-    else if (code == 0x21) 
+    else if (code == 0x21)
         eGeomType = SXF_GT_VectorAngle;
-    else if (code == 0x22) 
+    else if (code == 0x22)
         eGeomType = SXF_GT_VectorScaled;
+
     bool bHasAttributes = CHECK_BIT(stRecordHeader.nRef[1], 1);
     bool bHasRefVector = CHECK_BIT(stRecordHeader.nRef[1], 3);
     if (bHasRefVector == true)
@@ -709,7 +711,7 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
     }
     stCertInfo.nSubObjectCount = stRecordHeader.nSubObjectCount;
 
-    bool bFloatType, bBigType;
+    bool bFloatType = 0, bBigType = 0;
     bool b3D(true);
     if (m_nSXFFormatVer == 3)
     {
@@ -725,6 +727,7 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
         bBigType = CHECK_BIT(stRecordHeader.nRef[1], 2);
         stCertInfo.bHasTextSign = CHECK_BIT(stRecordHeader.nRef[2], 3);
     }
+    // Else trouble.
 
     if (b3D) //xххххх1х
         stCertInfo.bDim = 1;
@@ -977,16 +980,35 @@ OGRFeature *OGRSXFLayer::GetNextRawFeature(long nFID)
                 }
                 case SXF_RAT_UNICODE:
                 {
-                    unsigned nLen = unsigned(stAttInfo.nScale) + 1;
-                    if( nLen > nSemanticsSize || nSemanticsSize - nLen < offset )
+                    unsigned nLen = (unsigned(stAttInfo.nScale) + 1) * 2;
+                    if(nLen < 2 || nLen > nSemanticsSize || nSemanticsSize - nLen < offset )
                     {
                         nSemanticsSize = 0;
                         break;
                     }
-                    char * value = (char*)CPLMalloc(nLen);
+                    char* value = (char*)CPLMalloc(nLen);
                     memcpy(value, psSemanticsdBuf + offset, nLen);
                     value[nLen-1] = 0;
-                    poFeature->SetField(oFieldName, value);
+                    value[nLen-2] = 0;
+                    char* dst = (char*)CPLMalloc(nLen);
+                    int nCount = 0;
+                    for(int i = 0; (unsigned)i < nLen; i += 2)
+                    {
+                         unsigned char ucs = value[i];
+
+                         if (ucs < 0x80U)
+                         {
+                             dst[nCount++] = ucs;
+                         }
+                         else
+                         {
+                             dst[nCount++] = 0xc0 | (ucs >> 6);
+                             dst[nCount++] = 0x80 | (ucs & 0x3F);
+                         }
+                    }
+
+                    poFeature->SetField(oFieldName, dst);
+                    CPLFree(dst);
                     CPLFree(value);
 
                     offset += nLen;
@@ -1427,4 +1449,3 @@ const char* OGRSXFLayer::GetFIDColumn()
 {
     return sFIDColumn_.c_str();
 }
-

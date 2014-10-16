@@ -1595,6 +1595,12 @@ OGRErr OGRShapeLayer::CreateField( OGRFieldDefn *poFieldDefn, int bApproxOK )
         return OGRERR_FAILURE;
     }
 
+    /* Suppress the dummy FID field if we have created it just before */
+    if( DBFGetFieldCount( hDBF ) == 1 && poFeatureDefn->GetFieldCount() == 0 )
+    {
+        DBFDeleteField( hDBF, 0 );
+    }
+
     iNewField =
         DBFAddNativeFieldType( hDBF, szNewFieldName,
                                chType, nWidth, nDecimals );
@@ -1719,11 +1725,11 @@ OGRErr OGRShapeLayer::AlterFieldDefn( int iField, OGRFieldDefn* poNewFieldDefn, 
     char            szFieldName[20];
     int             nWidth, nPrecision;
     OGRFieldType    eType = poFieldDefn->GetType();
-    DBFFieldType    eDBFType;
+    /* DBFFieldType    eDBFType; */
 
     chNativeType = DBFGetNativeFieldType( hDBF, iField );
-    eDBFType = DBFGetFieldInfo( hDBF, iField, szFieldName,
-                                &nWidth, &nPrecision );
+    /* eDBFType = */ DBFGetFieldInfo( hDBF, iField, szFieldName,
+                                      &nWidth, &nPrecision );
 
     if ((nFlags & ALTER_TYPE_FLAG) &&
         poNewFieldDefn->GetType() != poFieldDefn->GetType())
@@ -1824,6 +1830,14 @@ OGRSpatialReference *OGRShapeGeomFieldDefn::GetSpatialRef()
         osPrjFile = pszPrjFile;
 
         poSRS = new OGRSpatialReference();
+        /* Remove UTF-8 BOM if found */
+        /* http://lists.osgeo.org/pipermail/gdal-dev/2014-July/039527.html */
+        if( ((unsigned char)papszLines[0][0] == 0xEF) &&
+            ((unsigned char)papszLines[0][1] == 0xBB) &&
+            ((unsigned char)papszLines[0][2] == 0xBF) )
+        {
+            memmove(papszLines[0], papszLines[0] + 3, strlen(papszLines[0] + 3) + 1);
+        }
         if( poSRS->importFromESRI( papszLines ) != OGRERR_NONE )
         {
             delete poSRS;
@@ -2513,11 +2527,11 @@ OGRErr OGRShapeLayer::ResizeDBF()
         char            szFieldName[20];
         int             nOriWidth, nPrecision;
         char            chNativeType;
-        DBFFieldType    eDBFType;
+        /* DBFFieldType    eDBFType; */
 
         chNativeType = DBFGetNativeFieldType( hDBF, iField );
-        eDBFType = DBFGetFieldInfo( hDBF, iField, szFieldName,
-                                    &nOriWidth, &nPrecision );
+        /* eDBFType = */ DBFGetFieldInfo( hDBF, iField, szFieldName,
+                                          &nOriWidth, &nPrecision );
 
         if (panBestWidth[j] < nOriWidth)
         {
