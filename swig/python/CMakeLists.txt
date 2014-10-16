@@ -193,14 +193,19 @@ if(PYTHONLIBS_FOUND)
             
             set(ENV{VS90COMNTOOLS} ${VC_DIR})
         endif()
-
-        add_custom_target(swig_build ALL
-        #check in cmake 2.8 swig/${BINDING} or swig/include
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/gdal_arrayPYTHON_wrap.cxx" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/gdal_array_wrap.cpp"   
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/gdalconstPYTHON_wrap.c" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/gdalconst_wrap.c"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/gdalPYTHON_wrap.cxx" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/gdal_wrap.cpp"  
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/ogrPYTHON_wrap.cxx" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/ogr_wrap.cpp"  
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osrPYTHON_wrap.cxx" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/osr_wrap.cpp"
+        
+        if (CMAKE_MAJOR_VERSION GREATER 2)
+            set(PYTHONSWIG_H_PATH "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}")
+        else(CMAKE_MAJOR_VERSION GREATER 2)
+            set(PYTHONSWIG_H_PATH "${GDAL_ROOT_BINARY_DIR}/swig/include")
+        endif(CMAKE_MAJOR_VERSION GREATER 2)
+        
+        add_custom_target(swig_build ALL             
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PYTHONSWIG_H_PATH}/gdal_arrayPYTHON_wrap.cxx" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/gdal_array_wrap.cpp"   
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PYTHONSWIG_H_PATH}/gdalconstPYTHON_wrap.c" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/gdalconst_wrap.c"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PYTHONSWIG_H_PATH}/gdalPYTHON_wrap.cxx" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/gdal_wrap.cpp"  
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PYTHONSWIG_H_PATH}/ogrPYTHON_wrap.cxx" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/ogr_wrap.cpp"  
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PYTHONSWIG_H_PATH}/osrPYTHON_wrap.cxx" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/${SWIGOUTPUTDIR}/osr_wrap.cpp"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_SOURCE_DIR}/swig/${BINDING}/README.txt" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/README.txt"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_SOURCE_DIR}/swig/${BINDING}/gdalnumeric.py" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/gdalnumeric.py" 
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDAL_ROOT_SOURCE_DIR}/swig/${BINDING}/osgeo/gdalnumeric.py" "${GDAL_ROOT_BINARY_DIR}/swig/${BINDING}/osgeo/gdalnumeric.py" 
